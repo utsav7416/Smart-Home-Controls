@@ -94,21 +94,31 @@ function DeviceControl({ room, onDeviceChange }) {
     }
   };
 
+  // Function to calculate dynamic gradient style for a range input
+  const getSliderStyle = (value, min, max) => {
+    const percentage = ((value - min) / (max - min)) * 100;
+    return {
+      background: `linear-gradient(90deg, #3b82f6 ${percentage}%, #d1d5db ${percentage}%)`
+    };
+  };
+
   const renderDeviceControls = (device) => {
     if (!device.isOn) return null;
     
     switch (device.property) {
-      case 'brightness':
+      case 'brightness': {
+        const min = 0, max = 100;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Brightness</label>
             <input
               type="range"
-              min="0"
-              max="100"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>Low</span>
@@ -117,17 +127,20 @@ function DeviceControl({ room, onDeviceChange }) {
             </div>
           </div>
         );
-      case 'speed':
+      }
+      case 'speed': {
+        const min = 0, max = 100;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Fan Speed</label>
             <input
               type="range"
-              min="0"
-              max="100"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>Slow</span>
@@ -136,17 +149,20 @@ function DeviceControl({ room, onDeviceChange }) {
             </div>
           </div>
         );
-      case 'temp':
+      }
+      case 'temp': {
+        const min = 60, max = 85;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Temperature</label>
             <input
               type="range"
-              min="60"
-              max="85"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>60°F</span>
@@ -155,17 +171,20 @@ function DeviceControl({ room, onDeviceChange }) {
             </div>
           </div>
         );
-      case 'volume':
+      }
+      case 'volume': {
+        const min = 0, max = 100;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Volume</label>
             <input
               type="range"
-              min="0"
-              max="100"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>Mute</span>
@@ -174,17 +193,20 @@ function DeviceControl({ room, onDeviceChange }) {
             </div>
           </div>
         );
-      case 'pressure':
+      }
+      case 'pressure': {
+        const min = 0, max = 100;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Water Pressure</label>
             <input
               type="range"
-              min="0"
-              max="100"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>Low</span>
@@ -193,17 +215,20 @@ function DeviceControl({ room, onDeviceChange }) {
             </div>
           </div>
         );
-      case 'temperature':
+      }
+      case 'temperature': {
+        const min = 40, max = 120;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Water Temperature</label>
             <input
               type="range"
-              min="40"
-              max="120"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>40°F</span>
@@ -212,17 +237,20 @@ function DeviceControl({ room, onDeviceChange }) {
             </div>
           </div>
         );
-      case 'power':
+      }
+      case 'power': {
+        const min = 10, max = 100;
         return (
           <div className="mt-2">
             <label className="text-sm text-gray-300 mb-1 block">Power Level</label>
             <input
               type="range"
-              min="10"
-              max="100"
+              min={min}
+              max={max}
               value={device.value}
               onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
               className="w-full"
+              style={getSliderStyle(device.value, min, max)}
             />
             <div className="flex justify-between text-sm text-gray-400 mt-1">
               <span>Low</span>
@@ -237,6 +265,7 @@ function DeviceControl({ room, onDeviceChange }) {
             </button>
           </div>
         );
+      }
       default:
         return null;
     }

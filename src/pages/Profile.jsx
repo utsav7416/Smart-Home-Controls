@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaHome, FaCamera } from 'react-icons/fa';
 
 function Profile() {
-  // Lazy initialization: load profile from localStorage or use defaults.
   const [profile, setProfile] = useState(() => {
     const savedProfile = localStorage.getItem('userProfile');
     return savedProfile
@@ -12,26 +11,23 @@ function Profile() {
           email: 'john.doe@example.com',
           phone: '+1 (555) 123-4567',
           address: '123 Smart Street, Tech City',
-          image: null, // no image by default
+          image: null, 
         };
   });
 
   const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Save profile to localStorage when "Save Changes" is clicked.
   const handleSave = () => {
     localStorage.setItem('userProfile', JSON.stringify(profile));
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
   };
 
-  // Trigger file input click when camera button is pressed.
   const handleCameraClick = () => {
     fileInputRef.current.click();
   };
 
-  // Handle image upload and convert to base64.
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;

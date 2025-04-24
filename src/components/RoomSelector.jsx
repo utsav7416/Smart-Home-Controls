@@ -3,6 +3,7 @@ import React from 'react';
 function RoomSelector({ rooms, selectedRoom, onSelectRoom }) {
   return (
     <div className="flex overflow-x-auto space-x-4 mb-8 pb-4">
+      
       {rooms.map((room) => (
         <button
           key={room.id}

@@ -33,6 +33,7 @@ function HomeCarousel() {
   ];
 
   return (
+    
     <div className="mb-12 rounded-xl overflow-hidden">
       <Slider {...settings}>
         {slides.map((slide, index) => (

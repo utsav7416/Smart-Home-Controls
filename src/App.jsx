@@ -12,7 +12,6 @@ import Notifications from './pages/Notifications';
 
 function App() {
   return (
-    
     <Router>
       <div className="min-h-screen bg-[#1a1b2e]">
         <Navbar />

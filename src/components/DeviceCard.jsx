@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 function DeviceCard({ device }) {
+  
   const [isOn, setIsOn] = useState(device.status);
 
   const toggleDevice = () => {

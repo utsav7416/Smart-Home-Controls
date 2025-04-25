@@ -11,6 +11,7 @@ function Navbar() {
             <FaHome className="text-3xl text-indigo-400" />
             <span className="text-2xl font-bold text-white">SmartHome</span>
           </Link>
+          
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2 text-white hover:text-indigo-400 transition-colors">
               <FaHome className="text-xl" />
@@ -34,5 +35,4 @@ function Navbar() {
     </nav>
   );
 }
-
 export default Navbar;

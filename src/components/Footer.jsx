@@ -30,6 +30,7 @@ function Footer() {
           
           <div>
             <h3 className="text-white font-semibold text-lg mb-4">Connect</h3>
+            
             <div className="flex space-x-4">
               <a href="#" className="text-gray-300 hover:text-white text-xl"><FaFacebook /></a>
               <a href="#" className="text-gray-300 hover:text-white text-xl"><FaTwitter /></a>

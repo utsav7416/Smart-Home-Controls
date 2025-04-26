@@ -67,7 +67,7 @@ function Contact() {
                 <FaMapMarkerAlt className="text-indigo-400 text-xl mr-4" />
                 <div>
                   <p className="text-gray-300">Address</p>
-                  <p className="text-white">123 Smart Street, Tech City, TC 12345</p>
+                  <p className="text-white">123 Sannaiyat Lines, New Delhi 110021</p>
                 </div>
               </div>
             </div>

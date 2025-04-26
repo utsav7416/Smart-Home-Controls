@@ -6,7 +6,7 @@ function Notifications() {
     {
       id: 1,
       type: 'alert',
-      title: 'High Energy Usage Detected',
+      title: 'High Energy Usage Detected!',
       message: 'Your living room AC has been running for 8 hours straight.',
       time: '2 hours ago',
       icon: FaExclamationTriangle,
@@ -48,7 +48,6 @@ function Notifications() {
             Clear All
           </button>
         </div>
-
         {notifications.length === 0 ? (
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20 text-center">
             <FaBell className="text-4xl text-gray-400 mx-auto mb-4" />

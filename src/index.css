@@ -26,7 +26,6 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Custom slider styles */
 input[type="range"] {
   height: 4px;
   background: linear-gradient(90deg, #4f46e5 var(--value, 50%), #374151 var(--value, 50%));

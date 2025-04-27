@@ -4,6 +4,7 @@ import { FaBolt, FaPlug } from 'react-icons/fa';
 function EnergyStats({ energyUsage, activeDevices, totalDevices }) {
   
   return (
+    
     <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
       <h2 className="text-2xl font-bold text-white mb-6">Energy Usage</h2>
       <div className="grid grid-cols-2 gap-6">

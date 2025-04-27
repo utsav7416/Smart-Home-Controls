@@ -15,7 +15,6 @@ function App() {
     <Router>
       <div className="min-h-screen bg-[#1a1b2e]">
         <Navbar />
-        
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/settings" element={<Settings />} />

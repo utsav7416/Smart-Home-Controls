@@ -27,6 +27,7 @@ const CardContent = React.forwardRef(({ className, children, ...props }, ref) =>
 CardContent.displayName = "CardContent";
 
 const Badge = ({ className, variant = 'default', children, ...props }) => {
+
   const baseClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2";
   
   const variantClasses = {
@@ -154,11 +155,13 @@ export default function About() {
               alt="Futuristic landscape representing innovation"
               className="w-full rounded-2xl shadow-2xl"
             />
+            
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 rounded-2xl flex items-center justify-center">
               <div className="text-center max-w-3xl px-6 -mt-24">
                 <h3 className="text-3xl font-bold text-gray-900 mb-4">
                     Building Tomorrow's Smart Homes Today
                 </h3>
+
                 <p className="text-xl font-bold text-gray-900 mb-4">
                     We envision a world where homes are not just smart, but truly intelligent - 
                     anticipating needs, optimizing resources, and creating the perfect living environment 

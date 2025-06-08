@@ -1,84 +1,61 @@
-import React from 'react';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+import { Mail, Phone, MapPin, Clock } from "lucide-react";
 
-function Contact() {
+export default function Contact() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white mb-8">Contact Us</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20">
-          <h2 className="text-2xl font-semibold text-white mb-6">Get in Touch</h2>
-          
-          <form className="space-y-6">
-            <div>
-              <label className="block text-gray-300 mb-2">Name</label>
-              <input
-                type="text"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
-                placeholder="Your name"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-gray-300 mb-2">Email</label>
-              <input
-                type="email"
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
-                placeholder="your@email.com"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-gray-300 mb-2">Message</label>
-              <textarea
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white h-32"
-                placeholder="How can we help?"
-              ></textarea>
-            </div>
-            
-            <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors">
-              Send Message
-            </button>
-          </form>
+    <div className="min-h-screen bg-gradient-to-br from-black to-slate-900 text-white">
+      <div className="py-20 px-6 text-center">
+        <div className="inline-block mb-4 px-4 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-sm">
+          Contact Us
         </div>
-        
-        <div className="space-y-8">
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-6">Contact Information</h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center">
-                <FaEnvelope className="text-indigo-400 text-xl mr-4" />
-                <div>
-                  <p className="text-gray-300">Email</p>
-                  <p className="text-white">support@smarthome.com</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <FaPhone className="text-indigo-400 text-xl mr-4" />
-                <div>
-                  <p className="text-gray-300">Phone</p>
-                  <p className="text-white">+1 (555) 123-4567</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <FaMapMarkerAlt className="text-indigo-400 text-xl mr-4" />
-                <div>
-                  <p className="text-gray-300">Address</p>
-                  <p className="text-white">123 Sannaiyat Lines, New Delhi 110021</p>
-                </div>
-              </div>
+        <h1 className="text-5xl font-bold mb-6">Get in Touch</h1>
+        <p className="text-xl text-blue-200 max-w-3xl mx-auto">
+          Have questions about SmartHome AI? We'd love to hear from you.
+          Reach out through any of the following ways.
+        </p>
+      </div>
+
+      <div className="px-6 pb-16 max-w-4xl mx-auto space-y-8">
+        {[{
+          icon: <Mail className="w-6 h-6 text-blue-400 mt-1" />,
+          title: "Email",
+          detail: "support@smarthome.in"
+        },{
+          icon: <Phone className="w-6 h-6 text-green-400 mt-1" />,
+          title: "Phone",
+          detail: "+91 98765 43210"
+        },{
+          icon: <MapPin className="w-6 h-6 text-purple-400 mt-1" />,
+          title: "Address",
+          detail: "401 Innovation Tower,\nConnaught Place, New Delhi, India"
+        },{
+          icon: <Clock className="w-6 h-6 text-orange-400 mt-1" />,
+          title: "Business Hours",
+          detail: "Mon–Fri: 9 AM–6 PM IST\nSat–Sun: 10 AM–4 PM IST"
+        }].map(({icon, title, detail}, idx) => (
+          <div key={idx} className="flex items-start space-x-4">
+            {icon}
+            <div>
+              <h3 className="font-semibold">{title}</h3>
+              <p className="text-blue-200 whitespace-pre-line">{detail}</p>
             </div>
           </div>
-          
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 border border-white/20">
-            <h2 className="text-2xl font-semibold text-white mb-6">Business Hours</h2>
-            <div className="space-y-2">
-              <p className="text-gray-300">Monday - Friday: 9:00 AM - 6:00 PM</p>
-              <p className="text-gray-300">Saturday: 10:00 AM - 4:00 PM</p>
-              <p className="text-gray-300">Sunday: Closed</p>
+        ))}
+      </div>
+
+      <div className="px-6 pb-20">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-8">Visit Our Office</h2>
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+            <img 
+              src="https://images.unsplash.com/photo-1663229203856-8a363f07d881?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              alt="New Delhi cityscape at night"
+              className="w-full h-80 object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+              <div className="text-center px-6">
+                <h3 className="text-2xl font-bold text-white mb-2">New Delhi, India</h3>
+                <p className="text-blue-200">Heart of Smart Innovation</p>
+              </div>
             </div>
           </div>
         </div>
@@ -86,5 +63,3 @@ function Contact() {
     </div>
   );
 }
-
-export default Contact;

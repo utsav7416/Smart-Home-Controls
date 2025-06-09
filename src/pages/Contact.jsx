@@ -14,11 +14,9 @@ export default function Contact() {
         </p>
       </div>
 
-      {/* Contact Section with Image and Text */}
       <div className="px-6 pb-16 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
-          {/* Left Side - Image */}
           <div className="relative">
             <img
               src="https://images.unsplash.com/photo-1423666639041-f56000c27a9a?w=600&h=500&fit=crop&crop=center"
@@ -36,7 +34,6 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Right Side - Contact Information */}
           <div className="space-y-8">
             {[{
               icon: <Mail className="w-6 h-6 text-blue-400 mt-1" />,

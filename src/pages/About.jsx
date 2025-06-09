@@ -49,7 +49,7 @@ const Badge = ({ className, variant = 'default', children, ...props }) => {
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-black to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-black via-black to-black">
       <div className="relative py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <Badge className="mb-4 bg-blue-500/20 text-blue-300 border-blue-400/30">

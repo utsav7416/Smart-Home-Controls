@@ -46,7 +46,7 @@ export default function Profile() {
   }
 
   const handleImageUpload = e => {
-    const file = e.target.files[0]
+    const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
     reader.onloadend = () => setProfile(p => ({ ...p, image: reader.result }))
@@ -57,9 +57,9 @@ export default function Profile() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=2025&auto=format&fit=crop&ixlib=rb-4.0.3"
-          alt=""
-          className="w-full h-full object-cover opacity-10"
+          src="https://thumbs.dreamstime.com/z/smart-home-security-system-monitoring-bedroom-city-view-night-futuristic-featuring-holographic-interface-wall-362001639.jpg?ct=jpeg"
+          alt="Smart Home Security System"
+          className="w-full h-full object-cover" 
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-black/90" />
       </div>
@@ -81,19 +81,19 @@ export default function Profile() {
                   {profile.image ? (
                     <img
                       src={profile.image}
-                      alt=""
+                      alt="User Profile"
                       className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white/20 shadow-xl"
                     />
                   ) : (
                     <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-r from-teal-500 via-emerald-500 to-green-500 flex items-center justify-center text-white text-4xl md:text-5xl font-bold shadow-xl border-4 border-white/20">
                       {profile.name
                         .split(' ')
-                        .map(n => n[0])
+                        .map(n => n?.[0])
                         .join('')}
                     </div>
                   )}
                   <button
-                    onClick={() => fileInputRef.current.click()}
+                    onClick={() => fileInputRef.current?.click()}
                     className="absolute -bottom-2 -right-2 bg-gradient-to-r from-teal-600 to-emerald-600 p-3 rounded-full text-white hover:from-teal-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110"
                   >
                     <FaCamera className="text-sm" />
@@ -143,13 +143,13 @@ export default function Profile() {
                       <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       <div
                         className={`relative flex items-center bg-white/5 border rounded-xl px-4 py-4 hover:bg-white/10 hover:border-white/20 transition-all duration-300 ${
-                          errors[field] ? 'border-red-500' : 'border-white/10'
+                          errors?.[field] ? 'border-red-500' : 'border-white/10'
                         }`}
                       >
                         {icon}
                         <input
                           type={type}
-                          value={profile[field]}
+                          value={profile?.[field] || ''}
                           onChange={e => handleChange(field, e.target.value)}
                           disabled={!isEditing}
                           className="bg-transparent text-white text-lg w-full ml-2 focus:outline-none disabled:cursor-not-allowed placeholder-gray-500"
@@ -157,7 +157,7 @@ export default function Profile() {
                         />
                       </div>
                     </div>
-                    {errors[field] && <p className="text-red-500 text-xs ml-2">{errors[field]}</p>}
+                    {errors?.[field] && <p className="text-red-500 text-xs ml-2">{errors?.[field]}</p>}
                   </div>
                 ))}
               </div>

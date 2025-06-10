@@ -69,7 +69,7 @@ export default function Contact() {
           <h2 className="text-2xl font-bold text-center mb-8">Visit Our Office</h2>
           <div className="relative rounded-2xl overflow-hidden shadow-2xl">
             <img 
-              src="https://images.unsplash.com/photo-1663229203856-8a363f07d881?q=80&w=1974&auto=format&fit=crop&crop=center"
+              src="https://media.istockphoto.com/id/517364023/photo/lotus-temple.jpg?s=1024x1024&w=is&k=20&c=QL6NNOFl8e5BzD8AIqxYQTuE8NrdOm6jJUHZN13uiuY="
               alt="New Delhi cityscape at night"
               className="w-full h-80 object-cover"
             />

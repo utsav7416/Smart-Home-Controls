@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Shield, Users, Clock, AlertTriangle, CheckCircle, FileText, Lock, Zap, ArrowRight, Home } from 'lucide-react';
 
 function Terms() {
@@ -81,13 +82,13 @@ function Terms() {
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="relative overflow-hidden h-80">
-        <img 
+        <img
           src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&auto=format&fit=crop&q=60"
           alt="Smart Home Terms"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30"></div>
-        
+
         <div className="absolute inset-0 flex items-center">
           <div className="container mx-auto px-4 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-green-600 to-emerald-700 rounded-2xl mb-6 shadow-lg">
@@ -156,7 +157,7 @@ function Terms() {
 
                   <div className="space-y-4">
                     {currentSection.content.points.map((point, index) => (
-                      <div 
+                      <div
                         key={index}
                         className="flex items-start p-4 bg-green-900/20 rounded-xl border border-green-700/30 hover:bg-green-900/30 transition-all duration-200 group"
                       >
@@ -203,12 +204,13 @@ function Terms() {
                   <h4 className="text-lg font-semibold text-white mb-2">Questions about our terms?</h4>
                   <p className="text-gray-300">Our legal team is here to help clarify any concerns.</p>
                 </div>
-                <button
+                <Link
+                  to="/contact" 
                   className="bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center group"
                 >
                   Contact Us
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>

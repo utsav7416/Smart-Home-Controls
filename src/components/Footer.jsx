@@ -58,10 +58,8 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-3 text-base">Navigation</h3>
             <ul className="space-y-2">
               <li><a href="/" className="text-green-400 hover:text-white transition-colors text-base">Dashboard</a></li>
-              <li><a href="/devices" className="text-green-400 hover:text-white transition-colors text-base">Devices</a></li>
               <li><a href="/analytics" className="text-green-400 hover:text-white transition-colors text-base">Analytics</a></li>
               <li><a href="/geofencing" className="text-green-400 hover:text-white transition-colors text-base">Geofencing</a></li>
-              <li><a href="/automation" className="text-green-400 hover:text-white transition-colors text-base">Automation</a></li>
             </ul>
           </div>
 
@@ -70,6 +68,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li><a href="/about" className="text-green-400 hover:text-white transition-colors text-base">About Us</a></li>
               <li><a href="/contact" className="text-green-400 hover:text-white transition-colors text-base">Contact</a></li>
+              <li><a href="/terms" className="text-green-400 hover:text-white transition-colors text-base">Terms & Conditions</a></li>
             </ul>
           </div>
 

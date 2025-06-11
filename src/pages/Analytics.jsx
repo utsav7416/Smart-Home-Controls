@@ -129,15 +129,15 @@ const AlgorithmCard = ({ algorithm, icon: Icon, gradientFrom, gradientTo, border
           {algorithm?.name === "Random Forest Regressor" && (
             <>
               <div className="text-center">
+                <div className="text-lg font-semibold text-green-400 mb-1 block">{algorithm?.purpose}</div>
+              </div>
+              <div className="text-center">
                 <div className="text-2xl font-bold text-white mb-1">{algorithm?.accuracy}%</div>
                 <div className="text-xs text-gray-300">Accuracy Score</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white mb-1">{algorithm?.parameters?.n_estimators}</div>
                 <div className="text-xs text-gray-300">Decision Trees</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold !text-emerald-400 mb-1">{algorithm?.purpose}</div>
               </div>
             </>
           )}
@@ -168,15 +168,15 @@ const AlgorithmCard = ({ algorithm, icon: Icon, gradientFrom, gradientTo, border
           {algorithm?.name === "Ridge Regression" && (
             <>
               <div className="text-center">
+                <div className="text-lg font-semibold text-green-400 mb-1 block">{algorithm?.purpose}</div>
+              </div>
+              <div className="text-center">
                 <div className="text-2xl font-bold text-white mb-1">{algorithm?.parameters?.alpha}</div>
                 <div className="text-xs text-gray-300">Alpha (α)</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white mb-1">{algorithm?.weight_in_ensemble}</div>
                 <div className="text-xs text-gray-300">Ensemble Weight</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold !text-emerald-400 mb-1">{algorithm?.purpose}</div>
               </div>
             </>
           )}

@@ -19,7 +19,6 @@ export default function Footer() {
               "Experience the future of living, where your home adapts to you."
             </p>
             
-            {/* Compact home automation images */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               <img
                 src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=120&h=80&fit=crop&crop=center"

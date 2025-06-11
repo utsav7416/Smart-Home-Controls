@@ -2,6 +2,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
+const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
+
 const Card = ({ children, className = "" }) => (
   <div className={`rounded-lg border ${className}`}>
     {children}
@@ -91,7 +93,7 @@ const useDeviceSync = () => {
 };
 
 const fetchAnalyticsData = async () => {
-  const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/analytics`);
+  const response = await fetch(`${FLASK_API_URL}/api/analytics`);
   if (!response.ok) throw new Error('Failed to fetch analytics data');
   return await response.json();
 };
@@ -274,7 +276,7 @@ export default function Analytics() {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
         <div className="text-red-400 text-lg">
-          Failed to connect to Flask backend. Make sure your Flask server is running on {process.env.REACT_APP_API_BASE_URL}
+          Failed to connect to Flask backend. Make sure your Flask server is running on {FLASK_API_URL}
         </div>
       </div>
     );

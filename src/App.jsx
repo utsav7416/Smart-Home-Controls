@@ -3,26 +3,26 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Settings from './pages/Settings';
-import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
-import Notifications from './pages/Notifications';
+import About from './pages/About';
+import Geofencing from './pages/Geofencing';
+import Analytics from './pages/Analytics';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-[#1a1b2e]">
+      <div className="min-h-screen bg-[#07051c]">
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/geofencing" element={<Geofencing />} />
+          <Route path="/anomaly-analytics" element={<Analytics />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/notifications" element={<Notifications />} />
         </Routes>
         <Footer />
       </div>

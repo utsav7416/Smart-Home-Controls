@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { FaLightbulb, FaFan, FaTv, FaThermometerHalf } from 'react-icons/fa';
 import { MdKitchen, MdHotTub, MdShower, MdMicrowave } from 'react-icons/md';
 
-// Create a mapping of device names to their icon components
-// This map will be used to 're-hydrate' the icon components after loading from localStorage.
 const ICON_MAP = {
   'Main Light': FaLightbulb,
   'Fan': FaFan,
@@ -13,12 +11,10 @@ const ICON_MAP = {
   'Refrigerator': MdKitchen,
   'Shower': MdShower,
   'Water Heater': MdHotTub,
-  'Dryer': FaFan, // Assuming Dryer uses a fan-like icon
+  'Dryer': FaFan,
 };
 
 function DeviceControl({ room }) {
-  // Define initial device configurations.
-  // We'll add the 'icon' property with the actual component dynamically later.
   const initialLivingRoomDevices = [
     { id: 1, name: 'Main Light', isOn: false, property: 'brightness', value: 70 },
     { id: 2, name: 'Fan', isOn: false, property: 'speed', value: 50 },
@@ -54,21 +50,18 @@ function DeviceControl({ room }) {
     { id: 4, name: 'Dryer', isOn: false, property: 'speed', value: 60 },
   ];
 
-  // Helper function to add icon components to device data
   const addIconsToDevices = (devices) => {
     return devices.map(device => ({
       ...device,
-      icon: ICON_MAP[device.name] || null // Assign the actual component from the map
+      icon: ICON_MAP[device.name] || null
     }));
   };
 
-  // Initialize state from localStorage or use initial values
   const getInitialDeviceStates = () => {
     try {
       const storedDevices = localStorage.getItem('deviceStates');
       if (storedDevices) {
         const parsedDevices = JSON.parse(storedDevices);
-        // Re-hydrate icons for all rooms
         const hydratedDevices = {};
         for (const roomName in parsedDevices) {
           hydratedDevices[roomName] = addIconsToDevices(parsedDevices[roomName]);
@@ -78,7 +71,6 @@ function DeviceControl({ room }) {
     } catch (error) {
       console.error('Error parsing device states from localStorage:', error);
     }
-    // Fallback to initial devices with icons
     return {
       "Living Room": addIconsToDevices(initialLivingRoomDevices),
       "Bedroom": addIconsToDevices(initialBedroomDevices),
@@ -90,19 +82,41 @@ function DeviceControl({ room }) {
 
   const [allDeviceStates, setAllDeviceStates] = useState(getInitialDeviceStates);
 
-  // Update localStorage whenever allDeviceStates changes
   useEffect(() => {
-    // Before saving to localStorage, remove the 'icon' property as it's not serializable
     const serializableStates = {};
     for (const roomName in allDeviceStates) {
       serializableStates[roomName] = allDeviceStates[roomName].map(({ icon, ...rest }) => rest);
     }
     localStorage.setItem('deviceStates', JSON.stringify(serializableStates));
-    
-    // Manually dispatch a storage event to ensure reactivity in the same tab
-    // This is a workaround for some browser inconsistencies where 'storage'
-    // event doesn't fire for same-tab localStorage changes.
+
     window.dispatchEvent(new Event('storage'));
+
+    const sendDeviceStatesToBackend = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/update-device-states`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ deviceStates: serializableStates }),
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Device states updated on backend:', data);
+      } catch (error) {
+        console.error('Error sending device states to backend:', error);
+      }
+    };
+
+    const handler = setTimeout(() => {
+      sendDeviceStatesToBackend();
+    }, 500);
+    return () => {
+      clearTimeout(handler);
+    };
+
   }, [allDeviceStates]);
 
   const getActiveRoomDevices = () => {
@@ -110,8 +124,7 @@ function DeviceControl({ room }) {
   };
 
   const updateDeviceState = (updatedRoomDevices) => {
-    // When updating the state, ensure the icon component is present
-    const hydratedUpdatedRoomDevices = addIconsToDevices(updatedRoomDevices.map(({ icon, ...rest }) => rest)); // Remove icon for safety, then re-add
+    const hydratedUpdatedRoomDevices = addIconsToDevices(updatedRoomDevices.map(({ icon, ...rest }) => rest));
     setAllDeviceStates(prevStates => ({
       ...prevStates,
       [room]: hydratedUpdatedRoomDevices,
@@ -147,8 +160,7 @@ function DeviceControl({ room }) {
 
   const renderDeviceControls = (device) => {
     if (!device.isOn) return null;
-    
-    // Determine min/max values based on property and device name
+
     let min, max;
     switch (device.property) {
       case 'brightness':
@@ -163,25 +175,25 @@ function DeviceControl({ room }) {
         min = device.name === 'Water Heater' ? 40 : 60;
         max = device.name === 'Water Heater' ? 120 : 85;
         break;
-      case 'temperature': // Assuming 'temperature' is specifically for Water Heater
+      case 'temperature':
         min = 40;
         max = 120;
         break;
       default:
         min = 0;
-        max = 100; // Default for unknown properties
+        max = 100;
     }
 
-    const valueLabel = 
-      device.property === 'temp' || device.property === 'temperature' ? `${device.value}°F` : 
+    const valueLabel =
+      device.property === 'temp' || device.property === 'temperature' ? `${device.value}°F` :
       `${device.value}%`;
 
-    const minLabel = 
-      device.property === 'temp' || device.property === 'temperature' ? `${min}°F` : 
+    const minLabel =
+      device.property === 'temp' || device.property === 'temperature' ? `${min}°F` :
       (device.property === 'volume' ? 'Mute' : 'Low');
-    
-    const maxLabel = 
-      device.property === 'temp' || device.property === 'temperature' ? `${max}°F` : 
+
+    const maxLabel =
+      device.property === 'temp' || device.property === 'temperature' ? `${max}°F` :
       (device.property === 'volume' ? 'Max' : 'High');
 
 
@@ -222,7 +234,6 @@ function DeviceControl({ room }) {
           <div key={device.id} className="bg-gray-700 p-4 rounded-lg flex flex-col">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-3">
-                {/* Ensure device.icon is rendered only if it's a valid component */}
                 {device.icon && (
                   <device.icon className={`w-6 h-6 ${device.isOn ? 'text-blue-400' : 'text-gray-400'}`} />
                 )}

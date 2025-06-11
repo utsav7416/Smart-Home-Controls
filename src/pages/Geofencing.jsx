@@ -280,7 +280,7 @@ export default function Geofencing() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -301,18 +301,6 @@ export default function Geofencing() {
                 <p className="text-3xl font-bold text-white">{mlMetrics.prediction_confidence?.toFixed(1) || 0}%</p>
               </div>
               <TrendingUp className="w-8 h-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 backdrop-blur-md border border-blue-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-200 text-sm">Energy Saved</p>
-                <p className="text-3xl font-bold text-white">{stats?.total_energy_saved?.toFixed(1) || 0}%</p>
-              </div>
-              <Zap className="w-8 h-8 text-blue-400" />
             </div>
           </CardContent>
         </Card>

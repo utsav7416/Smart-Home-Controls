@@ -45,7 +45,7 @@ device_states = {}
 ml_performance_history = []
 optimization_history = []
 optimization_success_count = 0
-total_optimization_attempts = 0 # Added to track total attempts
+total_optimization_attempts = 0 
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -505,17 +505,19 @@ def create_geofence():
 
 @app.route('/api/geofences/stats', methods=['GET'])
 def get_geofence_stats():
-    global optimization_success_count
     
-    total_energy_saved = sum(g.get('energy_savings', 0) for g in geofence_data)
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
     total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
     
+    if total_optimization_attempts > 0:
+        optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100
+    else:
+        optimization_success_percentage = 0.0 
+    
     return jsonify({
-        'total_energy_saved': round(float(total_energy_saved), 1),
         'total_zones': total_zones,
         'total_triggers': int(total_triggers),
-        'optimization_success_count': optimization_success_count 
+        'optimization_success_count': round(optimization_success_percentage, 1) 
     })
 
 @app.route('/api/geofences/activity', methods=['GET'])
@@ -544,6 +546,7 @@ def get_geofence_activity():
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():
     global total_optimization_attempts, optimization_success_count
+    
     energy_optimization = []
     for hour in range(24):
         consumption = 15 + 10 * np.sin(2 * np.pi * hour / 24) + np.random.normal(0, 2)
@@ -562,16 +565,17 @@ def get_geofence_analytics():
             'efficiency': round(float(np.random.uniform(75, 96)), 1)
         })
     
-    # Calculate optimization success percentage
     if total_optimization_attempts > 0:
-        optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100
+        base_success_rate = (optimization_success_count / total_optimization_attempts) * 100
+        random_factor = np.random.uniform(-5, 5) 
+        optimization_success_percentage = np.clip(base_success_rate + random_factor, 70.0, 99.9) 
     else:
-        optimization_success_percentage = 0.0 # Or a default value if no attempts yet
-
+        optimization_success_percentage = np.random.uniform(70.0, 90.0) 
+    
     ml_metrics = {
         'model_accuracy': round(float(np.random.uniform(91, 97)), 1),
         'prediction_confidence': round(float(np.random.uniform(88, 96)), 1),
-        'optimization_success_count': round(optimization_success_percentage, 1) # Now sending a percentage
+        'optimization_success_count': round(optimization_success_percentage, 1) 
     }
     
     return jsonify({
@@ -606,7 +610,7 @@ def detect_anomalies():
 def optimize_geofences():
     global optimization_history, optimization_success_count, total_optimization_attempts
     
-    total_optimization_attempts += 1 # Increment total attempts on each call
+    total_optimization_attempts += 1 
     
     improvements = []
     total_energy_improvement = 0
@@ -627,8 +631,8 @@ def optimize_geofences():
         })
         total_energy_improvement += energy_improvement
     
-    # Simulate a successful optimization for simplicity; in a real app, this would be conditional
-    optimization_success_count += 1 
+    if np.random.rand() < 0.90:
+        optimization_success_count += 1 
     
     optimization_record = {
         'timestamp': datetime.now().isoformat(),

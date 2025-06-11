@@ -2,7 +2,12 @@ import { useState, useEffect } from 'react';
 import { MapPin, Plus, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
-const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL;
+// Add debugging and fallback
+const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls.onrender.com';
+
+// Debug logging (remove this after fixing)
+console.log('Environment variable:', process.env.REACT_APP_API_BASE_URL);
+console.log('Using API URL:', FLASK_API_URL);
 
 const Card = ({ children, className = '' }) => (
   <div className={`rounded-lg shadow-lg ${className}`}>
@@ -56,6 +61,7 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
 };
 
 const fetchGeofences = async () => {
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`); // Debug log
   const response = await fetch(`${FLASK_API_URL}/api/geofences`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -65,6 +71,7 @@ const fetchGeofences = async () => {
 };
 
 const fetchGeofenceStats = async () => {
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`); // Debug log
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -96,6 +103,7 @@ const fetchGeofenceActivity = async () => {
 };
 
 const fetchAnalytics = async () => {
+  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`); // Debug log
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));

@@ -18,7 +18,7 @@ import os
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) # Consider specifying origins for production: CORS(app, origins=["https://your-frontend-app.onrender.com"])
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -32,13 +32,13 @@ class NumpyEncoder(json.JSONEncoder):
 
 app.json_encoder = NumpyEncoder
 
+# --- ML Models and Data Structures (Keep these global) ---
 energy_model = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
 ridge_model = Ridge(alpha=1.0, random_state=42)
 anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
 scaler = StandardScaler()
 location_clusterer = DBSCAN(eps=0.01, min_samples=3)
 mlp_model = MLPRegressor(hidden_layer_sizes=(100, 50), activation='relu', solver='adam', max_iter=200, random_state=42)
-
 
 energy_data = []
 geofence_data = []
@@ -57,7 +57,9 @@ DEVICE_POWER_MAP = {
     'Dryer': {'base': 2000, 'max': 3000}
 }
 
+# --- Functions (remain unchanged) ---
 def calculate_device_consumption(device_name, is_on, value, property_type):
+    # ... (your existing code) ...
     if not is_on or device_name not in DEVICE_POWER_MAP:
         return 0
     
@@ -83,6 +85,7 @@ def calculate_device_consumption(device_name, is_on, value, property_type):
     return actual_consumption * 0.85
 
 def generate_realistic_energy_data(device_states_data=None):
+    # ... (your existing code) ...
     current_time = datetime.now()
     hour = current_time.hour
     day_of_week = current_time.weekday()
@@ -121,6 +124,7 @@ def generate_realistic_energy_data(device_states_data=None):
     }
 
 def initialize_data():
+    # ... (your existing code) ...
     global energy_data, geofence_data, ml_performance_history
     
     base_time = datetime.now() - timedelta(days=30)
@@ -172,6 +176,7 @@ def initialize_data():
         })
 
 def train_models():
+    # ... (your existing code) ...
     global energy_model, ridge_model, anomaly_detector, scaler, mlp_model
     
     if len(energy_data) < 50:
@@ -201,8 +206,10 @@ def train_models():
     except Exception as e:
         print(f"Training error: {e}")
 
+# --- API Endpoints (remain unchanged) ---
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
+    # ... (your existing code) ...
     global device_states
     
     data = request.json
@@ -226,6 +233,7 @@ def update_device_states():
 
 @app.route('/api/energy-data', methods=['GET'])
 def get_energy_data():
+    # ... (your existing code) ...
     recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
     
     for item in recent_data:
@@ -252,15 +260,20 @@ def get_energy_data():
             item['prediction_confidence'] = np.random.uniform(0.85, 0.98)
             
         except Exception as e:
+            # IMPORTANT: Log this error properly on Render to debug model issues
+            print(f"Prediction error: {e}") 
             item['predicted'] = item['consumption']
             item['prediction_confidence'] = 0.5
-    
+            
     return jsonify(recent_data)
 
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
+    # ... (your existing code) ...
     if len(energy_data) < 10:
-        return jsonify({'error': 'Insufficient data'}), 400
+        # Return an empty response or a more specific error,
+        # but ensure it's valid JSON.
+        return jsonify({'message': 'Insufficient data for analytics, please allow more time for data to accumulate.'}), 200 # Changed to 200 OK with message
     
     df = pd.DataFrame(energy_data[-336:])
     
@@ -446,6 +459,8 @@ def get_analytics():
         'mlAlgorithms': ml_algorithms
     })
 
+
+# --- ALL OTHER ENDPOINTS (unchanged as they look fine for structure) ---
 @app.route('/api/geofences', methods=['GET'])
 def get_geofences():
     return jsonify(geofence_data)
@@ -564,8 +579,14 @@ def optimize_geofences():
         'improvements': f"Energy savings increased by {float(np.random.uniform(8, 18)):.1f}%"
     })
 
+# --- IMPORTANT CHANGE HERE ---
+# Call initialization and training functions directly, outside the if __name__ == '__main__': block.
+# This ensures they run when Gunicorn imports your app.
+initialize_data()
+train_models()
+
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000)) 
-    initialize_data()
-    train_models()
+    print(f"Flask app running locally on http://0.0.0.0:{port}")
     app.run(debug=True, host='0.0.0.0', port=port)

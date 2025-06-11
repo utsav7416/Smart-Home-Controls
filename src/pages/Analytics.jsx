@@ -102,143 +102,136 @@ const AlgorithmCard = ({ algorithm, icon: Icon, gradientFrom, gradientTo, border
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-xl border ${borderColor} overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl`}>
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className={`w-14 h-14 ${iconBg} rounded-xl flex items-center justify-center ring-2 ring-white/20`}>
-              <Icon className={`w-7 h-7 ${iconColor}`} />
+    <div className="max-w-md w-full">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden hover:border-zinc-600 transition-colors">
+        <div className="bg-zinc-800 px-6 py-4 border-b border-zinc-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-900 rounded-md flex items-center justify-center">
+                <Icon className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <h3 className="text-white text-lg font-medium">{algorithm.name}</h3>
+                <p className="text-green-400 text-sm">{algorithm.purpose}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-white font-bold text-xl mb-1">{algorithm?.name}</h3>
-              <p className={`text-sm font-medium ${iconColor.replace('text-', 'text-').replace('-400', '-300')}`}>
-                {algorithm?.purpose}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="px-3 py-1 bg-green-500/20 text-green-300 text-xs font-semibold rounded-full border border-green-500/30">
+            <div className="bg-green-900 text-green-300 px-2 py-1 rounded text-xs font-medium">
               ACTIVE
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-6">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {algorithm?.name === "Random Forest Regressor" && (
-            <>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-green-400 mb-1 block">{algorithm?.purpose}</div>
+        <div className="p-6">
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {/* Conditional rendering for each algorithm's specific stats */}
+            {algorithm?.name === "Random Forest Regressor" && (
+              <>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.accuracy}%</div>
+                  <div className="text-xs text-zinc-400">Accuracy</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.parameters.n_estimators}</div>
+                  <div className="text-xs text-zinc-400">Trees</div>
+                </div>
+              </>
+            )}
+            {algorithm?.name === "Isolation Forest" && (
+              <>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
+                  <div className="text-xs text-zinc-400">Anomalies Found</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{(algorithm.parameters.contamination * 100).toFixed(1)}%</div>
+                  <div className="text-xs text-zinc-400">Contamination Rate</div>
+                </div>
+              </>
+            )}
+            {algorithm?.name === "Multi-Layer Perceptron" && (
+              <>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.parameters.hidden_layer_sizes?.length || 0}</div>
+                  <div className="text-xs text-zinc-400">Hidden Layers</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
+                  <div className="text-xs text-zinc-400">Ensemble Weight</div>
+                </div>
+              </>
+            )}
+            {algorithm?.name === "Ridge Regression" && (
+              <>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
+                  <div className="text-xs text-zinc-400">Alpha (α)</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
+                  <div className="text-xs text-zinc-400">Ensemble Weight</div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <p className="text-zinc-300 text-sm mb-6 leading-relaxed">
+            {algorithm.description}
+          </p>
+
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-zinc-700"
+          >
+            <Settings className="w-4 h-4" />
+            {isExpanded ? 'Hide Parameters' : 'View Parameters'}
+          </button>
+
+          {isExpanded && (
+            <div className="mt-6 space-y-4">
+              <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700">
+                <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                  <Code className="w-4 h-4" />
+                  Parameters
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
+                    <div key={key} className="flex justify-between items-center">
+                      <span className="text-zinc-400 text-xs font-mono">{key}:</span>
+                      <span className="text-white text-xs font-mono bg-zinc-900 px-2 py-1 rounded">
+                        {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.accuracy}%</div>
-                <div className="text-xs text-gray-300">Accuracy Score</div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-zinc-800 rounded-md p-3 border border-zinc-700">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Activity className="w-4 h-4 text-blue-400" />
+                    <span className="text-white text-sm font-medium">Performance</span>
+                  </div>
+                  <div className="text-blue-400 font-mono text-sm">
+                    {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
+                     algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
+                     algorithm?.name === "Multi-Layer Perceptron" ? `${algorithm?.parameters?.max_iter} Max Iter` :
+                     `α = ${algorithm?.parameters?.alpha}`}
+                  </div>
+                </div>
+
+                <div className="bg-zinc-800 rounded-md p-3 border border-zinc-700">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Cpu className="w-4 h-4 text-purple-400" />
+                    <span className="text-white text-sm font-medium">Status</span>
+                  </div>
+                  <div className="text-purple-400 font-mono text-sm">
+                    Processing
+                  </div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.parameters?.n_estimators}</div>
-                <div className="text-xs text-gray-300">Decision Trees</div>
-              </div>
-            </>
-          )}
-          {algorithm?.name === "Isolation Forest" && (
-            <>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.anomalies_detected}</div>
-                <div className="text-xs text-gray-300">Anomalies Found</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{(algorithm?.parameters?.contamination * 100).toFixed(1)}%</div>
-                <div className="text-xs text-gray-300">Contamination Rate</div>
-              </div>
-            </>
-          )}
-          {algorithm?.name === "Multi-Layer Perceptron" && (
-            <>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.parameters?.hidden_layer_sizes?.length || 0}</div>
-                <div className="text-xs text-gray-300">Hidden Layers</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.weight_in_ensemble}</div>
-                <div className="text-xs text-gray-300">Ensemble Weight</div>
-              </div>
-            </>
-          )}
-          {algorithm?.name === "Ridge Regression" && (
-            <>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-green-400 mb-1 block">{algorithm?.purpose}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.parameters?.alpha}</div>
-                <div className="text-xs text-gray-300">Alpha (α)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white mb-1">{algorithm?.weight_in_ensemble}</div>
-                <div className="text-xs text-gray-300">Ensemble Weight</div>
-              </div>
-            </>
+            </div>
           )}
         </div>
-
-        <p className="text-gray-300 text-sm leading-relaxed mb-4">
-          {algorithm?.description}
-        </p>
-
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={`w-full py-3 px-4 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-all duration-200 border border-white/20 hover:border-white/30 flex items-center justify-center gap-2`}
-        >
-          <Settings className="w-4 h-4" />
-          {isExpanded ? 'Hide Parameters' : 'View Parameters'}
-        </button>
-
-        {isExpanded && (
-          <div className="mt-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
-            <div className="bg-black/30 rounded-lg p-4 border border-white/10">
-              <h4 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
-                <Code className="w-4 h-4" />
-                Model Parameters
-              </h4>
-              <div className="space-y-2">
-                {Object.entries(algorithm?.parameters || {}).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center">
-                    <span className="text-gray-400 text-xs font-mono">{key}:</span>
-                    <span className="text-white text-xs font-mono bg-gray-800/50 px-2 py-1 rounded">
-                      {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-black/30 rounded-lg p-3 border border-white/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-4 h-4 text-blue-400" />
-                  <span className="text-white text-xs font-semibold">Performance</span>
-                </div>
-                <div className="text-blue-300 text-sm font-mono">
-                  {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
-                   algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                   algorithm?.name === "Multi-Layer Perceptron" ? `${algorithm?.parameters?.max_iter} Max Iter` :
-                   `α = ${algorithm?.parameters?.alpha}`}
-                </div>
-              </div>
-
-              <div className="bg-black/30 rounded-lg p-3 border border-white/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <Cpu className="w-4 h-4 text-purple-400" />
-                  <span className="text-white text-xs font-semibold">Status</span>
-                </div>
-                <div className="text-purple-300 text-sm font-mono">
-                  Real-time Processing
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

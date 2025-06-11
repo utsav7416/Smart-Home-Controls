@@ -43,7 +43,8 @@ energy_data = []
 geofence_data = []
 device_states = {}
 ml_performance_history = []
-optimization_history = []# Add explicit success counter
+optimization_history = []
+optimization_success_count = 0
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -202,7 +203,6 @@ def train_models():
         print(f"Training error: {e}")
 
 def detect_dynamic_anomalies(df):
-    """Improved anomaly detection with dynamic thresholds"""
     anomaly_data = []
     
     if len(df) < 20:
@@ -283,7 +283,7 @@ def detect_dynamic_anomalies(df):
             contamination_rate = max(0.05, min(0.2, 10 / len(recent_data)))
             temp_detector = IsolationForest(
                 contamination=contamination_rate, 
-                random_state=int(time.time()) % 1000,  # Dynamic seed
+                random_state=int(time.time()) % 1000,
                 n_estimators=100
             )
             temp_detector.fit(features)
@@ -293,7 +293,6 @@ def detect_dynamic_anomalies(df):
             for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
                 if is_anomaly == -1:
                     row = recent_data.iloc[i]
-                    # Avoid duplicates
                     existing_anomaly = any(
                         a['timestamp'] == row['timestamp'] for a in anomaly_data
                     )
@@ -392,7 +391,6 @@ def get_analytics():
                 'efficiency': round(float(np.random.uniform(75, 95)), 1)
             })
     
-    # Use improved anomaly detection
     anomaly_data = detect_dynamic_anomalies(df)
     anomaly_count = len(anomaly_data)
     
@@ -516,7 +514,7 @@ def get_geofence_stats():
         'total_energy_saved': round(float(total_energy_saved), 1),
         'total_zones': total_zones,
         'total_triggers': int(total_triggers),
-        'optimization_success_count': optimization_success_count  # Add this field
+        'optimization_success_count': optimization_success_count  
     })
 
 @app.route('/api/geofences/activity', methods=['GET'])

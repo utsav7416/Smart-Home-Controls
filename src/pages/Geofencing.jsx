@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Settings, Home, Navigation, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
+import { MapPin, Plus, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
-const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL;
 
 const Card = ({ children, className = '' }) => (
   <div className={`rounded-lg shadow-lg ${className}`}>

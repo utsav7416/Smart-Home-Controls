@@ -1,5 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
-import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Gauge, Cpu, Database, Settings, Shield, Lightbulb, Home, Thermometer, Network, Code, Layers, GitBranch } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const Card = ({ children, className = "" }) => (

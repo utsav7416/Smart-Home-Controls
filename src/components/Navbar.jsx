@@ -6,12 +6,12 @@ function Navbar() {
   return (
     <nav className="bg-gradient-to-r from-black to-blue-800 border-b border-slate-200 shadow-lg">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-3">
             <FaHome className="text-3xl text-indigo-400" />
             <span className="text-2xl font-bold text-white">SmartHome</span>
           </Link>
-                        
+
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2 text-white hover:text-indigo-400 transition-colors">
               <FaHome className="text-xl" />
@@ -37,7 +37,7 @@ function Navbar() {
               <FaFileContract className="text-xl" />
               <span>Terms of Service</span>
             </Link>
-            <Link to="/profile" className="flex items-center space-x-2 bg-indigo-600 px-4 py-2 rounded-full text-white hover:bg-indigo-700 transition-colors">
+            <Link to="/profile" className="flex items-center space-x-2 bg-black px-4 py-2 rounded-full text-white hover:bg-gray-800 transition-colors">
               <FaUser className="text-xl" />
               <span>Profile</span>
             </Link>

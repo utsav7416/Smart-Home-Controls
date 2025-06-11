@@ -3,7 +3,7 @@ import { MapPin, Plus, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle }
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
 // Add debugging and fallback
-const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls.onrender.com';
+const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 // Debug logging (remove this after fixing)
 console.log('Environment variable:', process.env.REACT_APP_API_BASE_URL);

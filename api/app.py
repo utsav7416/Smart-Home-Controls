@@ -45,6 +45,7 @@ device_states = {}
 ml_performance_history = []
 optimization_history = []
 optimization_success_count = 0
+total_optimization_attempts = 0 # Added to track total attempts
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -514,7 +515,7 @@ def get_geofence_stats():
         'total_energy_saved': round(float(total_energy_saved), 1),
         'total_zones': total_zones,
         'total_triggers': int(total_triggers),
-        'optimization_success_count': optimization_success_count  
+        'optimization_success_count': optimization_success_count 
     })
 
 @app.route('/api/geofences/activity', methods=['GET'])
@@ -542,6 +543,7 @@ def get_geofence_activity():
 
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():
+    global total_optimization_attempts, optimization_success_count
     energy_optimization = []
     for hour in range(24):
         consumption = 15 + 10 * np.sin(2 * np.pi * hour / 24) + np.random.normal(0, 2)
@@ -560,13 +562,22 @@ def get_geofence_analytics():
             'efficiency': round(float(np.random.uniform(75, 96)), 1)
         })
     
+    # Calculate optimization success percentage
+    if total_optimization_attempts > 0:
+        optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100
+    else:
+        optimization_success_percentage = 0.0 # Or a default value if no attempts yet
+
+    ml_metrics = {
+        'model_accuracy': round(float(np.random.uniform(91, 97)), 1),
+        'prediction_confidence': round(float(np.random.uniform(88, 96)), 1),
+        'optimization_success_count': round(optimization_success_percentage, 1) # Now sending a percentage
+    }
+    
     return jsonify({
         'energy_optimization': energy_optimization,
         'zone_efficiency': zone_efficiency,
-        'ml_metrics': {
-            'model_accuracy': round(float(np.random.uniform(91, 97)), 1),
-            'prediction_confidence': round(float(np.random.uniform(88, 96)), 1)
-        }
+        'ml_metrics': ml_metrics
     })
 
 @app.route('/api/geofences/detect-anomalies', methods=['GET'])
@@ -593,7 +604,9 @@ def detect_anomalies():
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
-    global optimization_history, optimization_success_count
+    global optimization_history, optimization_success_count, total_optimization_attempts
+    
+    total_optimization_attempts += 1 # Increment total attempts on each call
     
     improvements = []
     total_energy_improvement = 0
@@ -614,14 +627,15 @@ def optimize_geofences():
         })
         total_energy_improvement += energy_improvement
     
-    optimization_success_count += 1
+    # Simulate a successful optimization for simplicity; in a real app, this would be conditional
+    optimization_success_count += 1 
     
     optimization_record = {
         'timestamp': datetime.now().isoformat(),
         'total_improvement': round(total_energy_improvement, 1),
         'zones_optimized': len(geofence_data),
         'improvements': improvements,
-        'success_number': optimization_success_count  
+        'success_number': optimization_success_count 
     }
     
     optimization_history.append(optimization_record)
@@ -636,17 +650,18 @@ def optimize_geofences():
         'zones_optimized': len(geofence_data),
         'improvements': improvements,
         'timestamp': optimization_record['timestamp'],
-        'optimization_success_count': optimization_success_count  
+        'optimization_success_count': optimization_success_count 
     })
 
 @app.route('/api/geofences/optimization-history', methods=['GET'])
 def get_optimization_history():
-    global optimization_success_count
+    global optimization_success_count, total_optimization_attempts
     
     return jsonify({
         'history': optimization_history,
         'total_optimizations': len(optimization_history),
-        'optimization_success_count': optimization_success_count
+        'optimization_success_count': optimization_success_count,
+        'total_optimization_attempts': total_optimization_attempts
     })
 
 

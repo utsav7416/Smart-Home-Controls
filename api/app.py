@@ -607,6 +607,7 @@ def get_optimization_history():
         'total_optimizations': len(optimization_history)
     })
 
+
 initialize_data()
 train_models()
 

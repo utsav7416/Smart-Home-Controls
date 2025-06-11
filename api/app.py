@@ -43,7 +43,7 @@ energy_data = []
 geofence_data = []
 device_states = {}
 ml_performance_history = []
-optimization_history = []
+optimization_history = []# Add explicit success counter
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -201,6 +201,121 @@ def train_models():
     except Exception as e:
         print(f"Training error: {e}")
 
+def detect_dynamic_anomalies(df):
+    """Improved anomaly detection with dynamic thresholds"""
+    anomaly_data = []
+    
+    if len(df) < 20:
+        return anomaly_data
+    
+    recent_data = df[-min(168, len(df)):]  
+    
+    consumption_values = recent_data['consumption'].values
+    
+    for _, row in recent_data.iterrows():
+        hour = row['hour']
+        consumption = row['consumption']
+        timestamp = row['timestamp']
+        
+        similar_hours = recent_data[recent_data['hour'] == hour]['consumption']
+        
+        if len(similar_hours) > 1:
+            hour_mean = similar_hours.mean()
+            hour_std = similar_hours.std()
+            
+            if hour_std > 0:
+                z_score = abs((consumption - hour_mean) / hour_std)
+                
+                threshold = 2.0 if hour_std < hour_mean * 0.2 else 2.5
+                
+                if z_score > threshold:
+                    deviation_ratio = abs(consumption - hour_mean) / hour_mean
+                    if deviation_ratio > 0.6:
+                        severity = 'high'
+                    elif deviation_ratio > 0.3:
+                        severity = 'medium'
+                    else:
+                        severity = 'low'
+                    
+                    confidence = min(0.95, 0.6 + (z_score / 5.0))
+                    
+                    anomaly_data.append({
+                        'time': int(hour),
+                        'consumption': round(float(consumption), 1),
+                        'severity': severity,
+                        'timestamp': timestamp,
+                        'score': round(float(confidence), 3),
+                        'type': 'temporal_pattern'
+                    })
+    
+    overall_mean = consumption_values.mean()
+    overall_std = consumption_values.std()
+    
+    if overall_std > 0:
+        upper_bound = overall_mean + (2.8 * overall_std)
+        lower_bound = max(0, overall_mean - (2.8 * overall_std))
+        
+        for _, row in recent_data.iterrows():
+            consumption = row['consumption']
+            if consumption > upper_bound or consumption < lower_bound:
+                existing_anomaly = any(
+                    a['timestamp'] == row['timestamp'] for a in anomaly_data
+                )
+                
+                if not existing_anomaly:
+                    deviation_ratio = abs(consumption - overall_mean) / overall_mean
+                    severity = 'high' if deviation_ratio > 0.5 else 'medium'
+                    confidence = min(0.95, 0.7 + (deviation_ratio * 0.3))
+                    
+                    anomaly_data.append({
+                        'time': int(row['hour']),
+                        'consumption': round(float(consumption), 1),
+                        'severity': severity,
+                        'timestamp': row['timestamp'],
+                        'score': round(float(confidence), 3),
+                        'type': 'statistical'
+                    })
+    
+    if len(recent_data) > 30:
+        try:
+            features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy']].fillna(0).values
+            
+            contamination_rate = max(0.05, min(0.2, 10 / len(recent_data)))
+            temp_detector = IsolationForest(
+                contamination=contamination_rate, 
+                random_state=int(time.time()) % 1000,  # Dynamic seed
+                n_estimators=100
+            )
+            temp_detector.fit(features)
+            ml_anomalies = temp_detector.predict(features)
+            ml_scores = temp_detector.decision_function(features)
+            
+            for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
+                if is_anomaly == -1:
+                    row = recent_data.iloc[i]
+                    # Avoid duplicates
+                    existing_anomaly = any(
+                        a['timestamp'] == row['timestamp'] for a in anomaly_data
+                    )
+                    
+                    if not existing_anomaly:
+                        severity = 'high' if abs(score) > 0.4 else 'medium'
+                        confidence = min(0.95, 0.5 + abs(score))
+                        
+                        anomaly_data.append({
+                            'time': int(row['hour']),
+                            'consumption': round(float(row['consumption']), 1),
+                            'severity': severity,
+                            'timestamp': row['timestamp'],
+                            'score': round(float(confidence), 3),
+                            'type': 'ml_detected'
+                        })
+                        
+        except Exception as e:
+            print(f"ML anomaly detection error: {e}")
+    
+    return anomaly_data
+
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
     global device_states
@@ -277,91 +392,8 @@ def get_analytics():
                 'efficiency': round(float(np.random.uniform(75, 95)), 1)
             })
     
-    anomaly_data = []
-    anomaly_count = 0
-    try:
-        recent_df = df[-168:] if len(df) >= 168 else df
-        
-        if len(recent_df) > 20:
-            consumption_mean = recent_df['consumption'].mean()
-            consumption_std = recent_df['consumption'].std()
-            upper_threshold = consumption_mean + (2.5 * consumption_std)
-            lower_threshold = max(0, consumption_mean - (2.5 * consumption_std))
-            
-            for _, row in recent_df.iterrows():
-                consumption = row['consumption']
-                hour = row['hour']
-                timestamp = row['timestamp']
-                
-                is_statistical_anomaly = consumption > upper_threshold or consumption < lower_threshold
-                
-                hour_data = recent_df[recent_df['hour'] == hour]['consumption']
-                if len(hour_data) > 1:
-                    hour_mean = hour_data.mean()
-                    hour_std = hour_data.std()
-                    if hour_std > 0:
-                        z_score = abs((consumption - hour_mean) / hour_std)
-                        is_pattern_anomaly = z_score > 2.0
-                    else:
-                        is_pattern_anomaly = False
-                else:
-                    is_pattern_anomaly = False
-                
-                device_consumption = row.get('device_consumption', 0)
-                is_device_anomaly = device_consumption > consumption * 0.8
-                
-                if is_statistical_anomaly or is_pattern_anomaly or is_device_anomaly:
-                    deviation_ratio = abs(consumption - consumption_mean) / consumption_mean
-                    if deviation_ratio > 0.5:
-                        severity = 'high'
-                    elif deviation_ratio > 0.25:
-                        severity = 'medium'
-                    else:
-                        severity = 'low'
-                    
-                    confidence = min(0.95, 0.5 + (deviation_ratio * 0.5))
-                    
-                    anomaly_data.append({
-                        'time': int(hour),
-                        'consumption': round(float(consumption), 1),
-                        'severity': severity,
-                        'timestamp': timestamp,
-                        'score': round(float(confidence), 3),
-                        'type': 'statistical' if is_statistical_anomaly else ('pattern' if is_pattern_anomaly else 'device')
-                    })
-            
-            if len(recent_df) > 50:
-                features = recent_df[['hour', 'day_of_week', 'temperature', 'occupancy']].fillna(0).values
-                
-                temp_detector = IsolationForest(contamination=0.15, random_state=42)
-                temp_detector.fit(features)
-                ml_anomalies = temp_detector.predict(features)
-                ml_scores = temp_detector.decision_function(features)
-                
-                for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
-                    if is_anomaly == -1: 
-                        row = recent_df.iloc[i]
-                        severity = 'high' if abs(score) > 0.5 else 'medium'
-                        anomaly_data.append({
-                            'time': int(row['hour']),
-                            'consumption': round(float(row['consumption']), 1),
-                            'severity': severity,
-                            'timestamp': row['timestamp'],
-                            'score': round(float(abs(score)), 3),
-                            'type': 'ml_detected'
-                        })
-                        
-    except Exception as e:
-        print(f"Anomaly detection error: {e}")
-    
-    unique_anomalies = []
-    seen_timestamps = set()
-    for anomaly in anomaly_data:
-        if anomaly['timestamp'] not in seen_timestamps:
-            unique_anomalies.append(anomaly)
-            seen_timestamps.add(anomaly['timestamp'])
-    
-    anomaly_data = sorted(unique_anomalies, key=lambda x: x['timestamp'], reverse=True)
+    # Use improved anomaly detection
+    anomaly_data = detect_dynamic_anomalies(df)
     anomaly_count = len(anomaly_data)
     
     cost_optimization = []
@@ -409,8 +441,8 @@ def get_analytics():
             'name': 'Isolation Forest',
             'purpose': 'Anomaly detection in energy consumption patterns',
             'parameters': {
-                'contamination': 0.15,
-                'random_state': 42
+                'contamination': 'dynamic',
+                'random_state': 'dynamic'
             },
             'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'],
             'anomalies_detected': anomaly_count,
@@ -474,6 +506,8 @@ def create_geofence():
 
 @app.route('/api/geofences/stats', methods=['GET'])
 def get_geofence_stats():
+    global optimization_success_count
+    
     total_energy_saved = sum(g.get('energy_savings', 0) for g in geofence_data)
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
     total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
@@ -481,7 +515,8 @@ def get_geofence_stats():
     return jsonify({
         'total_energy_saved': round(float(total_energy_saved), 1),
         'total_zones': total_zones,
-        'total_triggers': int(total_triggers)
+        'total_triggers': int(total_triggers),
+        'optimization_success_count': optimization_success_count  # Add this field
     })
 
 @app.route('/api/geofences/activity', methods=['GET'])
@@ -538,8 +573,10 @@ def get_geofence_analytics():
 
 @app.route('/api/geofences/detect-anomalies', methods=['GET'])
 def detect_anomalies():
+    anomaly_count = np.random.randint(3, 15)  
     anomalies = []
-    for i in range(8):
+    
+    for i in range(anomaly_count):
         anomalies.append({
             'location': {
                 'lat': round(float(37.7749 + np.random.normal(0, 0.01)), 4),
@@ -558,7 +595,7 @@ def detect_anomalies():
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
-    global optimization_history
+    global optimization_history, optimization_success_count
     
     improvements = []
     total_energy_improvement = 0
@@ -579,11 +616,14 @@ def optimize_geofences():
         })
         total_energy_improvement += energy_improvement
     
+    optimization_success_count += 1
+    
     optimization_record = {
         'timestamp': datetime.now().isoformat(),
         'total_improvement': round(total_energy_improvement, 1),
         'zones_optimized': len(geofence_data),
-        'improvements': improvements
+        'improvements': improvements,
+        'success_number': optimization_success_count  
     }
     
     optimization_history.append(optimization_record)
@@ -597,14 +637,18 @@ def optimize_geofences():
         'total_improvement': round(total_energy_improvement, 1),
         'zones_optimized': len(geofence_data),
         'improvements': improvements,
-        'timestamp': optimization_record['timestamp']
+        'timestamp': optimization_record['timestamp'],
+        'optimization_success_count': optimization_success_count  
     })
 
 @app.route('/api/geofences/optimization-history', methods=['GET'])
 def get_optimization_history():
+    global optimization_success_count
+    
     return jsonify({
         'history': optimization_history,
-        'total_optimizations': len(optimization_history)
+        'total_optimizations': len(optimization_history),
+        'optimization_success_count': optimization_success_count
     })
 
 

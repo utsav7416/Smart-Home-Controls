@@ -346,7 +346,7 @@ export default function Geofencing() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-lime-200 text-sm">Optimization Success</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.optimization_success?.toFixed(1) || 0}%</p>
+                <p className="text-3xl font-bold text-white">{mlMetrics.optimization_success_count?.toFixed(1) || 0}%</p>
               </div>
               <Brain className="w-8 h-8 text-lime-400" />
             </div>

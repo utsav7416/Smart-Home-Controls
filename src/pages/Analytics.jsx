@@ -103,7 +103,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="w-full"> {/* Changed from max-w-md to w-full */}
+    <div className="w-full"> 
       <div className="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden hover:border-zinc-600 transition-colors">
         <div className="bg-zinc-800 px-6 py-4 border-b border-zinc-700">
           <div className="flex items-center justify-between">

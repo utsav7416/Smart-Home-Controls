@@ -43,6 +43,7 @@ energy_data = []
 geofence_data = []
 device_states = {}
 ml_performance_history = []
+optimization_history = []
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -120,7 +121,7 @@ def generate_realistic_energy_data(device_states_data=None):
     }
 
 def initialize_data():
-    global energy_data, geofence_data, ml_performance_history
+    global energy_data, geofence_data, ml_performance_history, optimization_history
     
     base_time = datetime.now() - timedelta(days=30)
     for i in range(720):
@@ -277,6 +278,7 @@ def get_analytics():
             })
     
     anomaly_data = []
+    anomaly_count = 0
     try:
         recent_df = df[-168:] if len(df) >= 168 else df
         
@@ -359,7 +361,8 @@ def get_analytics():
             unique_anomalies.append(anomaly)
             seen_timestamps.add(anomaly['timestamp'])
     
-    anomaly_data = sorted(unique_anomalies, key=lambda x: x['timestamp'], reverse=True) 
+    anomaly_data = sorted(unique_anomalies, key=lambda x: x['timestamp'], reverse=True)
+    anomaly_count = len(anomaly_data)
     
     cost_optimization = []
     for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']:
@@ -410,7 +413,7 @@ def get_analytics():
                 'random_state': 42
             },
             'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'],
-            'anomalies_detected': len(unique_anomalies), 
+            'anomalies_detected': anomaly_count,
             'description': 'An unsupervised learning algorithm that efficiently identifies outliers by isolating observations that deviate from the norm. It\'s ideal for detecting unusual energy spikes or drops.'
         },
         'ridge_regression': {
@@ -464,7 +467,7 @@ def create_geofence():
         'automations': int(np.random.randint(1, 6)),
         'trigger_count': 0,
         'energy_savings': 0,
-        'created_at': (datetime.now() - timedelta(days=30)).isoformat()
+        'created_at': datetime.now().isoformat()
     }
     geofence_data.append(new_geofence)
     return jsonify(new_geofence)
@@ -473,7 +476,7 @@ def create_geofence():
 def get_geofence_stats():
     total_energy_saved = sum(g.get('energy_savings', 0) for g in geofence_data)
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
-    total_triggers = sum(g.get('trigger', 0) for g in geofence_data)
+    total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
     
     return jsonify({
         'total_energy_saved': round(float(total_energy_saved), 1),
@@ -555,18 +558,57 @@ def detect_anomalies():
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
+    global optimization_history
+    
+    improvements = []
+    total_energy_improvement = 0
+    
     for geofence in geofence_data:
-        geofence['energy_savings'] = min(50, geofence['energy_savings'] + float(np.random.uniform(3, 12)))
-        geofence['radius'] = max(50, geofence['radius'] * float(np.random.uniform(0.88, 1.15)))
+        old_savings = geofence['energy_savings']
+        energy_improvement = float(np.random.uniform(3, 12))
+        geofence['energy_savings'] = min(500, old_savings + energy_improvement)
+        
+        old_radius = geofence['radius']
+        radius_change = float(np.random.uniform(-15, 15))
+        geofence['radius'] = max(50, old_radius + radius_change)
+        
+        improvements.append({
+            'zone_name': geofence['name'],
+            'energy_improvement': round(energy_improvement, 1),
+            'radius_change': round(radius_change, 1)
+        })
+        total_energy_improvement += energy_improvement
+    
+    optimization_record = {
+        'timestamp': datetime.now().isoformat(),
+        'total_improvement': round(total_energy_improvement, 1),
+        'zones_optimized': len(geofence_data),
+        'improvements': improvements
+    }
+    
+    optimization_history.append(optimization_record)
+    
+    if len(optimization_history) > 10:
+        optimization_history.pop(0)
     
     return jsonify({
+        'success': True,
         'message': 'Geofences optimized using ML algorithms',
-        'improvements': f"Energy savings increased by {float(np.random.uniform(8, 18)):.1f}%"
+        'total_improvement': round(total_energy_improvement, 1),
+        'zones_optimized': len(geofence_data),
+        'improvements': improvements,
+        'timestamp': optimization_record['timestamp']
+    })
+
+@app.route('/api/geofences/optimization-history', methods=['GET'])
+def get_optimization_history():
+    return jsonify({
+        'history': optimization_history,
+        'total_optimizations': len(optimization_history)
     })
 
 initialize_data()
 train_models()
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000)) 

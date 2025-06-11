@@ -98,11 +98,11 @@ const fetchAnalyticsData = async () => {
   return await response.json();
 };
 
-const AlgorithmCard = ({ algorithm, icon: Icon, gradientFrom, gradientTo, borderColor, iconBg, iconColor }) => {
+const AlgorithmCard = ({ algorithm, icon: Icon }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="max-w-md w-full">
+    <div className="w-full"> {/* Changed from max-w-md to w-full */}
       <div className="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden hover:border-zinc-600 transition-colors">
         <div className="bg-zinc-800 px-6 py-4 border-b border-zinc-700">
           <div className="flex items-center justify-between">
@@ -123,7 +123,6 @@ const AlgorithmCard = ({ algorithm, icon: Icon, gradientFrom, gradientTo, border
 
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4 mb-6">
-            {/* Conditional rendering for each algorithm's specific stats */}
             {algorithm?.name === "Random Forest Regressor" && (
               <>
                 <div className="text-center">
@@ -285,7 +284,7 @@ export default function Analytics() {
     weeklyData = [],
     anomalyData = [],
     costOptimization = [],
-    mlPerformance = {},
+    mlPerformance = {}, // This is unused in the provided code, but keeping for completeness
     hourlyPatterns = [],
     mlAlgorithms = {}
   } = analyticsData || {};
@@ -447,45 +446,25 @@ export default function Analytics() {
           <p className="text-gray-300 text-sm">Advanced ensemble of ML algorithms working together to optimize your energy consumption</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Adjusted to 2 columns on medium screens and up */}
             <AlgorithmCard
               algorithm={mlAlgorithms.random_forest}
               icon={GitBranch}
-              gradientFrom="from-emerald-500/10"
-              gradientTo="to-green-600/10"
-              borderColor="border-emerald-500/30"
-              iconBg="bg-emerald-500/20"
-              iconColor="text-emerald-400"
             />
 
             <AlgorithmCard
               algorithm={mlAlgorithms.isolation_forest}
               icon={Shield}
-              gradientFrom="from-red-500/10"
-              gradientTo="to-rose-600/10"
-              borderColor="border-red-500/30"
-              iconBg="bg-red-500/20"
-              iconColor="text-red-400"
             />
 
             <AlgorithmCard
               algorithm={mlAlgorithms.mlp_regressor}
               icon={Layers}
-              gradientFrom="from-purple-500/10"
-              gradientTo="to-indigo-600/10"
-              borderColor="border-purple-500/30"
-              iconBg="bg-purple-500/20"
-              iconColor="text-purple-400"
             />
 
             <AlgorithmCard
               algorithm={mlAlgorithms.ridge_regression}
               icon={TrendingUp}
-              gradientFrom="from-amber-500/10"
-              gradientTo="to-orange-600/10"
-              borderColor="border-amber-500/30"
-              iconBg="bg-amber-500/20"
-              iconColor="text-amber-400"
             />
           </div>
         </CardContent>

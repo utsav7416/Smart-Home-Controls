@@ -2,12 +2,7 @@ import { useState, useEffect } from 'react';
 import { MapPin, Plus, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
-// Add debugging and fallback
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
-
-// Debug logging (remove this after fixing)
-console.log('Environment variable:', process.env.REACT_APP_API_BASE_URL);
-console.log('Using API URL:', FLASK_API_URL);
 
 const Card = ({ children, className = '' }) => (
   <div className={`rounded-lg shadow-lg ${className}`}>
@@ -245,7 +240,7 @@ export default function Geofencing() {
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="text-white text-lg">Loading ML-powered geofencing data...</div>
+        <div className="text-white text-lg">Loading ML-powered geofencing data...This may take some time... Your patience is appreciated</div>
       </div>
     );
   }

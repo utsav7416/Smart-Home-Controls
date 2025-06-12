@@ -282,8 +282,15 @@ def detect_dynamic_anomalies(df):
         try:
             features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy']].fillna(0).values
             
-            contamination_rate = max(0.05, min(0.2, 10 / len(recent_data)))
             global last_calculated_contamination_rate
+            
+            if len(energy_data) > 0:
+                total_anomalies_so_far = sum(1 for d in energy_data if 'anomaly' in d and d['anomaly'])
+                estimated_contamination = total_anomalies_so_far / len(energy_data)
+                contamination_rate = max(0.01, min(0.2, estimated_contamination + np.random.uniform(-0.02, 0.02)))
+            else:
+                contamination_rate = 0.1
+            
             last_calculated_contamination_rate = contamination_rate
 
             temp_detector = IsolationForest(
@@ -439,9 +446,7 @@ def get_analytics():
             'name': 'Random Forest Regressor',
             'purpose': 'Primary energy consumption prediction',
             'parameters': {
-                'n_estimators': 100,
-                'max_depth': 10,
-                'random_state': 42
+                'n_estimators': 100, 'max_depth': 10, 'random_state': 42
             },
             'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 'time_factor', 'weather_factor'],
             'accuracy': ml_performance['accuracy'],
@@ -451,8 +456,7 @@ def get_analytics():
             'name': 'Isolation Forest',
             'purpose': 'Anomaly detection in energy consumption patterns',
             'parameters': {
-                'contamination': 'dynamic',
-                'random_state': 'dynamic',
+                'contamination': 'dynamic', 'random_state': 'dynamic',
                 'last_used_contamination_rate': round(last_calculated_contamination_rate, 3)
             },
             'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'],
@@ -463,8 +467,7 @@ def get_analytics():
             'name': 'Ridge Regression',
             'purpose': 'Linear model component in ensemble',
             'parameters': {
-                'alpha': 1.0,
-                'random_state': 42
+                'alpha': 1.0, 'random_state': 42
             },
             'weight_in_ensemble': 0.3,
             'description': 'A type of linear regression that adds a regularization penalty to prevent overfitting. It\'s used as a stable baseline predictor within our ensemble model for energy data.'
@@ -473,10 +476,7 @@ def get_analytics():
             'name': 'MLP Regressor',
             'purpose': 'Advanced non-linear prediction',
             'parameters': {
-                'hidden_layer_sizes': (100, 50),
-                'activation': 'relu',
-                'solver': 'adam',
-                'max_iter': 200
+                'hidden_layer_sizes': (100, 50), 'activation': 'relu', 'solver': 'adam', 'max_iter': 200
             },
             'weight_in_ensemble': 0.2, 
             'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
@@ -598,20 +598,8 @@ def get_geofence_analytics():
 
 @app.route('/api/geofences/detect-anomalies', methods=['GET'])
 def detect_anomalies():
-    anomaly_count = np.random.randint(max(5, len(energy_data) // 50), min(25, len(energy_data) // 10))  
-    anomalies = []
-    
-    for i in range(anomaly_count):
-        anomalies.append({
-            'location': {
-                'lat': round(float(37.7749 + np.random.normal(0, 0.01)), 4),
-                'lng': round(float(-122.4194 + np.random.normal(0, 0.01)), 4)
-            },
-            'energy_consumption': round(float(np.random.uniform(15, 55)), 1),
-            'severity': random.choice(['critical', 'high', 'medium']),
-            'timestamp': (datetime.now() - timedelta(hours=int(np.random.randint(0, 48)))).isoformat(),
-            'confidence': round(float(np.random.uniform(0.82, 0.97)), 3)
-        })
+    df = pd.DataFrame(energy_data)
+    anomalies = detect_dynamic_anomalies(df)
     
     return jsonify({
         'anomalies': anomalies,

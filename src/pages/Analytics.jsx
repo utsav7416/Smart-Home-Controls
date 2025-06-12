@@ -137,17 +137,19 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               </>
             )}
             {algorithm?.name === "Isolation Forest" && (
-              <>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
-                  <div className="text-xs text-zinc-400">Anomalies Found</div>
+            <>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
+                <div className="text-xs text-zinc-400">Anomalies Found</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-white">
+                  {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{(algorithm.parameters.contamination * 100).toFixed(1)}%</div>
-                  <div className="text-xs text-zinc-400">Contamination Rate</div>
-                </div>
-              </>
-            )}
+                <div className="text-xs text-zinc-400">Contamination Rate</div>
+              </div>
+            </>
+          )}
             {algorithm?.name === "Multi-Layer Perceptron" && (
               <>
                 <div className="text-center">
@@ -265,7 +267,7 @@ export default function Analytics() {
       <div className="p-6 flex items-center justify-center min-h-screen">
         <div className="text-white text-lg flex items-center gap-3">
           <Brain className="w-6 h-6 animate-pulse" />
-          Loading ML analytics...
+          Loading ML analytics... This may take some time... Your patience is appreciated
         </div>
       </div>
     );

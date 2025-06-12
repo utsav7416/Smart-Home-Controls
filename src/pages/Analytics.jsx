@@ -2,11 +2,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 const Card = ({ children, className = "" }) => (
-  <div className={`rounded-lg border ${className}`}>
+  <div className={`rounded-lg border border-zinc-800 bg-zinc-900 ${className}`}>
     {children}
   </div>
 );
@@ -104,11 +103,11 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
 
   return (
     <div className="w-full"> 
-      <div className="bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden hover:border-zinc-600 transition-colors">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-colors">
         <div className="bg-zinc-800 px-6 py-4 border-b border-zinc-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-900 rounded-md flex items-center justify-center">
+              <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
                 <Icon className="w-5 h-5 text-green-400" />
               </div>
               <div>
@@ -116,7 +115,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                 <p className="text-green-400 text-sm">{algorithm.purpose}</p>
               </div>
             </div>
-            <div className="bg-green-900 text-green-300 px-2 py-1 rounded text-xs font-medium">
+            <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">
               ACTIVE
             </div>
           </div>
@@ -150,7 +149,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               </div>
             </>
           )}
-            {algorithm?.name === "Multi-Layer Perceptron" && (
+            {algorithm?.name === "MLP Regressor" && (
               <>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.parameters.hidden_layer_sizes?.length || 0}</div>
@@ -199,7 +198,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                   {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
                     <div key={key} className="flex justify-between items-center">
                       <span className="text-zinc-400 text-xs font-mono">{key}:</span>
-                      <span className="text-white text-xs font-mono bg-zinc-900 px-2 py-1 rounded">
+                      <span className="text-white text-xs font-mono bg-zinc-950 px-2 py-1 rounded">
                         {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
                       </span>
                     </div>
@@ -216,7 +215,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                   <div className="text-blue-400 font-mono text-sm">
                     {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
                      algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                     algorithm?.name === "Multi-Layer Perceptron" ? `${algorithm?.parameters?.max_iter} Max Iter` :
+                     algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
                      `α = ${algorithm?.parameters?.alpha}`}
                   </div>
                 </div>
@@ -264,7 +263,7 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
         <div className="text-white text-lg flex items-center gap-3">
           <Brain className="w-6 h-6 animate-pulse" />
           Loading ML analytics... This may take some time... Your patience is appreciated
@@ -275,7 +274,7 @@ export default function Analytics() {
 
   if (error) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
         <div className="text-red-400 text-lg">
           Failed to connect to Flask backend. Make sure your Flask server is running on {FLASK_API_URL}
         </div>
@@ -287,7 +286,7 @@ export default function Analytics() {
     weeklyData = [],
     anomalyData = [],
     costOptimization = [],
-    mlPerformance = {}, // This is unused in the provided code, but keeping for completeness
+    mlPerformance = {},
     hourlyPatterns = [],
     mlAlgorithms = {}
   } = analyticsData || {};
@@ -315,7 +314,7 @@ export default function Analytics() {
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
       <div className="relative text-center py-8">
         <img
           src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg"
@@ -326,10 +325,10 @@ export default function Analytics() {
           <h1 className="text-4xl font-bold text-white mb-2">
             Advanced Energy Analytics & ML Insights
           </h1>
-          <p className="text-blue-200 text-xl mb-4">
+          <p className="text-zinc-300 text-xl mb-4">
             Real-time machine learning algorithms analyzing your energy consumption patterns
           </p>
-          <div className="flex flex-wrap justify-center gap-8 text-base text-blue-300">
+          <div className="flex flex-wrap justify-center gap-8 text-base text-zinc-400">
             <span>• Anomaly Detection Active</span>
             <span>• Predictive Modeling Enabled</span>
             <span>• Cost Optimization Running</span>
@@ -338,7 +337,7 @@ export default function Analytics() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
+        <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -351,7 +350,7 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-600/20 to-red-800/20 backdrop-blur-md border border-red-400/30">
+        <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -364,7 +363,7 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 backdrop-blur-md border border-blue-400/30">
+        <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -377,7 +376,7 @@ export default function Analytics() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-md border border-purple-400/30">
+        <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -391,24 +390,24 @@ export default function Analytics() {
         </Card>
       </div>
 
-      <Card className="bg-black/40 backdrop-blur-md border border-white/20">
+      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
             Real-Time Anomaly Detection ({anomaliesDetected} detected)
           </CardTitle>
-          <p className="text-gray-300 text-sm">Live anomaly detection using Isolation Forest algorithm</p>
+          <p className="text-zinc-400 text-sm">Live anomaly detection using Isolation Forest algorithm</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <ScatterChart data={anomalyData}>
-              <CartesianGrid strokeDashArray="3 3" stroke="#374151" />
+              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
               <XAxis dataKey="time" stroke="#9ca3af" />
               <YAxis stroke="#9ca3af" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: 'white'
                 }}
@@ -424,15 +423,15 @@ export default function Analytics() {
             </ScatterChart>
           </ResponsiveContainer>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-300">
+            <div className="flex items-center gap-2 text-sm text-zinc-400">
               <div className="w-3 h-3 bg-red-400 rounded-full"></div>
               <span>High severity: {anomalyData.filter((a) => a.severity === 'high').length}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-300">
+            <div className="flex items-center gap-2 text-sm text-zinc-400">
               <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
               <span>Medium severity: {anomalyData.filter((a) => a.severity === 'medium').length}</span>
             </div>
-            <div className="text-sm text-gray-300">
+            <div className="text-sm text-zinc-400">
               <span className="text-white font-semibold">Last detected:</span>
               {anomalyData.length > 0 ? ` ${new Date(anomalyData[0].timestamp).toLocaleTimeString()}` : ' None'}
             </div>
@@ -440,16 +439,16 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-black/40 backdrop-blur-md border border-white/20">
+      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5" />
             AI-Powered Machine Learning Pipeline
           </CardTitle>
-          <p className="text-gray-300 text-sm">Advanced ensemble of ML algorithms working together to optimize your energy consumption</p>
+          <p className="text-zinc-400 text-sm">Advanced ensemble of ML algorithms working together to optimize your energy consumption</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> {/* Adjusted to 2 columns on medium screens and up */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <AlgorithmCard
               algorithm={mlAlgorithms.random_forest}
               icon={GitBranch}
@@ -473,24 +472,24 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-black/40 backdrop-blur-md border border-white/20">
+      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             Weekly Consumption vs ML Predictions (Device-Adjusted)
           </CardTitle>
-          <p className="text-gray-300 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
+          <p className="text-zinc-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart data={adjustedWeeklyData}>
-              <CartesianGrid strokeDashArray="3 3" stroke="#374151" />
+              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
               <XAxis dataKey="day" stroke="#9ca3af" />
               <YAxis stroke="#9ca3af" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: 'white'
                 }}
@@ -517,13 +516,13 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-black/40 backdrop-blur-md border border-white/20">
+      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5" />
             24-Hour Energy Consumption Patterns (Live Device Impact)
           </CardTitle>
-          <p className="text-gray-300 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
+          <p className="text-zinc-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -534,13 +533,13 @@ export default function Analytics() {
                   <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDashArray="3 3" stroke="#374151" />
+              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
               <XAxis dataKey="hour" stroke="#9ca3af" />
               <YAxis stroke="#9ca3af" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: 'white'
                 }}
@@ -568,24 +567,24 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-black/40 backdrop-blur-md border border-white/20">
+      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Target className="w-5 h-5" />
             AI-Powered Cost Optimization
           </CardTitle>
-          <p className="text-gray-300 text-sm">Machine learning optimization showing potential cost savings through smart energy management</p>
+          <p className="text-zinc-400 text-sm">Machine learning optimization showing potential cost savings through smart energy management</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
             <BarChart data={costOptimization}>
-              <CartesianGrid strokeDashArray="3 3" stroke="#374151" />
+              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
               <XAxis dataKey="month" stroke="#9ca3af" />
               <YAxis stroke="#9ca3af" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '8px',
                   color: 'white'
                 }}
@@ -597,15 +596,15 @@ export default function Analytics() {
           <div className="mt-4 grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-xl font-bold text-red-400">${costOptimization.reduce((sum, item) => sum + item.actual, 0)}</div>
-              <div className="text-sm text-gray-300">Total Actual Cost</div>
+              <div className="text-sm text-zinc-400">Total Actual Cost</div>
             </div>
             <div>
               <div className="text-xl font-bold text-green-400">${costOptimization.reduce((sum, item) => sum + item.optimized, 0)}</div>
-              <div className="text-sm text-gray-300">Optimized Cost</div>
+              <div className="text-sm text-zinc-400">Optimized Cost</div>
             </div>
             <div>
               <div className="text-xl font-bold text-blue-400">${totalSavings}</div>
-              <div className="text-sm text-gray-300">Total Savings</div>
+              <div className="text-sm text-zinc-400">Total Savings</div>
             </div>
           </div>
         </CardContent>

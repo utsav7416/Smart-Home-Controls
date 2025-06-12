@@ -38,7 +38,8 @@ ridge_model = Ridge(alpha=1.0, random_state=42)
 anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
 scaler = StandardScaler()
 location_clusterer = DBSCAN(eps=0.01, min_samples=3)
-mlp_model = MLPRegressor(hidden_layer_sizes=(100, 50), activation='relu', solver='adam', max_iter=200, random_state=42)
+# FIX: Added alpha parameter for MLPRegressor
+mlp_model = MLPRegressor(hidden_layer_sizes=(100, 50), activation='relu', solver='adam', max_iter=200, random_state=42, alpha=0.0001)
 
 energy_data = []
 geofence_data = []
@@ -365,7 +366,8 @@ def get_analytics():
             })
     
     anomaly_data = detect_dynamic_anomalies(df)
-    anomaly_count = len(anomaly_data)
+    # FIX: Correctly get anomaly count after anomaly_data is populated
+    anomaly_count = len(anomaly_data) 
     
     cost_optimization = []
     for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']:
@@ -417,7 +419,7 @@ def get_analytics():
         },
         'mlp_regressor': { 
             'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
-            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200},
+            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200, 'alpha': 0.0001}, # Added alpha
             'weight_in_ensemble': 0.2, 
             'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
         }

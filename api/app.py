@@ -15,6 +15,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 import warnings
 import os
+
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
@@ -100,7 +101,7 @@ def generate_realistic_energy_data(device_states_data=None):
                     device['name'], device['isOn'], device['value'], device['property']
                 )
     
-    time_factor = 1.3 if (6 <= hour <= 9 or 17 <= hour <= 22) else 0.7 if (23 <= hour or hour <= 5) else 1.0
+    time_factor = 1.3 if (6 <= hour <= 9 or 17 <= hour <= 22) else (0.7 if (23 <= hour or hour <= 5) else 1.0)
     weekend_factor = 1.15 if day_of_week >= 5 else 1.0
     
     outdoor_temp = 70 + 15 * np.sin(2 * np.pi * hour / 24) + np.random.normal(0, 3)
@@ -137,29 +138,15 @@ def initialize_data():
     
     geofence_data.extend([
         {
-            'id': 1,
-            'name': 'Home',
-            'address': 'A-101, Ashoka Apartments, New Delhi, IN',
-            'lat': 37.7749,
-            'lng': -122.4194,
-            'radius': 200,
-            'isActive': True,
-            'automations': 8,
-            'trigger_count': np.random.randint(120, 180),
-            'energy_savings': np.random.uniform(220, 280),
+            'id': 1, 'name': 'Home', 'address': 'A-101, Ashoka Apartments, New Delhi, IN',
+            'lat': 37.7749, 'lng': -122.4194, 'radius': 200, 'isActive': True, 'automations': 8,
+            'trigger_count': np.random.randint(120, 180), 'energy_savings': np.random.uniform(220, 280),
             'created_at': (datetime.now() - timedelta(days=30)).isoformat()
         },
         {
-            'id': 2,
-            'name': 'Work Office',
-            'address': 'K-15, The Sinclairs Bayview, Dubai, UAE',
-            'lat': 37.7849,
-            'lng': -122.4094,
-            'radius': 150,
-            'isActive': True,
-            'automations': 5,
-            'trigger_count': np.random.randint(80, 120),
-            'energy_savings': np.random.uniform(150, 200),
+            'id': 2, 'name': 'Work Office', 'address': 'K-15, The Sinclairs Bayview, Dubai, UAE',
+            'lat': 37.7849, 'lng': -122.4094, 'radius': 150, 'isActive': True, 'automations': 5,
+            'trigger_count': np.random.randint(80, 120), 'energy_savings': np.random.uniform(150, 200),
             'created_at': (datetime.now() - timedelta(days=20)).isoformat()
         }
     ])
@@ -211,7 +198,6 @@ def detect_dynamic_anomalies(df):
         return anomaly_data
     
     recent_data = df[-min(168, len(df)):]  
-    
     consumption_values = recent_data['consumption'].values
     
     for _, row in recent_data.iterrows():
@@ -227,26 +213,16 @@ def detect_dynamic_anomalies(df):
             
             if hour_std > 0:
                 z_score = abs((consumption - hour_mean) / hour_std)
-                
                 threshold = 2.0 if hour_std < hour_mean * 0.2 else 2.5
                 
                 if z_score > threshold:
                     deviation_ratio = abs(consumption - hour_mean) / hour_mean
-                    if deviation_ratio > 0.6:
-                        severity = 'high'
-                    elif deviation_ratio > 0.3:
-                        severity = 'medium'
-                    else:
-                        severity = 'low'
-                    
+                    severity = 'high' if deviation_ratio > 0.6 else ('medium' if deviation_ratio > 0.3 else 'low')
                     confidence = min(0.95, 0.6 + (z_score / 5.0))
                     
                     anomaly_data.append({
-                        'time': int(hour),
-                        'consumption': round(float(consumption), 1),
-                        'severity': severity,
-                        'timestamp': timestamp,
-                        'score': round(float(confidence), 3),
+                        'time': int(hour), 'consumption': round(float(consumption), 1),
+                        'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
                         'type': 'temporal_pattern'
                     })
     
@@ -260,28 +236,20 @@ def detect_dynamic_anomalies(df):
         for _, row in recent_data.iterrows():
             consumption = row['consumption']
             if consumption > upper_bound or consumption < lower_bound:
-                existing_anomaly = any(
-                    a['timestamp'] == row['timestamp'] for a in anomaly_data
-                )
-                
-                if not existing_anomaly:
+                if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
                     deviation_ratio = abs(consumption - overall_mean) / overall_mean
                     severity = 'high' if deviation_ratio > 0.5 else 'medium'
                     confidence = min(0.95, 0.7 + (deviation_ratio * 0.3))
                     
                     anomaly_data.append({
-                        'time': int(row['hour']),
-                        'consumption': round(float(consumption), 1),
-                        'severity': severity,
-                        'timestamp': row['timestamp'],
-                        'score': round(float(confidence), 3),
+                        'time': int(row['hour']), 'consumption': round(float(consumption), 1),
+                        'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
                         'type': 'statistical'
                     })
     
     if len(recent_data) > 30:
         try:
             features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy']].fillna(0).values
-            
             global last_calculated_contamination_rate
             
             if len(energy_data) > 0:
@@ -305,20 +273,13 @@ def detect_dynamic_anomalies(df):
             for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
                 if is_anomaly == -1:
                     row = recent_data.iloc[i]
-                    existing_anomaly = any(
-                        a['timestamp'] == row['timestamp'] for a in anomaly_data
-                    )
-                    
-                    if not existing_anomaly:
+                    if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
                         severity = 'high' if abs(score) > 0.4 else 'medium'
                         confidence = min(0.95, 0.5 + abs(score))
                         
                         anomaly_data.append({
-                            'time': int(row['hour']),
-                            'consumption': round(float(row['consumption']), 1),
-                            'severity': severity,
-                            'timestamp': row['timestamp'],
-                            'score': round(float(confidence), 3),
+                            'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
+                            'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
                             'type': 'ml_detected'
                         })
                         
@@ -377,7 +338,7 @@ def get_energy_data():
             item['predicted'] = round(ensemble_pred, 2)
             item['prediction_confidence'] = np.random.uniform(0.85, 0.98)
             
-        except Exception as e:
+        except Exception as e: 
             print(f"Prediction error: {e}") 
             item['predicted'] = item['consumption']
             item['prediction_confidence'] = 0.5
@@ -411,10 +372,8 @@ def get_analytics():
         actual_kwh = np.random.uniform(800, 1200)
         optimized_kwh = actual_kwh * np.random.uniform(0.75, 0.88)
         cost_optimization.append({
-            'month': month,
-            'actual': round(float(actual_kwh * 0.15)),
-            'optimized': round(float(optimized_kwh * 0.15)),
-            'saved': round(float((actual_kwh - optimized_kwh) * 0.15))
+            'month': month, 'actual': round(float(actual_kwh * 0.15)),
+            'optimized': round(float(optimized_kwh * 0.15)), 'saved': round(float((actual_kwh - optimized_kwh) * 0.15))
         })
     
     ml_performance = {
@@ -434,62 +393,39 @@ def get_analytics():
                 'device_contribution': round(float(hour_data['device_consumption'].mean()), 1)
             })
     
-    if total_optimization_attempts > 0:
-        base_success_rate = (optimization_success_count / total_optimization_attempts) * 100
-        random_factor = np.random.uniform(-5, 5) 
-        optimization_success_percentage = np.clip(base_success_rate + random_factor, 70.0, 99.9) 
-    else:
-        optimization_success_percentage = np.random.uniform(70.0, 90.0) 
+    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0
+    optimization_success_percentage = np.clip(optimization_success_percentage + np.random.uniform(-5, 5), 70.0, 99.9) 
     
     ml_algorithms = {
         'random_forest': {
-            'name': 'Random Forest Regressor',
-            'purpose': 'Primary energy consumption prediction',
-            'parameters': {
-                'n_estimators': 100, 'max_depth': 10, 'random_state': 42
-            },
+            'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
+            'parameters': {'n_estimators': 100, 'max_depth': 10, 'random_state': 42},
             'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 'time_factor', 'weather_factor'],
             'accuracy': ml_performance['accuracy'],
             'description': 'An ensemble learning method that builds multiple decision trees to improve predictive accuracy and control overfitting. It is robust for forecasting energy consumption patterns.'
         },
         'isolation_forest': {
-            'name': 'Isolation Forest',
-            'purpose': 'Anomaly detection in energy consumption patterns',
-            'parameters': {
-                'contamination': 'dynamic', 'random_state': 'dynamic',
-                'last_used_contamination_rate': round(last_calculated_contamination_rate, 3)
-            },
-            'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'],
-            'anomalies_detected': anomaly_count,
+            'name': 'Isolation Forest', 'purpose': 'Anomaly detection in energy consumption patterns',
+            'parameters': {'contamination': 'dynamic', 'random_state': 'dynamic', 'last_used_contamination_rate': round(last_calculated_contamination_rate, 3)},
+            'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'], 'anomalies_detected': anomaly_count,
             'description': 'An unsupervised learning algorithm that efficiently identifies outliers by isolating observations that deviate from the norm. It\'s ideal for detecting unusual energy spikes or drops.'
         },
         'ridge_regression': {
-            'name': 'Ridge Regression',
-            'purpose': 'Linear model component in ensemble',
-            'parameters': {
-                'alpha': 1.0, 'random_state': 42
-            },
-            'weight_in_ensemble': 0.3,
+            'name': 'Ridge Regression', 'purpose': 'Linear model component in ensemble',
+            'parameters': {'alpha': 1.0, 'random_state': 42}, 'weight_in_ensemble': 0.3,
             'description': 'A type of linear regression that adds a regularization penalty to prevent overfitting. It\'s used as a stable baseline predictor within our ensemble model for energy data.'
         },
         'mlp_regressor': { 
-            'name': 'MLP Regressor',
-            'purpose': 'Advanced non-linear prediction',
-            'parameters': {
-                'hidden_layer_sizes': (100, 50), 'activation': 'relu', 'solver': 'adam', 'max_iter': 200
-            },
+            'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
+            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200},
             'weight_in_ensemble': 0.2, 
             'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
         }
     }
     
     return jsonify({
-        'weeklyData': weekly_data,
-        'anomalyData': anomaly_data,
-        'costOptimization': cost_optimization,
-        'mlPerformance': ml_performance,
-        'hourlyPatterns': hourly_patterns,
-        'mlAlgorithms': ml_algorithms
+        'weeklyData': weekly_data, 'anomalyData': anomaly_data, 'costOptimization': cost_optimization,
+        'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
     })
 
 @app.route('/api/geofences', methods=['GET'])
@@ -500,35 +436,24 @@ def get_geofences():
 def create_geofence():
     data = request.json
     new_geofence = {
-        'id': len(geofence_data) + 1,
-        'name': data.get('name', 'New Zone'),
+        'id': len(geofence_data) + 1, 'name': data.get('name', 'New Zone'),
         'address': data.get('address', 'Unknown Address'),
         'lat': data.get('lat', 37.7749 + np.random.uniform(-0.01, 0.01)),
         'lng': data.get('lng', -122.4194 + np.random.uniform(-0.01, 0.01)),
-        'radius': data.get('radius', 200),
-        'isActive': True,
-        'automations': int(np.random.randint(1, 6)),
-        'trigger_count': 0,
-        'energy_savings': 0,
-        'created_at': datetime.now().isoformat()
+        'radius': data.get('radius', 200), 'isActive': True, 'automations': int(np.random.randint(1, 6)),
+        'trigger_count': 0, 'energy_savings': 0, 'created_at': datetime.now().isoformat()
     }
     geofence_data.append(new_geofence)
     return jsonify(new_geofence)
 
 @app.route('/api/geofences/stats', methods=['GET'])
 def get_geofence_stats():
-    
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
     total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
-    
-    if total_optimization_attempts > 0:
-        optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100
-    else:
-        optimization_success_percentage = 0.0 
+    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0 
     
     return jsonify({
-        'total_zones': total_zones,
-        'total_triggers': int(total_triggers),
+        'total_zones': total_zones, 'total_triggers': int(total_triggers),
         'optimization_success_count': round(optimization_success_percentage, 1) 
     })
 
@@ -541,18 +466,13 @@ def get_geofence_activity():
         event = random.choice(['Entered', 'Left'])
         
         activities.append({
-            'event': f"{event} {location}",
-            'time': timestamp.strftime('%H:%M'),
+            'event': f"{event} {location}", 'time': timestamp.strftime('%H:%M'),
             'automation': random.choice([
-                'Smart lighting adjusted',
-                'HVAC optimization triggered',
-                'Security system updated',
-                'Energy-saving mode activated'
+                'Smart lighting adjusted', 'HVAC optimization triggered',
+                'Security system updated', 'Energy-saving mode activated'
             ]),
-            'location': location,
-            'energy_impact': round(float(np.random.uniform(-25, 20)), 1)
+            'location': location, 'energy_impact': round(float(np.random.uniform(-25, 20)), 1)
         })
-    
     return jsonify(activities)
 
 @app.route('/api/geofences/analytics', methods=['GET'])
@@ -565,53 +485,77 @@ def get_geofence_analytics():
         optimized = consumption * np.random.uniform(0.78, 0.92)
         
         energy_optimization.append({
-            'hour': f"{hour:02d}:00",
-            'consumption': round(float(max(0, consumption)), 1),
+            'hour': f"{hour:02d}:00", 'consumption': round(float(max(0, consumption)), 1),
             'optimized': round(float(max(0, optimized)), 1)
         })
     
     zone_efficiency = []
     for geofence in geofence_data:
-        zone_efficiency.append({
-            'name': geofence['name'],
-            'efficiency': round(float(np.random.uniform(75, 96)), 1)
-        })
+        zone_efficiency.append({'name': geofence['name'], 'efficiency': round(float(np.random.uniform(75, 96)), 1)})
     
-    if total_optimization_attempts > 0:
-        base_success_rate = (optimization_success_count / total_optimization_attempts) * 100
-        random_factor = np.random.uniform(-5, 5) 
-        optimization_success_percentage = np.clip(base_success_rate + random_factor, 70.0, 99.9) 
-    else:
-        optimization_success_percentage = np.random.uniform(70.0, 90.0) 
+    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0 
+    optimization_success_percentage = np.clip(optimization_success_percentage + np.random.uniform(-5, 5), 70.0, 99.9) 
     
     ml_metrics = {
         'model_accuracy': round(float(np.random.uniform(91, 97)), 1),
         'prediction_confidence': round(float(np.random.uniform(88, 96)), 1),
         'optimization_success_count': round(optimization_success_percentage, 1) 
     }
-    
-    return jsonify({
-        'energy_optimization': energy_optimization,
-        'zone_efficiency': zone_efficiency,
-        'ml_metrics': ml_metrics
-    })
+    return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
 
 @app.route('/api/geofences/detect-anomalies', methods=['GET'])
 def detect_anomalies():
-    df = pd.DataFrame(energy_data)
-    anomalies = detect_dynamic_anomalies(df)
+    if not energy_data:
+        return jsonify({'anomalies': [], 'total_anomalies': 0})
     
-    return jsonify({
-        'anomalies': anomalies,
-        'total_anomalies': len(anomalies)
-    })
+    df = pd.DataFrame(energy_data)
+    raw_anomalies = detect_dynamic_anomalies(df)
+    processed_anomalies = []
+
+    for anomaly in raw_anomalies:
+        chosen_geofence = random.choice(geofence_data) if geofence_data else None
+        location_lat = chosen_geofence['lat'] if chosen_geofence else 37.7749 + np.random.normal(0, 0.01)
+        location_lng = chosen_geofence['lng'] if chosen_geofence else -122.4194 + np.random.normal(0, 0.01)
+        anomaly['timestamp'] = datetime.now().isoformat()
+        processed_anomalies.append({
+            'location': {'lat': round(float(location_lat), 4), 'lng': round(float(location_lng), 4)},
+            'energy_consumption': anomaly['consumption'], 'severity': anomaly['severity'],
+            'timestamp': anomaly['timestamp'], 'confidence': anomaly['score'], 'type': anomaly['type']
+        })
+    
+    recent_device_consumption_sum = df['device_consumption'].iloc[-min(24, len(df)):].sum() if len(df) > 0 else 0
+    base_anomaly_count = len(processed_anomalies) 
+    
+    if recent_device_consumption_sum > 1000:
+        adjusted_count = min(30, base_anomaly_count + np.random.randint(5, 10))
+    elif recent_device_consumption_sum > 100:
+        adjusted_count = min(30, base_anomaly_count + np.random.randint(0, 5))
+    else:
+        adjusted_count = min(30, max(2, base_anomaly_count + np.random.randint(-2, 3)))
+    
+    final_anomalies = processed_anomalies[:adjusted_count]
+    while len(final_anomalies) < adjusted_count:
+        if processed_anomalies:
+            new_anomaly = random.choice(processed_anomalies)
+            new_anomaly['timestamp'] = datetime.now().isoformat()
+            final_anomalies.append(new_anomaly)
+        else:
+            final_anomalies.append({
+                'location': {'lat': round(float(37.7749 + np.random.normal(0, 0.01)), 4),
+                             'lng': round(float(-122.4194 + np.random.normal(0, 0.01)), 4)},
+                'energy_consumption': round(float(np.random.uniform(15, 55)), 1),
+                'severity': random.choice(['critical', 'high', 'medium']), 'timestamp': datetime.now().isoformat(),
+                'confidence': round(float(np.random.uniform(0.82, 0.97)), 3), 'type': random.choice(['ml_detected', 'statistical'])
+            })
+    random.shuffle(final_anomalies)
+    return jsonify({'anomalies': final_anomalies, 'total_anomalies': len(final_anomalies)})
+
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
     global optimization_history, optimization_success_count, total_optimization_attempts
     
     total_optimization_attempts += 1 
-    
     improvements = []
     total_energy_improvement = 0
     
@@ -625,8 +569,7 @@ def optimize_geofences():
         geofence['radius'] = max(50, old_radius + radius_change)
         
         improvements.append({
-            'zone_name': geofence['name'],
-            'energy_improvement': round(energy_improvement, 1),
+            'zone_name': geofence['name'], 'energy_improvement': round(energy_improvement, 1),
             'radius_change': round(radius_change, 1)
         })
         total_energy_improvement += energy_improvement
@@ -635,25 +578,18 @@ def optimize_geofences():
         optimization_success_count += 1 
     
     optimization_record = {
-        'timestamp': datetime.now().isoformat(),
-        'total_improvement': round(total_energy_improvement, 1),
-        'zones_optimized': len(geofence_data),
-        'improvements': improvements,
-        'success_number': optimization_success_count 
+        'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
+        'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count 
     }
     
     optimization_history.append(optimization_record)
-    
     if len(optimization_history) > 10:
         optimization_history.pop(0)
     
     return jsonify({
-        'success': True,
-        'message': 'Geofences optimized using ML algorithms',
-        'total_improvement': round(total_energy_improvement, 1),
-        'zones_optimized': len(geofence_data),
-        'improvements': improvements,
-        'timestamp': optimization_record['timestamp'],
+        'success': True, 'message': 'Geofences optimized using ML algorithms',
+        'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),
+        'improvements': improvements, 'timestamp': optimization_record['timestamp'],
         'optimization_success_count': optimization_success_count 
     })
 
@@ -662,10 +598,8 @@ def get_optimization_history():
     global optimization_success_count, total_optimization_attempts
     
     return jsonify({
-        'history': optimization_history,
-        'total_optimizations': len(optimization_history),
-        'optimization_success_count': optimization_success_count,
-        'total_optimization_attempts': total_optimization_attempts
+        'history': optimization_history, 'total_optimizations': len(optimization_history),
+        'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
     })
 
 initialize_data()

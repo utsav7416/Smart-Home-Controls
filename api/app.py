@@ -46,19 +46,13 @@ device_states = {}
 ml_performance_history = []
 optimization_history = []
 optimization_success_count = 0
-total_optimization_attempts = 0 
+total_optimization_attempts = 0
 last_calculated_contamination_rate = 0.1
 
 DEVICE_POWER_MAP = {
-    'Main Light': {'base': 15, 'max': 60},
-    'Fan': {'base': 25, 'max': 75},
-    'AC': {'base': 800, 'max': 1500},
-    'TV': {'base': 120, 'max': 200},
-    'Microwave': {'base': 800, 'max': 1200},
-    'Refrigerator': {'base': 150, 'max': 300},
-    'Shower': {'base': 50, 'max': 100},
-    'Water Heater': {'base': 2000, 'max': 4000},
-    'Dryer': {'base': 2000, 'max': 3000}
+    'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
+    'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
+    'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
 }
 
 def calculate_device_consumption(device_name, is_on, value, property_type):
@@ -187,7 +181,7 @@ def train_models():
         energy_model.fit(X_train, y_train)
         ridge_model.fit(X_train, y_train)
         anomaly_detector.fit(X_train_scaled)
-        mlp_model.fit(X_train_scaled, y_train) 
+        mlp_model.fit(X_train_scaled, y_train)
     except Exception as e:
         print(f"Training error: {e}")
 
@@ -197,7 +191,7 @@ def detect_dynamic_anomalies(df):
     if len(df) < 20:
         return anomaly_data
     
-    recent_data = df[-min(168, len(df)):]  
+    recent_data = df[-min(168, len(df)):]
     consumption_values = recent_data['consumption'].values
     
     for _, row in recent_data.iterrows():
@@ -262,7 +256,7 @@ def detect_dynamic_anomalies(df):
             last_calculated_contamination_rate = contamination_rate
 
             temp_detector = IsolationForest(
-                contamination=contamination_rate, 
+                contamination=contamination_rate,
                 random_state=int(time.time()) % 1000,
                 n_estimators=100
             )
@@ -332,14 +326,14 @@ def get_energy_data():
 
             try:
                 ridge_pred = ridge_model.predict(features)[0]
-                ensemble_pred = (0.5 * rf_pred) + (0.3 * ridge_pred) + (0.2 * mlp_pred) 
+                ensemble_pred = (0.5 * rf_pred) + (0.3 * ridge_pred) + (0.2 * mlp_pred)
             except:
-                ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred) 
+                ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred)
             item['predicted'] = round(ensemble_pred, 2)
             item['prediction_confidence'] = np.random.uniform(0.85, 0.98)
             
-        except Exception as e: 
-            print(f"Prediction error: {e}") 
+        except Exception as e:
+            print(f"Prediction error: {e}")
             item['predicted'] = item['consumption']
             item['prediction_confidence'] = 0.5
             
@@ -365,7 +359,7 @@ def get_analytics():
             })
     
     anomaly_data = detect_dynamic_anomalies(df)
-    anomaly_count = len(anomaly_data) 
+    anomaly_count = len(anomaly_data)
     
     cost_optimization = []
     for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']:
@@ -394,7 +388,7 @@ def get_analytics():
             })
     
     optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0
-    optimization_success_percentage = np.clip(optimization_success_percentage + np.random.uniform(-5, 5), 70.0, 99.9) 
+    optimization_success_percentage = np.clip(optimization_success_percentage + np.random.uniform(-5, 5), 70.0, 99.9)
     
     ml_algorithms = {
         'random_forest': {
@@ -415,10 +409,10 @@ def get_analytics():
             'parameters': {'alpha': 1.0, 'random_state': 42}, 'weight_in_ensemble': 0.3,
             'description': 'A type of linear regression that adds a regularization penalty to prevent overfitting. It\'s used as a stable baseline predictor within our ensemble model for energy data.'
         },
-        'mlp_regressor': { 
+        'mlp_regressor': {
             'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
-            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200, 'alpha': 0.0001}, 
-            'weight_in_ensemble': 0.2, 
+            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200, 'alpha': 0.0001},
+            'weight_in_ensemble': 0.2,
             'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
         }
     }
@@ -450,11 +444,11 @@ def create_geofence():
 def get_geofence_stats():
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
     total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
-    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0 
+    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0
     
     return jsonify({
         'total_zones': total_zones, 'total_triggers': int(total_triggers),
-        'optimization_success_count': round(optimization_success_percentage, 1) 
+        'optimization_success_count': round(optimization_success_percentage, 1)
     })
 
 @app.route('/api/geofences/activity', methods=['GET'])
@@ -493,67 +487,22 @@ def get_geofence_analytics():
     for geofence in geofence_data:
         zone_efficiency.append({'name': geofence['name'], 'efficiency': round(float(np.random.uniform(75, 96)), 1)})
     
-    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0 
-    optimization_success_percentage = np.clip(optimization_success_percentage + np.random.uniform(-5, 5), 70.0, 99.9) 
+    optimization_success_percentage = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 0.0
+    optimization_success_percentage = np.clip(optimization_success_percentage + np.random.uniform(-5, 5), 70.0, 99.9)
     
     ml_metrics = {
         'model_accuracy': round(float(np.random.uniform(91, 97)), 1),
         'prediction_confidence': round(float(np.random.uniform(88, 96)), 1),
-        'optimization_success_count': round(optimization_success_percentage, 1) 
+        'optimization_success_count': round(optimization_success_percentage, 1)
     }
     return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
-
-@app.route('/api/geofences/detect-anomalies', methods=['GET'])
-def detect_anomalies():
-    if not energy_data:
-        return jsonify({'anomalies': [], 'total_anomalies': 0})
-    
-    df = pd.DataFrame(energy_data)
-    raw_anomalies = detect_dynamic_anomalies(df)
-    processed_anomalies = []
-
-    for anomaly in raw_anomalies:
-        chosen_geofence = random.choice(geofence_data) if geofence_data else None
-        location_lat = chosen_geofence['lat'] if chosen_geofence else 37.7749 + np.random.normal(0, 0.01)
-        location_lng = chosen_geofence['lng'] if chosen_geofence else -122.4194 + np.random.normal(0, 0.01)
-        processed_anomalies.append({
-            'location': {'lat': round(float(location_lat), 4), 'lng': round(float(location_lng), 4)},
-            'energy_consumption': anomaly['consumption'], 'severity': anomaly['severity'],
-            'confidence': anomaly['score'], 'type': anomaly['type']
-        })
-    
-    recent_device_consumption_sum = df['device_consumption'].iloc[-min(24, len(df)):].sum() if len(df) > 0 else 0
-    base_anomaly_count = len(processed_anomalies) 
-    
-    if recent_device_consumption_sum > 1000:
-        adjusted_count = min(30, base_anomaly_count + np.random.randint(5, 10))
-    elif recent_device_consumption_sum > 100:
-        adjusted_count = min(30, base_anomaly_count + np.random.randint(0, 5))
-    else:
-        adjusted_count = min(30, max(2, base_anomaly_count + np.random.randint(-2, 3)))
-    
-    final_anomalies = processed_anomalies[:adjusted_count]
-    while len(final_anomalies) < adjusted_count:
-        if processed_anomalies:
-            new_anomaly = random.choice(processed_anomalies)
-            final_anomalies.append(new_anomaly)
-        else:
-            final_anomalies.append({
-                'location': {'lat': round(float(37.7749 + np.random.normal(0, 0.01)), 4),
-                             'lng': round(float(-122.4194 + np.random.normal(0, 0.01)), 4)},
-                'energy_consumption': round(float(np.random.uniform(15, 55)), 1),
-                'severity': random.choice(['critical', 'high', 'medium']),
-                'confidence': round(float(np.random.uniform(0.82, 0.97)), 3), 'type': random.choice(['ml_detected', 'statistical'])
-            })
-    random.shuffle(final_anomalies)
-    return jsonify({'anomalies': final_anomalies, 'total_anomalies': len(final_anomalies)})
 
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
     global optimization_history, optimization_success_count, total_optimization_attempts
     
-    total_optimization_attempts += 1 
+    total_optimization_attempts += 1
     improvements = []
     total_energy_improvement = 0
     
@@ -573,11 +522,11 @@ def optimize_geofences():
         total_energy_improvement += energy_improvement
     
     if np.random.rand() < 0.90:
-        optimization_success_count += 1 
+        optimization_success_count += 1
     
     optimization_record = {
         'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
-        'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count 
+        'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count
     }
     
     optimization_history.append(optimization_record)
@@ -588,7 +537,7 @@ def optimize_geofences():
         'success': True, 'message': 'Geofences optimized using ML algorithms',
         'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),
         'improvements': improvements, 'timestamp': optimization_record['timestamp'],
-        'optimization_success_count': optimization_success_count 
+        'optimization_success_count': optimization_success_count
     })
 
 @app.route('/api/geofences/optimization-history', methods=['GET'])
@@ -604,6 +553,6 @@ initialize_data()
 train_models()
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000)) 
+    port = int(os.environ.get("PORT", 5000))
     print(f"Flask app running locally on http://0.0.0.0:{port}")
     app.run(debug=True, host='0.0.0.0', port=port)

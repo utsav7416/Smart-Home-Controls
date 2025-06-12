@@ -56,7 +56,7 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
 };
 
 const fetchGeofences = async () => {
-  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`); // Debug log
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`); 
   const response = await fetch(`${FLASK_API_URL}/api/geofences`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -66,7 +66,7 @@ const fetchGeofences = async () => {
 };
 
 const fetchGeofenceStats = async () => {
-  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`); // Debug log
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`); 
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -98,20 +98,11 @@ const fetchGeofenceActivity = async () => {
 };
 
 const fetchAnalytics = async () => {
-  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`); // Debug log
+  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`); 
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(`Failed to fetch analytics: ${errorData.error || response.statusText}`);
-  }
-  return await response.json();
-};
-
-const fetchAnomalies = async () => {
-  const response = await fetch(`${FLASK_API_URL}/api/geofences/detect-anomalies`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to fetch anomalies: ${errorData.error || response.statusText}`);
   }
   return await response.json();
 };
@@ -202,7 +193,6 @@ export default function Geofencing() {
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: activity, error: activityError } = useApiData('geofence-activity', fetchGeofenceActivity, 15000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
-  const { data: anomalies, error: anomaliesError } = useApiData('geofence-anomalies', fetchAnomalies, 120000);
 
   const createMutation = useMutation(createGeofence, {
     onSuccess: () => {
@@ -235,7 +225,7 @@ export default function Geofencing() {
     }
   };
 
-  const overallError = geofenceError || statsError || activityError || analyticsError || anomaliesError || createMutation.error || optimizeMutation.error;
+  const overallError = geofenceError || statsError || activityError || analyticsError || createMutation.error || optimizeMutation.error;
 
   if (isLoading) {
     return (
@@ -338,7 +328,7 @@ export default function Geofencing() {
       </div>
 
       <div className="flex space-x-4 mb-6">
-        {['overview', 'analytics', 'anomalies'].map((tab) => (
+        {['overview', 'analytics'].map((tab) => (
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -548,63 +538,6 @@ export default function Geofencing() {
             </CardContent>
           </Card>
         </div>
-      )}
-
-      {activeTab === 'anomalies' && anomalies && (
-        <Card className="bg-black/40 backdrop-blur-md border border-red-400/20">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Brain className="w-5 h-5 text-red-400" />
-              ML Anomaly Detection
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-red-900/20 p-4 rounded-lg border border-red-400/30">
-                <p className="text-red-200 text-sm">Total Anomalies</p>
-                <p className="text-2xl font-bold text-white">{anomalies.total_anomalies || 0}</p>
-              </div>
-              <div className="bg-yellow-900/20 p-4 rounded-lg border border-yellow-400/30">
-                <p className="text-yellow-200 text-sm">Detection Rate</p>
-                <p className="text-2xl font-bold text-white">{(anomalies.detection_rate || 0).toFixed(1)}%</p>
-              </div>
-              <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-400/30">
-                <p className="text-blue-200 text-sm">Model Confidence</p>
-                <p className="text-2xl font-bold text-white">{mlMetrics.prediction_confidence?.toFixed(1) || 0}%</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {anomalies.anomalies && anomalies.anomalies.length > 0 ? (
-                anomalies.anomalies.map((anomaly, index) => (
-                  <div key={index} className="bg-red-900/20 p-4 rounded-lg border border-red-400/30">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-white font-medium">Anomalous Location Pattern</p>
-                        <p className="text-red-200 text-sm">
-                          Lat: {anomaly.location.lat.toFixed(4)}, Lng: {anomaly.location.lng.toFixed(4)}
-                        </p>
-                        <p className="text-red-300 text-sm">Energy: {anomaly.energy_consumption.toFixed(1)}kW</p>
-                      </div>
-                      <div className="text-right">
-                        <span className={`px-2 py-1 text-xs rounded ${
-                          anomaly.severity === 'high' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'
-                        }`}>
-                          {anomaly.severity.toUpperCase()}
-                        </span>
-                        <p className="text-gray-400 text-xs mt-1">
-                          {new Date(anomaly.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-green-300 text-center">No anomalies detected recently.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {showCreateForm && (

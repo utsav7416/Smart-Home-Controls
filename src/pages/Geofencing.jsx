@@ -426,7 +426,6 @@ export default function Geofencing() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-white font-medium">{item.event}</span>
-                        <span className="text-green-300 text-sm">{item.time}</span>
                       </div>
                       <p className="text-green-200 text-sm">{item.automation}</p>
                       <div className="flex justify-between text-xs mt-1">

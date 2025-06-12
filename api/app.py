@@ -38,7 +38,6 @@ ridge_model = Ridge(alpha=1.0, random_state=42)
 anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
 scaler = StandardScaler()
 location_clusterer = DBSCAN(eps=0.01, min_samples=3)
-# FIX: Added alpha parameter for MLPRegressor
 mlp_model = MLPRegressor(hidden_layer_sizes=(100, 50), activation='relu', solver='adam', max_iter=200, random_state=42, alpha=0.0001)
 
 energy_data = []
@@ -366,7 +365,6 @@ def get_analytics():
             })
     
     anomaly_data = detect_dynamic_anomalies(df)
-    # FIX: Correctly get anomaly count after anomaly_data is populated
     anomaly_count = len(anomaly_data) 
     
     cost_optimization = []
@@ -419,7 +417,7 @@ def get_analytics():
         },
         'mlp_regressor': { 
             'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
-            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200, 'alpha': 0.0001}, # Added alpha
+            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200, 'alpha': 0.0001}, 
             'weight_in_ensemble': 0.2, 
             'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
         }
@@ -518,11 +516,10 @@ def detect_anomalies():
         chosen_geofence = random.choice(geofence_data) if geofence_data else None
         location_lat = chosen_geofence['lat'] if chosen_geofence else 37.7749 + np.random.normal(0, 0.01)
         location_lng = chosen_geofence['lng'] if chosen_geofence else -122.4194 + np.random.normal(0, 0.01)
-        anomaly['timestamp'] = datetime.now().isoformat()
         processed_anomalies.append({
             'location': {'lat': round(float(location_lat), 4), 'lng': round(float(location_lng), 4)},
             'energy_consumption': anomaly['consumption'], 'severity': anomaly['severity'],
-            'timestamp': anomaly['timestamp'], 'confidence': anomaly['score'], 'type': anomaly['type']
+            'confidence': anomaly['score'], 'type': anomaly['type']
         })
     
     recent_device_consumption_sum = df['device_consumption'].iloc[-min(24, len(df)):].sum() if len(df) > 0 else 0
@@ -539,14 +536,13 @@ def detect_anomalies():
     while len(final_anomalies) < adjusted_count:
         if processed_anomalies:
             new_anomaly = random.choice(processed_anomalies)
-            new_anomaly['timestamp'] = datetime.now().isoformat()
             final_anomalies.append(new_anomaly)
         else:
             final_anomalies.append({
                 'location': {'lat': round(float(37.7749 + np.random.normal(0, 0.01)), 4),
                              'lng': round(float(-122.4194 + np.random.normal(0, 0.01)), 4)},
                 'energy_consumption': round(float(np.random.uniform(15, 55)), 1),
-                'severity': random.choice(['critical', 'high', 'medium']), 'timestamp': datetime.now().isoformat(),
+                'severity': random.choice(['critical', 'high', 'medium']),
                 'confidence': round(float(np.random.uniform(0.82, 0.97)), 3), 'type': random.choice(['ml_detected', 'statistical'])
             })
     random.shuffle(final_anomalies)

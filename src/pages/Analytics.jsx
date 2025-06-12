@@ -102,8 +102,8 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="w-full"> 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-colors">
+    <div className="w-full">
+      <div className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-colors">
         <div className="bg-zinc-800 px-6 py-4 border-b border-zinc-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -390,7 +390,7 @@ export default function Analytics() {
         </Card>
       </div>
 
-      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
@@ -422,7 +422,7 @@ export default function Analytics() {
               </Scatter>
             </ScatterChart>
           </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-2 text-sm text-zinc-400">
               <div className="w-3 h-3 bg-red-400 rounded-full"></div>
               <span>High severity: {anomalyData.filter((a) => a.severity === 'high').length}</span>
@@ -431,15 +431,11 @@ export default function Analytics() {
               <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
               <span>Medium severity: {anomalyData.filter((a) => a.severity === 'medium').length}</span>
             </div>
-            <div className="text-sm text-zinc-400">
-              <span className="text-white font-semibold">Last detected:</span>
-              {anomalyData.length > 0 ? ` ${new Date(anomalyData[0].timestamp).toLocaleTimeString()}` : ' None'}
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5" />
@@ -472,7 +468,7 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
@@ -516,7 +512,7 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5" />
@@ -567,7 +563,7 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Target className="w-5 h-5" />

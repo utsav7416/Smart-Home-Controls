@@ -38,68 +38,68 @@ function CalendarHeatmap({ data, deviceName, room }) {
   };
 
   const daysData = getLast5DaysData();
-  const maxCount = Math.max(...daysData.map(d => d.count), 1);
+  const maxCount = Math.max(...daysData.map(d => d.count));
+  const totalActions = daysData.reduce((sum, day) => sum + day.count, 0);
 
   const getIntensityColor = (count) => {
-    if (count === 0) return '#0F172A'; 
+    if (count === 0) return '#1e293b'; // Dark gray for no activity
+    if (maxCount === 0) return '#1e293b';
+    
     const intensity = count / maxCount;
-    if (intensity <= 0.25) return '#4CAF50'; 
-    if (intensity <= 0.5) return '#8BC34A';  
-    if (intensity <= 0.75) return '#CDDC39';
-    return '#FFEB3B';
+    if (intensity <= 0.2) return '#065f46'; // Dark green
+    if (intensity <= 0.4) return '#047857'; // Medium dark green
+    if (intensity <= 0.6) return '#059669'; // Medium green
+    if (intensity <= 0.8) return '#10b981'; // Light green
+    return '#34d399'; // Bright green
   };
 
   return (
-    <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
+    <div className="bg-gray-900 p-4 rounded-lg border border-gray-600">
       <div className="flex items-center gap-2 mb-4">
-        <FaChartBar className="w-4 h-4 text-blue-400" />
+        <FaChartBar className="w-4 h-4 text-emerald-400" />
         <h4 className="text-sm font-semibold text-white">
           {deviceName} Usage Activity
         </h4>
       </div>
 
-      <p className="text-xs text-slate-400 mb-3">
-        Track your device usage patterns over the last 5 days. Lighter squares indicate higher activity.
+      <p className="text-xs text-gray-400 mb-3">
+        Track your device usage patterns over the last 5 days. Brighter squares indicate higher activity.
       </p>
 
       <div className="grid grid-cols-5 gap-2 mb-3">
         {daysData.map((day, index) => (
           <div key={index} className="flex flex-col items-center">
             <div
-              className="w-8 h-8 rounded-sm border border-slate-600 transition-all hover:scale-110"
+              className="w-10 h-10 rounded-lg border border-gray-700 transition-all hover:scale-110 hover:border-emerald-400 cursor-pointer flex items-center justify-center"
               style={{ backgroundColor: getIntensityColor(day.count) }}
               title={`${day.dayName}, ${day.dayNumber}: ${day.count} actions`}
-            />
-            <span className="text-xs text-slate-500 mt-1">{day.dayName}</span>
+            >
+              <span className="text-xs text-white font-medium">{day.count}</span>
+            </div>
+            <span className="text-xs text-gray-400 mt-1">{day.dayName}</span>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-between text-xs text-slate-400">
+      <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
         <span>Less activity</span>
         <div className="flex gap-1">
-          {[0, 0.25, 0.5, 0.75, 1].map((intensity, i) => (
+          {[0, 0.2, 0.4, 0.6, 0.8, 1].map((intensity, i) => (
             <div
               key={i}
-              className="w-3 h-3 rounded-sm"
-              style={{ backgroundColor: getIntensityColor(maxCount * intensity) }}
+              className="w-3 h-3 rounded-sm border border-gray-700"
+              style={{ backgroundColor: getIntensityColor(Math.ceil(maxCount * intensity)) }}
             />
           ))}
         </div>
         <span>More activity</span>
       </div>
 
-      <div className="mt-3 p-2 bg-slate-800 rounded text-xs">
+      <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-700">
         <div className="flex justify-between">
-          <span className="text-slate-300">Total actions (5 days):</span>
-          <span className="text-blue-400 font-semibold">
-            {daysData.reduce((sum, day) => sum + day.count, 0)}
-          </span>
-        </div>
-        <div className="flex justify-between mt-1">
-          <span className="text-slate-300">Most active day:</span>
-          <span className="text-blue-400 font-semibold">
-            {maxCount} actions
+          <span className="text-gray-300">Total actions (5 days):</span>
+          <span className="text-emerald-400 font-semibold">
+            {totalActions}
           </span>
         </div>
       </div>
@@ -150,75 +150,19 @@ function DeviceControl({ room }) {
     }));
   };
 
-  const getInitialDeviceStates = () => {
-    const savedStates = localStorage.getItem('deviceStates');
-    if (savedStates) {
-      try {
-        const parsed = JSON.parse(savedStates);
-        // Add icons back to loaded data
-        Object.keys(parsed).forEach(roomKey => {
-          parsed[roomKey] = addIconsToDevices(parsed[roomKey]);
-        });
-        return parsed;
-      } catch (error) {
-        console.error('Failed to parse saved device states:', error);
-      }
-    }
-
-    const defaultStates = {
+  // Initialize states with in-memory storage instead of localStorage
+  const [allDeviceStates, setAllDeviceStates] = useState(() => {
+    return {
       "Living Room": addIconsToDevices(initialLivingRoomDevices),
       "Bedroom": addIconsToDevices(initialBedroomDevices),
       "Office": addIconsToDevices(initialOfficeDevices),
       "Kitchen": addIconsToDevices(initialKitchenDevices),
       "Bathroom": addIconsToDevices(initialBathroomDevices),
     };
-    return defaultStates;
-  };
+  });
 
-  const getInitialUsageData = () => {
-    const savedUsageData = localStorage.getItem('usageData');
-    if (savedUsageData) {
-      try {
-        return JSON.parse(savedUsageData);
-      } catch (error) {
-        console.error('Failed to parse saved usage data:', error);
-      }
-    }
-    return {};
-  };
-
-  const getInitialHeatmapState = () => {
-    const savedHeatmapState = localStorage.getItem('showHeatmap');
-    if (savedHeatmapState) {
-      try {
-        return JSON.parse(savedHeatmapState);
-      } catch (error) {
-        console.error('Failed to parse saved heatmap state:', error);
-      }
-    }
-    return {};
-  };
-
-  const [allDeviceStates, setAllDeviceStates] = useState(getInitialDeviceStates);
-  const [usageData, setUsageData] = useState(getInitialUsageData);
-  const [showHeatmap, setShowHeatmap] = useState(getInitialHeatmapState);
-
-  // Save to localStorage whenever states change
-  useEffect(() => {
-    const statesToSave = {};
-    Object.keys(allDeviceStates).forEach(roomKey => {
-      statesToSave[roomKey] = allDeviceStates[roomKey].map(({ icon, ...rest }) => rest);
-    });
-    localStorage.setItem('deviceStates', JSON.stringify(statesToSave));
-  }, [allDeviceStates]);
-
-  useEffect(() => {
-    localStorage.setItem('usageData', JSON.stringify(usageData));
-  }, [usageData]);
-
-  useEffect(() => {
-    localStorage.setItem('showHeatmap', JSON.stringify(showHeatmap));
-  }, [showHeatmap]);
+  const [usageData, setUsageData] = useState({});
+  const [showHeatmap, setShowHeatmap] = useState({});
 
   const getActiveRoomDevices = () => {
     return allDeviceStates[room] || [];
@@ -288,7 +232,7 @@ function DeviceControl({ room }) {
   const getSliderStyle = (value, min, max) => {
     const percentage = ((value - min) / (max - min)) * 100;
     return {
-      background: `linear-gradient(90deg, #3b82f6 ${percentage}%, #374151 ${percentage}%)`
+      background: `linear-gradient(90deg, #10b981 ${percentage}%, #374151 ${percentage}%)`
     };
   };
 
@@ -326,7 +270,7 @@ function DeviceControl({ room }) {
       device.property === 'temp' || device.property === 'temperature' ? `${max}°F` :
       (device.property === 'volume' ? 'Max' : 'High');
     return (
-      <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-600">
+      <div className="mt-3 p-3 bg-gray-900 rounded-lg border border-gray-700">
         <label className="text-sm font-medium text-gray-200 mb-2 block">
           {device.property === 'brightness' && 'Brightness Control'}
           {device.property === 'speed' && 'Fan Speed Control'}
@@ -347,7 +291,7 @@ function DeviceControl({ room }) {
         />
         <div className="flex justify-between text-sm text-gray-400 mt-2">
           <span>{minLabel}</span>
-          <span className="font-semibold text-blue-400">{valueLabel}</span>
+          <span className="font-semibold text-emerald-400">{valueLabel}</span>
           <span>{maxLabel}</span>
         </div>
       </div>
@@ -355,8 +299,8 @@ function DeviceControl({ room }) {
   };
 
   return (
-    <div className="p-6 bg-gray-900 rounded-xl shadow-2xl text-white border border-gray-700">
-      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+    <div className="p-6 bg-gray-950 rounded-xl shadow-2xl text-white border border-gray-800">
+      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
         {room} Smart Controls
       </h2>
       <div className="grid grid-cols-1 gap-6">
@@ -365,11 +309,11 @@ function DeviceControl({ room }) {
           const deviceUsageData = usageData[deviceKey] || {};
           const hasUsageData = Object.keys(deviceUsageData).length > 0;
           return (
-            <div key={device.id} className="bg-gray-800 p-5 rounded-xl border border-gray-600 hover:border-gray-500 transition-all">
+            <div key={device.id} className="bg-gray-900 p-5 rounded-xl border border-gray-700 hover:border-gray-600 transition-all shadow-lg">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-4">
                   {device.icon && (
-                    <device.icon className={`w-7 h-7 transition-colors ${device.isOn ? 'text-blue-400' : 'text-gray-500'}`} />
+                    <device.icon className={`w-7 h-7 transition-colors ${device.isOn ? 'text-emerald-400' : 'text-gray-500'}`} />
                   )}
                   <div>
                     <span className="font-semibold text-lg">{device.name}</span>
@@ -382,8 +326,8 @@ function DeviceControl({ room }) {
                       onClick={() => toggleHeatmap(deviceKey)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         showHeatmap[deviceKey]
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                          : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
                       }`}
                     >
                       <FaChartBar className="w-4 h-4" />
@@ -393,8 +337,8 @@ function DeviceControl({ room }) {
                 </div>
                 <button
                   onClick={() => toggleDevice(device.id)}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
-                    device.isOn ? 'bg-blue-600' : 'bg-gray-600'
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                    device.isOn ? 'bg-emerald-600' : 'bg-gray-700'
                   }`}
                 >
                   <span

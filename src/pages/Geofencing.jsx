@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, CheckCircle, BarChart3, Activity, PieChart, Bolt, LightningBolt } from 'lucide-react';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, CheckCircle, BarChart3, Activity, PieChart, Bolt } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -541,7 +541,7 @@ export default function Geofencing() {
                 <div className="flex flex-col gap-1 p-3 bg-purple-900/10 rounded-lg border border-purple-500/20 hover:bg-purple-900/20 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <LightningBolt className="w-5 h-5 text-purple-400" />
+                      <Bolt className="w-5 h-5 text-purple-400" />
                       <span className="text-purple-200 font-medium">Total Triggers Processed</span>
                     </div>
                     <span className="text-white font-bold text-xl">{stats?.total_triggers || 1247}</span>

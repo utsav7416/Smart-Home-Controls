@@ -451,24 +451,6 @@ def get_geofence_stats():
         'optimization_success_count': round(optimization_success_percentage, 1)
     })
 
-@app.route('/api/geofences/activity', methods=['GET'])
-def get_geofence_activity():
-    activities = []
-    for i in range(8):
-        timestamp = datetime.now() - timedelta(hours=i)
-        location = random.choice(['Home', 'Work Office', 'Gym', 'Store'])
-        event = random.choice(['Entered', 'Left'])
-        
-        activities.append({
-            'event': f"{event} {location}", 'time': timestamp.strftime('%H:%M'),
-            'automation': random.choice([
-                'Smart lighting adjusted', 'HVAC optimization triggered',
-                'Security system updated', 'Energy-saving mode activated'
-            ]),
-            'location': location, 'energy_impact': round(float(np.random.uniform(-25, 20)), 1)
-        })
-    return jsonify(activities)
-
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():
     global total_optimization_attempts, optimization_success_count

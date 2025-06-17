@@ -394,45 +394,18 @@ export default function Geofencing() {
             </CardContent>
           </Card>
 
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Clock className="w-5 h-5 text-green-400" />
-                ML-Enhanced Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {activity?.length > 0 ? (
-                activity.slice(0, 3).map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-3 bg-green-900/20 rounded-lg border border-green-400/20"
-                  >
-                    <img
-                      src={`https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRD3PgRhvR5JwlQMtXW9W7Zqa4HnOWN6aHIug&s?${encodeURIComponent(item.location)}`}
-                      alt={item.location}
-                      className="w-16 h-16 rounded-md object-cover flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white font-medium">{item.event}</span>
-                      </div>
-                      <p className="text-green-200 text-sm">{item.automation}</p>
-                      <div className="flex justify-between text-xs mt-1">
-                        <span className="text-green-400">{item.location}</span>
-                        <span className={`${item.energy_impact > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                          {item.energy_impact > 0 ? '+' : ''}
-                          {item.energy_impact.toFixed(1)}kW
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-green-300 text-center">No recent activity to display.</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="flex gap-2">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-_eF4UTYx2njHANYE9Y0wopBnqMknNcNRiw&s"
+              alt="Smart Home Security"
+              className="w-1/2 h-32 object-cover rounded-lg"
+            />
+            <img
+              src="https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp"
+              alt="Smart Home Climate Control"
+              className="w-1/2 h-32 object-cover rounded-lg"
+            />
+          </div>
 
         </div>
       )}

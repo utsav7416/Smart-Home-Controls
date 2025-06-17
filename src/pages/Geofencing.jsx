@@ -322,7 +322,7 @@ export default function Geofencing() {
       </div>
 
       <div className="flex space-x-4 mb-6">
-        {['overview', 'analytics', 'conclusion'].map((tab) => (
+        {['overview', 'analytics'].map((tab) => (
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -477,139 +477,6 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-
-      {activeTab === 'conclusion' && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.2, duration: 0.8 } }
-          }}
-          className="space-y-6"
-        >
-          <Card className="bg-gradient-to-br from-black via-green-900 to-gray-900 border border-green-800 rounded-2xl p-6">
-            <CardHeader>
-              <CardTitle className="text-white text-3xl flex items-center gap-3">
-                <CheckCircle className="w-7 h-7 text-green-400 animate-pulse" />
-                Performance at a Glance
-              </CardTitle>
-            </CardHeader>
-
-            <CardContent className="space-y-8">
-              <motion.p
-                variants={{ hidden: { y: 10, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-                className="text-green-200 text-sm leading-relaxed"
-              >
-                Our geofencing engine optimizes energy usage with intelligent zone predictions—delivering sustainable comfort without manual effort.
-              </motion.p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <motion.div
-                  variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-                  whileHover={{ scale: 1.05 }}
-                  className="space-y-6"
-                >
-                  <h4 className="text-white font-semibold text-xl flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-green-300" /> Core Metrics
-                  </h4>
-
-                  <div className="space-y-6">
-                    <div className="p-4 bg-green-800/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-green-200">Model Accuracy</span>
-                        <span className="text-white text-2xl font-bold">{mlMetrics.model_accuracy?.toFixed(1) || 95.2}%</span>
-                      </div>
-                      <p className="mt-1 text-green-300 text-sm">Percentage of correct zone predictions by our ML model over historical data.</p>
-                    </div>
-
-                    <div className="p-4 bg-green-800/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-green-200">Prediction Confidence</span>
-                        <span className="text-white text-2xl font-bold">{mlMetrics.prediction_confidence?.toFixed(1) || 88.7}%</span>
-                      </div>
-                      <p className="mt-1 text-green-300 text-sm">Average confidence level of the model’s zone adjustments.</p>
-                    </div>
-
-                    <div className="p-4 bg-green-800/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-green-200">Active Zones</span>
-                        <span className="text-white text-2xl font-bold">{stats.total_zones || 12}</span>
-                      </div>
-                      <p className="mt-1 text-green-300 text-sm">Total geofence zones currently monitoring your environment.</p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1 } }}
-                  whileHover={{ scale: 1.05 }}
-                  className="space-y-6"
-                >
-                  <h4 className="text-white font-semibold text-xl flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-green-300" /> Operational Highlights
-                  </h4>
-
-                  <div className="space-y-6">
-                    <div className="p-4 bg-green-800/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-green-200">Total Triggers Processed</span>
-                        <span className="text-white text-2xl font-bold">{stats.total_triggers || 1247}</span>
-                      </div>
-                      <p className="mt-1 text-green-300 text-sm">Number of times geofence boundaries detected an event and responded.</p>
-                    </div>
-
-                    <div className="p-4 bg-green-800/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-green-200">Optimization Success</span>
-                        <span className="text-white text-2xl font-bold">{mlMetrics.optimization_success_count?.toFixed(1) || 92.4}%</span>
-                      </div>
-                      <p className="mt-1 text-green-300 text-sm">Rate at which automated adjustments improved energy usage.</p>
-                    </div>
-
-                    <div className="p-4 bg-green-800/50 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-green-200">Energy Savings</span>
-                        <span className="text-white text-2xl font-bold">{((geofences.reduce((sum, g) => sum + (g.energy_savings || 0), 0) / (geofences.length || 1)) || 23.8).toFixed(1)}%</span>
-                      </div>
-                      <p className="mt-1 text-green-300 text-sm">Average percentage of energy conserved across all zones.</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-
-              <motion.div
-                variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { delay: 0.4 } } }}
-                className="space-y-6"
-              >
-                <div className="bg-green-800/20 p-4 rounded-lg">
-                  <h5 className="text-green-100 font-semibold">Overall Impact</h5>
-                  <p className="text-green-200 text-sm leading-relaxed">
-                    Kudos! we’ve saved an average of <span className="font-bold text-white">{((geofences.reduce((sum, g) => sum + (g.energy_savings || 0), 0) / (geofences.length || 1)) || 23.8).toFixed(1)}%</span> energy across your home—effortlessly balancing efficiency and comfort.
-                  </p>
-                  <p className="text-green-300 text-xs italic">Disclaimer: Metrics improve as models evolve.</p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                variants={{ hidden: { y: 20, opacity: 0 }, visible: { y: 0, opacity: 1, transition: { delay: 0.6 } } }}
-                className="grid grid-cols-2 gap-6"
-              >
-                {geofences.slice(0, 2).map((g, idx) => (
-                  <motion.img
-                    key={idx}
-                    src={g.imageUrl}
-                    alt={`Zone ${idx + 1}`}
-                    className="w-full h-48 object-cover rounded-lg shadow-lg"
-                    variants={{ hidden: { scale: 0.8, opacity: 0 }, visible: { scale: 1, opacity: 1 } }}
-                  />
-                ))}
-              </motion.div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
 
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">

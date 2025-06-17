@@ -88,15 +88,6 @@ const createGeofence = async (geofenceData) => {
   return await response.json();
 };
 
-const fetchGeofenceActivity = async () => {
-  const response = await fetch(`${FLASK_API_URL}/api/geofences/activity`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to fetch activity: ${errorData.error || response.statusText}`);
-  }
-  return await response.json();
-};
-
 const fetchAnalytics = async () => {
   console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaLightbulb, FaFan, FaTv, FaThermometerHalf, FaQrcode } from 'react-icons/fa';
+import { FaLightbulb, FaFan, FaTv, FaThermometerHalf, FaChartBar } from 'react-icons/fa';
 import { MdKitchen, MdHotTub, MdShower, MdMicrowave } from 'react-icons/md';
-import { QRCodeSVG } from 'qrcode.react';
 
 const ICON_MAP = {
   'Main Light': FaLightbulb,
@@ -15,44 +14,94 @@ const ICON_MAP = {
   'Dryer': FaFan,
 };
 
-function CalendarHeatmap({ data, deviceName }) {
-  const getIntensity = (index) => {
+function CalendarHeatmap({ data, deviceName, room }) {
+  const getLast9DaysData = () => {
     const today = new Date();
-    const lastNineDaysData = [];
+    const last9Days = [];
+    
     for (let i = 8; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const dateString = d.toISOString().split('T')[0];
-      lastNineDaysData.push(data[dateString] ? data[dateString].count : 0);
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const dayNumber = date.getDate();
+      
+      last9Days.push({
+        date: dateString,
+        dayName,
+        dayNumber,
+        count: data[dateString]?.count || 0
+      });
     }
-    if (lastNineDaysData.length === 0) return 0;
-    const count = lastNineDaysData[index] || 0;
-    const maxCount = Math.max(...lastNineDaysData);
-    if (maxCount === 0) return 0;
-    const intensity = count / maxCount;
-    if (intensity === 0) return 0;
-    if (intensity <= 0.33) return 1;
-    if (intensity <= 0.66) return 2;
-    return 3;
+    
+    return last9Days;
   };
 
-  const getColor = (intensity) => {
-    const colors = ['#374151', '#22c55e', '#16a34a', '#15803d'];
-    return colors[intensity];
+  const daysData = getLast9DaysData();
+  const maxCount = Math.max(...daysData.map(d => d.count), 1);
+
+  const getIntensityColor = (count) => {
+    if (count === 0) return '#1f2937'; // gray-800
+    const intensity = count / maxCount;
+    if (intensity <= 0.25) return '#065f46'; // emerald-800
+    if (intensity <= 0.5) return '#047857'; // emerald-700
+    if (intensity <= 0.75) return '#059669'; // emerald-600
+    return '#10b981'; // emerald-500
   };
 
   return (
-    <div className="bg-gray-700 p-3 rounded">
-      <div className="text-xs text-gray-300 mb-2">{deviceName} Usage (Last 9 Days)</div>
-      <div className="grid grid-cols-3 gap-1">
-        {Array.from({ length: 9 }, (_, i) => (
-          <div
-            key={i}
-            className="w-6 h-6 rounded"
-            style={{ backgroundColor: getColor(getIntensity(i)) }}
-            title={`Day ${9 - i}: ${data[new Date(new Date().setDate(new Date().getDate() - (8 - i))).toISOString().split('T')[0]]?.count || 0} actions`}
-          />
+    <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+      <div className="flex items-center gap-2 mb-4">
+        <FaChartBar className="w-4 h-4 text-emerald-400" />
+        <h4 className="text-sm font-semibold text-white">
+          {deviceName} Usage Activity
+        </h4>
+      </div>
+      
+      <p className="text-xs text-gray-400 mb-3">
+        Track your device usage patterns over the last 9 days. Darker squares indicate higher activity.
+      </p>
+
+      <div className="grid grid-cols-9 gap-1 mb-3">
+        {daysData.map((day, index) => (
+          <div key={index} className="flex flex-col items-center">
+            <div
+              className="w-6 h-6 rounded-sm border border-gray-600 transition-all hover:scale-110"
+              style={{ backgroundColor: getIntensityColor(day.count) }}
+              title={`${day.dayName}, ${day.dayNumber}: ${day.count} actions`}
+            />
+            <span className="text-xs text-gray-500 mt-1">{day.dayName}</span>
+          </div>
         ))}
+      </div>
+
+      <div className="flex items-center justify-between text-xs text-gray-400">
+        <span>Less activity</span>
+        <div className="flex gap-1">
+          {[0, 0.25, 0.5, 0.75, 1].map((intensity, i) => (
+            <div
+              key={i}
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: getIntensityColor(maxCount * intensity) }}
+            />
+          ))}
+        </div>
+        <span>More activity</span>
+      </div>
+
+      <div className="mt-3 p-2 bg-gray-700 rounded text-xs">
+        <div className="flex justify-between">
+          <span className="text-gray-300">Total actions (9 days):</span>
+          <span className="text-emerald-400 font-semibold">
+            {daysData.reduce((sum, day) => sum + day.count, 0)}
+          </span>
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-gray-300">Most active day:</span>
+          <span className="text-emerald-400 font-semibold">
+            {maxCount} actions
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -102,6 +151,20 @@ function DeviceControl({ room }) {
   };
 
   const getInitialDeviceStates = () => {
+    const savedStates = localStorage.getItem('deviceStates');
+    if (savedStates) {
+      try {
+        const parsed = JSON.parse(savedStates);
+        // Add icons back to loaded data
+        Object.keys(parsed).forEach(roomKey => {
+          parsed[roomKey] = addIconsToDevices(parsed[roomKey]);
+        });
+        return parsed;
+      } catch (error) {
+        console.error('Failed to parse saved device states:', error);
+      }
+    }
+    
     const defaultStates = {
       "Living Room": addIconsToDevices(initialLivingRoomDevices),
       "Bedroom": addIconsToDevices(initialBedroomDevices),
@@ -113,12 +176,49 @@ function DeviceControl({ room }) {
   };
 
   const getInitialUsageData = () => {
+    const savedUsageData = localStorage.getItem('usageData');
+    if (savedUsageData) {
+      try {
+        return JSON.parse(savedUsageData);
+      } catch (error) {
+        console.error('Failed to parse saved usage data:', error);
+      }
+    }
+    return {};
+  };
+
+  const getInitialHeatmapState = () => {
+    const savedHeatmapState = localStorage.getItem('showHeatmap');
+    if (savedHeatmapState) {
+      try {
+        return JSON.parse(savedHeatmapState);
+      } catch (error) {
+        console.error('Failed to parse saved heatmap state:', error);
+      }
+    }
     return {};
   };
 
   const [allDeviceStates, setAllDeviceStates] = useState(getInitialDeviceStates);
   const [usageData, setUsageData] = useState(getInitialUsageData);
-  const [showHeatmap, setShowHeatmap] = useState({});
+  const [showHeatmap, setShowHeatmap] = useState(getInitialHeatmapState);
+
+  // Save to localStorage whenever states change
+  useEffect(() => {
+    const statesToSave = {};
+    Object.keys(allDeviceStates).forEach(roomKey => {
+      statesToSave[roomKey] = allDeviceStates[roomKey].map(({ icon, ...rest }) => rest);
+    });
+    localStorage.setItem('deviceStates', JSON.stringify(statesToSave));
+  }, [allDeviceStates]);
+
+  useEffect(() => {
+    localStorage.setItem('usageData', JSON.stringify(usageData));
+  }, [usageData]);
+
+  useEffect(() => {
+    localStorage.setItem('showHeatmap', JSON.stringify(showHeatmap));
+  }, [showHeatmap]);
 
   const getActiveRoomDevices = () => {
     return allDeviceStates[room] || [];
@@ -127,6 +227,7 @@ function DeviceControl({ room }) {
   const recordUsage = (deviceName, actionType, value = null) => {
     const today = new Date().toISOString().split('T')[0];
     const deviceKey = `${room}-${deviceName}`;
+    
     setUsageData(prevData => {
       const newData = { ...prevData };
       if (!newData[deviceKey]) {
@@ -187,7 +288,7 @@ function DeviceControl({ room }) {
   const getSliderStyle = (value, min, max) => {
     const percentage = ((value - min) / (max - min)) * 100;
     return {
-      background: `linear-gradient(90deg, #3b82f6 ${percentage}%, #d1d5db ${percentage}%)`
+      background: `linear-gradient(90deg, #3b82f6 ${percentage}%, #374151 ${percentage}%)`
     };
   };
 
@@ -225,15 +326,15 @@ function DeviceControl({ room }) {
       device.property === 'temp' || device.property === 'temperature' ? `${max}°F` :
       (device.property === 'volume' ? 'Max' : 'High');
     return (
-      <div className="mt-2">
-        <label className="text-sm text-gray-300 mb-1 block">
-          {device.property === 'brightness' && 'Brightness'}
-          {device.property === 'speed' && 'Fan Speed'}
-          {device.property === 'temp' && 'Temperature'}
-          {device.property === 'temperature' && 'Water Temperature'}
-          {device.property === 'volume' && 'Volume'}
-          {device.property === 'pressure' && 'Water Pressure'}
-          {device.property === 'power' && 'Power Level'}
+      <div className="mt-3 p-3 bg-gray-800 rounded-lg border border-gray-600">
+        <label className="text-sm font-medium text-gray-200 mb-2 block">
+          {device.property === 'brightness' && 'Brightness Control'}
+          {device.property === 'speed' && 'Fan Speed Control'}
+          {device.property === 'temp' && 'Temperature Control'}
+          {device.property === 'temperature' && 'Water Temperature Control'}
+          {device.property === 'volume' && 'Volume Control'}
+          {device.property === 'pressure' && 'Water Pressure Control'}
+          {device.property === 'power' && 'Power Level Control'}
         </label>
         <input
           type="range"
@@ -241,12 +342,12 @@ function DeviceControl({ room }) {
           max={max}
           value={device.value}
           onChange={(e) => updateDeviceValue(device.id, 'value', parseInt(e.target.value))}
-          className="w-full"
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer slider"
           style={getSliderStyle(device.value, min, max)}
         />
-        <div className="flex justify-between text-sm text-gray-400 mt-1">
+        <div className="flex justify-between text-sm text-gray-400 mt-2">
           <span>{minLabel}</span>
-          <span>{valueLabel}</span>
+          <span className="font-semibold text-blue-400">{valueLabel}</span>
           <span>{maxLabel}</span>
         </div>
       </div>
@@ -254,57 +355,65 @@ function DeviceControl({ room }) {
   };
 
   return (
-    <div className="p-4 bg-gray-800 rounded-lg shadow-lg text-white">
-      <h2 className="text-xl font-bold mb-4">{room} Controls</h2>
-      <div className="grid grid-cols-1 gap-4">
+    <div className="p-6 bg-gray-900 rounded-xl shadow-2xl text-white border border-gray-700">
+      <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+        {room} Smart Controls
+      </h2>
+      <div className="grid grid-cols-1 gap-6">
         {getActiveRoomDevices().map(device => {
           const deviceKey = `${room}-${device.name}`;
           const deviceUsageData = usageData[deviceKey] || {};
           const hasUsageData = Object.keys(deviceUsageData).length > 0;
           return (
-            <div key={device.id} className="bg-gray-700 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+            <div key={device.id} className="bg-gray-800 p-5 rounded-xl border border-gray-600 hover:border-gray-500 transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-4">
                   {device.icon && (
-                    <device.icon className={`w-6 h-6 ${device.isOn ? 'text-blue-400' : 'text-gray-400'}`} />
+                    <device.icon className={`w-7 h-7 transition-colors ${device.isOn ? 'text-blue-400' : 'text-gray-500'}`} />
                   )}
-                  <span className="font-semibold">{device.name}</span>
+                  <div>
+                    <span className="font-semibold text-lg">{device.name}</span>
+                    <p className="text-xs text-gray-400">
+                      {device.isOn ? 'Currently active' : 'Currently off'}
+                    </p>
+                  </div>
                   {hasUsageData && (
                     <button
                       onClick={() => toggleHeatmap(deviceKey)}
-                      className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors"
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        showHeatmap[deviceKey] 
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      }`}
                     >
-                      <FaQrcode className="w-4 h-4" />
-                      View Usage Heatmap
+                      <FaChartBar className="w-4 h-4" />
+                      {showHeatmap[deviceKey] ? 'Hide Analytics' : 'View Analytics'}
                     </button>
                   )}
                 </div>
                 <button
                   onClick={() => toggleDevice(device.id)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    device.isOn ? 'bg-blue-600' : 'bg-gray-400'
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                    device.isOn ? 'bg-blue-600' : 'bg-gray-600'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-lg ${
                       device.isOn ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
               </div>
+              
               {renderDeviceControls(device)}
+              
               {showHeatmap[deviceKey] && hasUsageData && (
-                <div className="mt-4 flex gap-4">
-                  <div className="flex-1">
-                    <CalendarHeatmap
-                      data={deviceUsageData}
-                      deviceName={device.name}
-                    />
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <QRCodeSVG value={JSON.stringify(deviceUsageData)} size={64} fgColor="#22c55e" bgColor="transparent" />
-                    <span className="text-xs text-gray-400">Usage QR</span>
-                  </div>
+                <div className="mt-4">
+                  <CalendarHeatmap
+                    data={deviceUsageData}
+                    deviceName={device.name}
+                    room={room}
+                  />
                 </div>
               )}
             </div>

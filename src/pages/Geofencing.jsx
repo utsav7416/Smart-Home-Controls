@@ -261,9 +261,6 @@ export default function Geofencing() {
           <p className="text-green-200 text-xl drop-shadow-md">
             Machine learning algorithms optimizing your location-based automation
           </p>
-          <p className="text-green-300 text-sm mt-4 max-w-2xl mx-auto">
-            Geofencing allows you to define virtual perimeters around real-world locations. When a device enters or exits these predefined zones, it can trigger automated actions, like turning off lights when you leave or adjusting the thermostat when you're on your way home. Our ML-powered system refines these zones and triggers for optimal efficiency and energy savings, learning from your habits and environmental factors to predict your needs. It's about making your smart home truly intuitive.
-          </p>
         </div>
       </div>
 

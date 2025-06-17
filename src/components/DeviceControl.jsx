@@ -36,12 +36,21 @@ function CalendarHeatmap({ data, deviceName, room }) {
   const maxCount = Math.max(...days.map(d => d.count))
   const total = days.reduce((s, d) => s + d.count, 0)
 
-  const getIntensityColor = c => {
-    if (c === 0 || maxCount === 0) return '#1f2937'
-    const i = c / maxCount
-    if (i <= 0.25) return '#22c55e'
-    if (i <= 0.5) return '#84cc16'
-    if (i <= 0.75) return '#eab308'
+  const getIntensityColor = count => {
+    // No actions = dark gray
+    if (count === 0) return '#1f2937'
+    
+    // If there's only 1 max count, make it green
+    if (maxCount === 1) return '#22c55e'
+    
+    // Calculate intensity based on count relative to maxCount
+    const intensity = count / maxCount
+    
+    // Green for low activity (1-33% of max)
+    if (intensity <= 0.33) return '#22c55e'
+    // Yellow for medium activity (34-66% of max)
+    if (intensity <= 0.66) return '#eab308'  
+    // Red for high activity (67-100% of max)
     return '#ef4444'
   }
 
@@ -52,7 +61,7 @@ function CalendarHeatmap({ data, deviceName, room }) {
         <h4 className="text-sm font-semibold text-white">{deviceName} Usage Activity</h4>
       </div>
       <p className="text-xs text-gray-400 mb-3">
-        Track your device usage patterns over the last 5 days. Brighter squares indicate higher activity.
+        Track your device usage patterns over the last 5 days. Green = low activity, Yellow = medium, Red = high activity.
       </p>
       <div className="grid grid-cols-5 gap-2 mb-3">
         {days.map((d, i) => (
@@ -71,13 +80,12 @@ function CalendarHeatmap({ data, deviceName, room }) {
       <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
         <span>Less activity</span>
         <div className="flex gap-1">
-          {[0, 0.2, 0.4, 0.6, 0.8, 1].map((t, i) => (
-            <div
-              key={i}
-              className="w-3 h-3 rounded-sm border border-gray-700"
-              style={{ backgroundColor: getIntensityColor(Math.ceil(maxCount * t)) }}
-            />
-          ))}
+          <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#1f2937' }} />
+          <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#22c55e' }} />
+          <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#22c55e' }} />
+          <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#eab308' }} />
+          <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#ef4444' }} />
+          <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#ef4444' }} />
         </div>
         <span>More activity</span>
       </div>

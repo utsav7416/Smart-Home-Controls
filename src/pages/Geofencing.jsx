@@ -169,6 +169,12 @@ const useMutation = (mutationFn, options = {}) => {
   return { mutate, isPending, error };
 };
 
+const loadingQuotes = [
+  "Our geofencing elves are busy at work, Brewing up some geofencing magic! Hold on...",
+  "Don't wander off! We're busy setting up invisible boundaries to keep your smart devices in line.",
+  "Please wait while we convince your thermostat that it's okay to save energy, even when you're just stepping out for milk.",
+];
+
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -219,8 +225,11 @@ export default function Geofencing() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen">
-        <div className="text-white text-lg">Loading ML-powered geofencing data...This may take some time... Your patience is appreciated</div>
+      <div className="p-6 flex items-center justify-center min-h-screen flex-col">
+        <div className="text-white text-lg mb-4">Loading ML-powered geofencing data...This may take some time... Your patience is appreciated</div>
+        <p className="text-green-300 text-md italic animate-pulse">
+          {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
+        </p>
       </div>
     );
   }
@@ -251,6 +260,9 @@ export default function Geofencing() {
           </h1>
           <p className="text-green-200 text-xl drop-shadow-md">
             Machine learning algorithms optimizing your location-based automation
+          </p>
+          <p className="text-green-300 text-sm mt-4 max-w-2xl mx-auto">
+            Geofencing allows you to define virtual perimeters around real-world locations. When a device enters or exits these predefined zones, it can trigger automated actions, like turning off lights when you leave or adjusting the thermostat when you're on your way home. Our ML-powered system refines these zones and triggers for optimal efficiency and energy savings, learning from your habits and environmental factors to predict your needs. It's about making your smart home truly intuitive.
           </p>
         </div>
       </div>
@@ -386,7 +398,7 @@ export default function Geofencing() {
 
           <div className="flex flex-col gap-4">
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-_eF4UTYx2njHANYE9Y0wopBnqMknNcNRiw&s"
+              src="https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg"
               alt="Smart Home Security"
               className="w-full h-64 object-cover rounded-lg"
             />

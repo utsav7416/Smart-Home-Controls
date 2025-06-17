@@ -14,130 +14,45 @@ const ICON_MAP = {
   'Dryer': FaFan,
 };
 
-function CalendarHeatmap({ data, deviceName }) {
-  const today = new Date();
-  const startDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
-  
-  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
-  
-  const getIntensity = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const dayData = data[dateStr];
-    if (!dayData) return 0;
+// Simple 3x3 heatmap component
+function SimpleHeatmap({ data, deviceName }) {
+  const getIntensity = (index) => {
+    const allCounts = Object.values(data).map(d => d.count || 0);
+    if (allCounts.length === 0) return 0;
     
-    const maxInteractions = Math.max(...Object.values(data).map(d => d.count || 0));
-    if (maxInteractions === 0) return 0;
+    const count = allCounts[index] || 0;
+    const maxCount = Math.max(...allCounts);
+    if (maxCount === 0) return 0;
     
-    const intensity = (dayData.count || 0) / maxInteractions;
+    const intensity = count / maxCount;
     if (intensity === 0) return 0;
-    if (intensity <= 0.25) return 1;
-    if (intensity <= 0.5) return 2;
-    if (intensity <= 0.75) return 3;
-    return 4;
+    if (intensity <= 0.33) return 1;
+    if (intensity <= 0.66) return 2;
+    return 3;
   };
   
   const getColor = (intensity) => {
-    const colors = ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'];
+    const colors = ['#374151', '#22c55e', '#16a34a', '#15803d'];
     return colors[intensity];
   };
   
-  const months = [];
-  const currentDate = new Date(startDate);
-  
-  for (let i = 0; i < 12; i++) {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = getDaysInMonth(year, month);
-    const monthName = currentDate.toLocaleDateString('en-US', { month: 'short' });
-    
-    const days = [];
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      if (date <= today) {
-        days.push({
-          date,
-          intensity: getIntensity(date),
-          count: data[date.toISOString().split('T')[0]]?.count || 0
-        });
-      }
-    }
-    
-    months.push({ monthName, days, year, month });
-    currentDate.setMonth(currentDate.getMonth() + 1);
-  }
-  
   return (
-    <div className="bg-gray-900 p-4 rounded-lg">
-      <h4 className="text-sm font-semibold mb-3 text-gray-200">{deviceName} Usage - Last 12 Months</h4>
-      <div className="grid grid-cols-4 gap-2 text-xs">
-        {months.map((month, idx) => (
-          <div key={idx} className="flex flex-col">
-            <div className="text-gray-400 mb-1 text-center font-medium">{month.monthName}</div>
-            <div className="grid grid-cols-7 gap-1">
-              {month.days.map((day, dayIdx) => (
-                <div
-                  key={dayIdx}
-                  className="w-3 h-3 rounded-sm cursor-pointer hover:ring-1 hover:ring-white"
-                  style={{ backgroundColor: getColor(day.intensity) }}
-                  title={`${day.date.toLocaleDateString()}: ${day.count} interactions`}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
-        <span>Less</span>
-        <div className="flex gap-1">
-          {[0, 1, 2, 3, 4].map(level => (
-            <div
-              key={level}
-              className="w-3 h-3 rounded-sm"
-              style={{ backgroundColor: getColor(level) }}
-            />
-          ))}
-        </div>
-        <span>More</span>
-      </div>
-    </div>
-  );
-}
-
-function QRCode({ data }) {
-  const size = 21; 
-  const moduleSize = 8;
-  
-  const hash = data.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
-    return a & a;
-  }, 0);
-  
-  const pattern = [];
-  for (let i = 0; i < size * size; i++) {
-    pattern.push(((hash + i) * 9301 + 49297) % 233280 > 116640);
-  }
-  
-  return (
-    <div className="bg-white p-2 rounded">
-      <div 
-        className="grid gap-0"
-        style={{ 
-          gridTemplateColumns: `repeat(${size}, ${moduleSize}px)`,
-          width: size * moduleSize,
-          height: size * moduleSize
-        }}
-      >
-        {pattern.map((isDark, i) => (
+    <div className="bg-gray-700 p-3 rounded">
+      <div className="text-xs text-gray-300 mb-2">{deviceName} Usage</div>
+      <div className="grid grid-cols-3 gap-1">
+        {Array.from({ length: 9 }, (_, i) => (
           <div
             key={i}
-            className={isDark ? 'bg-black' : 'bg-white'}
-            style={{ width: moduleSize, height: moduleSize }}
+            className="w-6 h-6 rounded"
+            style={{ backgroundColor: getColor(getIntensity(i)) }}
           />
         ))}
       </div>
     </div>
   );
 }
+
+
 
 function DeviceControl({ room }) {
   const initialLivingRoomDevices = [

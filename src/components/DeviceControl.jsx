@@ -15,18 +15,18 @@ const ICON_MAP = {
 };
 
 function CalendarHeatmap({ data, deviceName, room }) {
-  const getLast9DaysData = () => {
+  const getLast5DaysData = () => {
     const today = new Date();
-    const last9Days = [];
+    const last5Days = [];
     
-    for (let i = 8; i >= 0; i--) {
+    for (let i = 4; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       const dateString = date.toISOString().split('T')[0];
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       const dayNumber = date.getDate();
       
-      last9Days.push({
+      last5Days.push({
         date: dateString,
         dayName,
         dayNumber,
@@ -34,48 +34,48 @@ function CalendarHeatmap({ data, deviceName, room }) {
       });
     }
     
-    return last9Days;
+    return last5Days;
   };
 
-  const daysData = getLast9DaysData();
+  const daysData = getLast5DaysData();
   const maxCount = Math.max(...daysData.map(d => d.count), 1);
 
   const getIntensityColor = (count) => {
-    if (count === 0) return '#1f2937'; // gray-800
+    if (count === 0) return '#0f172a'; // slate-900 (darker than before)
     const intensity = count / maxCount;
-    if (intensity <= 0.25) return '#065f46'; // emerald-800
-    if (intensity <= 0.5) return '#047857'; // emerald-700
-    if (intensity <= 0.75) return '#059669'; // emerald-600
-    return '#10b981'; // emerald-500
+    if (intensity <= 0.25) return '#1e293b'; // slate-800
+    if (intensity <= 0.5) return '#334155'; // slate-700  
+    if (intensity <= 0.75) return '#475569'; // slate-600
+    return '#64748b'; // slate-500 (lightest for highest activity)
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+    <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
       <div className="flex items-center gap-2 mb-4">
-        <FaChartBar className="w-4 h-4 text-emerald-400" />
+        <FaChartBar className="w-4 h-4 text-blue-400" />
         <h4 className="text-sm font-semibold text-white">
           {deviceName} Usage Activity
         </h4>
       </div>
       
-      <p className="text-xs text-gray-400 mb-3">
-        Track your device usage patterns over the last 9 days. Darker squares indicate higher activity.
+      <p className="text-xs text-slate-400 mb-3">
+        Track your device usage patterns over the last 5 days. Lighter squares indicate higher activity.
       </p>
 
-      <div className="grid grid-cols-9 gap-1 mb-3">
+      <div className="grid grid-cols-5 gap-2 mb-3">
         {daysData.map((day, index) => (
           <div key={index} className="flex flex-col items-center">
             <div
-              className="w-6 h-6 rounded-sm border border-gray-600 transition-all hover:scale-110"
+              className="w-8 h-8 rounded-sm border border-slate-600 transition-all hover:scale-110"
               style={{ backgroundColor: getIntensityColor(day.count) }}
               title={`${day.dayName}, ${day.dayNumber}: ${day.count} actions`}
             />
-            <span className="text-xs text-gray-500 mt-1">{day.dayName}</span>
+            <span className="text-xs text-slate-500 mt-1">{day.dayName}</span>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-400">
+      <div className="flex items-center justify-between text-xs text-slate-400">
         <span>Less activity</span>
         <div className="flex gap-1">
           {[0, 0.25, 0.5, 0.75, 1].map((intensity, i) => (
@@ -89,16 +89,16 @@ function CalendarHeatmap({ data, deviceName, room }) {
         <span>More activity</span>
       </div>
 
-      <div className="mt-3 p-2 bg-gray-700 rounded text-xs">
+      <div className="mt-3 p-2 bg-slate-800 rounded text-xs">
         <div className="flex justify-between">
-          <span className="text-gray-300">Total actions (9 days):</span>
-          <span className="text-emerald-400 font-semibold">
+          <span className="text-slate-300">Total actions (5 days):</span>
+          <span className="text-blue-400 font-semibold">
             {daysData.reduce((sum, day) => sum + day.count, 0)}
           </span>
         </div>
         <div className="flex justify-between mt-1">
-          <span className="text-gray-300">Most active day:</span>
-          <span className="text-emerald-400 font-semibold">
+          <span className="text-slate-300">Most active day:</span>
+          <span className="text-blue-400 font-semibold">
             {maxCount} actions
           </span>
         </div>

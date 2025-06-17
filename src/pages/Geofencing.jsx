@@ -477,7 +477,7 @@ export default function Geofencing() {
         </div>
       )}
 
-      {activeTab === 'conclusion' && conclusion && (
+      {activeTab === 'conclusion' && (
         <motion.div
           initial="hidden"
           animate="visible"

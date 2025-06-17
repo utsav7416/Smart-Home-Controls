@@ -33,25 +33,13 @@ function CalendarHeatmap({ data, deviceName, room }) {
   }
 
   const days = getLast5DaysData()
-  const maxCount = Math.max(...days.map(d => d.count))
   const total = days.reduce((s, d) => s + d.count, 0)
 
   const getIntensityColor = count => {
-    // No actions = dark gray
     if (count === 0) return '#1f2937'
-    
-    // If there's only 1 max count, make it green
-    if (maxCount === 1) return '#22c55e'
-    
-    // Calculate intensity based on count relative to maxCount
-    const intensity = count / maxCount
-    
-    // Green for low activity (1-33% of max)
-    if (intensity <= 0.33) return '#22c55e'
-    // Yellow for medium activity (34-66% of max)
-    if (intensity <= 0.66) return '#eab308'  
-    // Red for high activity (67-100% of max)
-    return '#ef4444'
+    if (count >= 1 && count < 5) return '#22c55e'
+    if (count >= 5 && count < 10) return '#eab308'
+    if (count >= 10) return '#ef4444'
   }
 
   return (

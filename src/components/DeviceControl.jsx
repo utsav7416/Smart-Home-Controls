@@ -122,25 +122,32 @@ function DeviceControl({ room }) {
   }
 
   const addIcons = list => list.map(d => ({ ...d, icon: ICON_MAP[d.name] || null }))
+  
   const [allDeviceStates, setAllDeviceStates] = useState(() => {
-    const saved = localStorage.getItem('deviceStates')
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('deviceStates') : null
     return saved
       ? JSON.parse(saved)
       : Object.fromEntries(Object.entries(baseDevices).map(([k, v]) => [k, addIcons(v)]))
   })
+  
   const [usageData, setUsageData] = useState(() => {
-    const saved = localStorage.getItem('deviceUsageData')
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('deviceUsageData') : null
     return saved ? JSON.parse(saved) : {}
   })
+  
   const [showHeatmap, setShowHeatmap] = useState({})
 
   useEffect(() => {
-    localStorage.setItem('deviceStates', JSON.stringify(allDeviceStates))
-    window.dispatchEvent(new Event('deviceStateChange'))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deviceStates', JSON.stringify(allDeviceStates))
+      window.dispatchEvent && window.dispatchEvent(new Event('deviceStateChange'))
+    }
   }, [allDeviceStates])
 
   useEffect(() => {
-    localStorage.setItem('deviceUsageData', JSON.stringify(usageData))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('deviceUsageData', JSON.stringify(usageData))
+    }
   }, [usageData])
 
   const current = allDeviceStates[room] || []
@@ -223,7 +230,7 @@ function DeviceControl({ room }) {
   }
 
   return (
-    <div className="p-6 bg-gray-950 rounded-xl shadow-2xl text-white border border-gray-800">
+    <div className="p-6 bg-gray-950 rounded-xl shadow-2xl text-white border border-gray-800 flex-shrink-0 min-w-0">
       <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
         {room} Smart Controls
       </h2>
@@ -235,16 +242,16 @@ function DeviceControl({ room }) {
           return (
             <div key={dev.id} className="bg-gray-900 p-5 rounded-xl border border-gray-700 hover:border-gray-600 transition-all shadow-lg">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-4">
-                  {dev.icon && <dev.icon className={`w-7 h-7 transition-colors ${dev.isOn ? 'text-emerald-400' : 'text-gray-500'}`} />}
-                  <div>
+                <div className="flex items-center gap-4 flex-shrink-0 min-w-0">
+                  {dev.icon && <dev.icon className={`w-7 h-7 transition-colors flex-shrink-0 ${dev.isOn ? 'text-emerald-400' : 'text-gray-500'}`} />}
+                  <div className="min-w-0">
                     <span className="font-semibold text-lg">{dev.name}</span>
                     <p className="text-xs text-gray-400">{dev.isOn ? 'Currently active' : 'Currently off'}</p>
                   </div>
                   {hasData && (
                     <button
                       onClick={() => toggleHeatmap(key)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 ${
                         showHeatmap[key]
                           ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg'
                           : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600'
@@ -257,7 +264,7 @@ function DeviceControl({ room }) {
                 </div>
                 <button
                   onClick={() => toggleDevice(dev.id)}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 ${
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 flex-shrink-0 ${
                     dev.isOn ? 'bg-emerald-600' : 'bg-gray-700'
                   }`}
                 >

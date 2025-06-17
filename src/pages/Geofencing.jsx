@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
+import { MapPin, Plus, Clock, Zap, Brain, TrendingUp, Target, MapIcon, XCircle, Lightbulb, ShieldCheck, UserCheck } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -175,6 +175,103 @@ const loadingQuotes = [
   "Please wait while we convince your thermostat that it's okay to save energy, even when you're just stepping out for milk.",
 ];
 
+// New Conclusion Section Component
+const ConclusionSection = ({ mlMetrics, geofences, stats }) => (
+  <div className="space-y-6">
+    <h2 className="text-3xl font-bold text-white flex items-center gap-3 mb-6">
+      <Zap className="w-8 h-8 text-green-400" /> Conclusion: The Power of AI in Geofencing
+    </h2>
+
+    <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
+      <CardHeader>
+        <CardTitle className="text-white">Overall Impact & Benefits</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-green-200">
+        <p>
+          The AI-powered geofencing system has demonstrated significant capabilities in enhancing smart home automation. By leveraging machine learning, it moves beyond simple rule-based triggers to anticipate user needs and optimize device behavior.
+        </p>
+        <ul className="list-disc list-inside space-y-2">
+          <li className="flex items-start">
+            <Lightbulb className="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0" />
+            <span>
+              **Energy Efficiency:** Through predictive analysis and optimized zone management, the system intelligently controls lighting, heating, and cooling, leading to an average energy saving of <span className="font-semibold text-white">{(geofences?.reduce((acc, g) => acc + (g.energy_savings || 0), 0) / geofences?.length || 0).toFixed(1)}%</span> across active zones. This ensures devices are active only when truly needed, reducing waste.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <ShieldCheck className="w-5 h-5 text-blue-400 mr-2 flex-shrink-0" />
+            <span>
+              **Enhanced Security:** Automated arming/disarming of security systems based on precise presence detection significantly improves home security. The system's ability to minimize false alarms increases reliability and user trust.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <UserCheck className="w-5 h-5 text-purple-400 mr-2 flex-shrink-0" />
+            <span>
+              **Unparalleled Convenience:** Users experience seamless transitions as their home adapts to their presence. From welcoming lighting to pre-adjusted temperatures, the system provides a truly smart and responsive environment, minimizing manual intervention.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <Clock className="w-5 h-5 text-orange-400 mr-2 flex-shrink-0" />
+            <span>
+              **Time Savings:** By automating routine tasks based on location, users save valuable time and reduce the cognitive load of managing multiple smart devices.
+            </span>
+          </li>
+        </ul>
+      </CardContent>
+    </Card>
+
+    <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
+      <CardHeader>
+        <CardTitle className="text-white">Role of Machine Learning</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-green-200">
+        <p>
+          The core strength of this geofencing solution lies in its embedded machine learning models. These models continuously learn from user patterns and environmental data to refine their predictions and optimizations:
+        </p>
+        <ul className="list-disc list-inside space-y-2">
+          <li className="flex items-start">
+            <Brain className="w-5 h-5 text-green-400 mr-2 flex-shrink-0" />
+            <span>
+              **Predictive Accuracy:** With a Model Accuracy of <span className="font-semibold text-white">{mlMetrics.model_accuracy?.toFixed(1) || 0}%</span> and a Prediction Confidence of <span className="font-semibold text-white">{mlMetrics.prediction_confidence?.toFixed(1) || 0}%</span>, the AI precisely determines user presence and anticipated movements, leading to highly effective automation triggers.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <TrendingUp className="w-5 h-5 text-emerald-400 mr-2 flex-shrink-0" />
+            <span>
+              **Adaptive Optimization:** The algorithms constantly work to optimize geofence radii and automation timings. The <span className="font-semibold text-white">{mlMetrics.optimization_success_count?.toFixed(1) || 0}%</span> optimization success rate indicates the system's effectiveness in adapting to changing user routines and environmental conditions, ensuring maximum efficiency and convenience.
+            </span>
+          </li>
+          <li className="flex items-start">
+            <Target className="w-5 h-5 text-purple-400 mr-2 flex-shrink-0" />
+            <span>
+              **Behavioral Learning:** Over time, the ML models build a detailed understanding of individual user behaviors, such as typical arrival and departure times, preferred settings at different locations, and energy consumption patterns. This allows for increasingly personalized and seamless automation.
+            </span>
+          </li>
+        </ul>
+      </CardContent>
+    </Card>
+
+    <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
+      <CardHeader>
+        <CardTitle className="text-white">Future Directions</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-green-200">
+        <p>
+          The current implementation serves as a robust foundation. Future enhancements will focus on:
+        </p>
+        <ul className="list-disc list-inside space-y-2">
+          <li>Further integrating with more smart home ecosystems.</li>
+          <li>Developing advanced anomaly detection for security alerts.</li>
+          <li>Implementing self-healing capabilities for geofence adjustments.</li>
+          <li>Providing more granular control and deeper insights into energy savings.</li>
+        </ul>
+        <p>
+          By continuously refining its machine learning models and expanding its capabilities, this AI-powered geofencing system is poised to redefine smart home automation, making homes smarter, more efficient, and truly intuitive.
+        </p>
+      </CardContent>
+    </Card>
+  </div>
+);
+
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -327,7 +424,7 @@ export default function Geofencing() {
       </div>
 
       <div className="flex space-x-4 mb-6">
-        {['overview', 'analytics'].map((tab) => (
+        {['overview', 'analytics', 'conclusion'].map((tab) => (
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -509,6 +606,10 @@ export default function Geofencing() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {activeTab === 'conclusion' && analytics && (
+        <ConclusionSection mlMetrics={mlMetrics} geofences={geofences} stats={stats} />
       )}
 
       {showCreateForm && (

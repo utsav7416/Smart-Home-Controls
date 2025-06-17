@@ -5,23 +5,20 @@ import { useState, useEffect } from 'react';
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 const Card = ({ children, className = "" }) => (
-  <div className={`rounded-lg border border-zinc-800 bg-zinc-900 ${className}`}>
+  <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>
     {children}
   </div>
 );
-
 const CardHeader = ({ children }) => (
   <div className="flex flex-col space-y-1.5 p-6">
     {children}
   </div>
 );
-
 const CardTitle = ({ children, className = "" }) => (
   <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>
     {children}
   </h3>
 );
-
 const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 pt-0 ${className}`}>
     {children}
@@ -33,16 +30,10 @@ const useDeviceSync = () => {
   const [totalDevicePower, setTotalDevicePower] = useState(0);
 
   const DEVICE_POWER_MAP = {
-    'Main Light': { base: 15, max: 60 },
-    'Fan': { base: 25, max: 75 },
-    'AC': { base: 800, max: 1500 },
-    'TV': { base: 120, max: 200 },
-    'Microwave': { base: 800, max: 1200 },
-    'Refrigerator': { base: 150, max: 300 },
-    'Shower': { base: 50, max: 100 },
-    'Water Heater': { base: 2000, max: 4000 },
-    'Dryer': { base: 2000, max: 3000 }
-  };
+    'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
+    'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
+    'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
+  }
 
   const calculateDevicePower = (deviceName, isOn, value, property) => {
     if (!isOn || !DEVICE_POWER_MAP[deviceName]) return 0;
@@ -103,8 +94,8 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
 
   return (
     <div className="w-full">
-      <div className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 border border-zinc-800 rounded-lg overflow-hidden hover:border-zinc-700 transition-colors">
-        <div className="bg-zinc-800 px-6 py-4 border-b border-zinc-700">
+      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
+        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
@@ -127,11 +118,11 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               <>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.accuracy}%</div>
-                  <div className="text-xs text-zinc-400">Accuracy</div>
+                  <div className="text-xs text-gray-400">Accuracy</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.parameters.n_estimators}</div>
-                  <div className="text-xs text-zinc-400">Trees</div>
+                  <div className="text-xs text-gray-400">Trees</div>
                 </div>
               </>
             )}
@@ -139,13 +130,13 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
             <>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
-                <div className="text-xs text-zinc-400">Anomalies Found</div>
+                <div className="text-xs text-gray-400">Anomalies Found</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">
                   {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
                 </div>
-                <div className="text-xs text-zinc-400">Contamination Rate</div>
+                <div className="text-xs text-gray-400">Contamination Rate</div>
               </div>
             </>
           )}
@@ -153,11 +144,11 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               <>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.parameters.hidden_layer_sizes?.length || 0}</div>
-                  <div className="text-xs text-zinc-400">Hidden Layers</div>
+                  <div className="text-xs text-gray-400">Hidden Layers</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
-                  <div className="text-xs text-zinc-400">Ensemble Weight</div>
+                  <div className="text-xs text-gray-400">Ensemble Weight</div>
                 </div>
               </>
             )}
@@ -165,23 +156,23 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               <>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                  <div className="text-xs text-zinc-400">Alpha (α)</div>
+                  <div className="text-xs text-gray-400">Alpha (α)</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
-                  <div className="text-xs text-zinc-400">Ensemble Weight</div>
+                  <div className="text-xs text-gray-400">Ensemble Weight</div>
                 </div>
               </>
             )}
           </div>
 
-          <p className="text-zinc-300 text-sm mb-6 leading-relaxed">
+          <p className="text-gray-300 text-sm mb-6 leading-relaxed">
             {algorithm.description}
           </p>
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-zinc-700"
+            className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
           >
             <Settings className="w-4 h-4" />
             {isExpanded ? 'Hide Parameters' : 'View Parameters'}
@@ -189,7 +180,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
 
           {isExpanded && (
             <div className="mt-6 space-y-4">
-              <div className="bg-zinc-800 rounded-md p-4 border border-zinc-700">
+              <div className="bg-gray-800 rounded-md p-4 border border-gray-700">
                 <h4 className="text-white font-medium mb-3 flex items-center gap-2">
                   <Code className="w-4 h-4" />
                   Parameters
@@ -197,8 +188,8 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                 <div className="space-y-2">
                   {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
                     <div key={key} className="flex justify-between items-center">
-                      <span className="text-zinc-400 text-xs font-mono">{key}:</span>
-                      <span className="text-white text-xs font-mono bg-zinc-950 px-2 py-1 rounded">
+                      <span className="text-green-400 text-xs font-mono">{key}:</span>
+                      <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
                         {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
                       </span>
                     </div>
@@ -207,20 +198,20 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-zinc-800 rounded-md p-3 border border-zinc-700">
+                <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                   <div className="flex items-center gap-2 mb-1">
                     <Activity className="w-4 h-4 text-blue-400" />
                     <span className="text-white text-sm font-medium">Performance</span>
                   </div>
                   <div className="text-blue-400 font-mono text-sm">
                     {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
-                     algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                     algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
-                     `α = ${algorithm?.parameters?.alpha}`}
+                      algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
+                      algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
+                      `α = ${algorithm?.parameters?.alpha}`}
                   </div>
                 </div>
 
-                <div className="bg-zinc-800 rounded-md p-3 border border-zinc-700">
+                <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                   <div className="flex items-center gap-2 mb-1">
                     <Cpu className="w-4 h-4 text-purple-400" />
                     <span className="text-white text-sm font-medium">Status</span>
@@ -325,10 +316,10 @@ export default function Analytics() {
           <h1 className="text-4xl font-bold text-white mb-2">
             Advanced Energy Analytics & ML Insights
           </h1>
-          <p className="text-zinc-300 text-xl mb-4">
+          <p className="text-gray-300 text-xl mb-4">
             Real-time machine learning algorithms analyzing your energy consumption patterns
           </p>
-          <div className="flex flex-wrap justify-center gap-8 text-base text-zinc-400">
+          <div className="flex flex-wrap justify-center gap-8 text-base text-gray-400">
             <span>• Anomaly Detection Active</span>
             <span>• Predictive Modeling Enabled</span>
             <span>• Cost Optimization Running</span>
@@ -390,13 +381,13 @@ export default function Analytics() {
         </Card>
       </div>
 
-      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
             Real-Time Anomaly Detection ({anomaliesDetected} detected)
           </CardTitle>
-          <p className="text-zinc-400 text-sm">Live anomaly detection using Isolation Forest algorithm</p>
+          <p className="text-gray-400 text-sm">Live anomaly detection using Isolation Forest algorithm</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -423,11 +414,11 @@ export default function Analytics() {
             </ScatterChart>
           </ResponsiveContainer>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
               <div className="w-3 h-3 bg-red-400 rounded-full"></div>
               <span>High severity: {anomalyData.filter((a) => a.severity === 'high').length}</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
               <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
               <span>Medium severity: {anomalyData.filter((a) => a.severity === 'medium').length}</span>
             </div>
@@ -435,13 +426,13 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5" />
             AI-Powered Machine Learning Pipeline
           </CardTitle>
-          <p className="text-zinc-400 text-sm">Advanced ensemble of ML algorithms working together to optimize your energy consumption</p>
+          <p className="text-gray-400 text-sm">Advanced ensemble of ML algorithms working together to optimize your energy consumption</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -449,17 +440,14 @@ export default function Analytics() {
               algorithm={mlAlgorithms.random_forest}
               icon={GitBranch}
             />
-
             <AlgorithmCard
               algorithm={mlAlgorithms.isolation_forest}
               icon={Shield}
             />
-
             <AlgorithmCard
               algorithm={mlAlgorithms.mlp_regressor}
               icon={Layers}
             />
-
             <AlgorithmCard
               algorithm={mlAlgorithms.ridge_regression}
               icon={TrendingUp}
@@ -468,13 +456,13 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             Weekly Consumption vs ML Predictions (Device-Adjusted)
           </CardTitle>
-          <p className="text-zinc-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
+          <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
@@ -490,35 +478,23 @@ export default function Analytics() {
                   color: 'white'
                 }}
               />
-              <Line
-                type="monotone"
-                dataKey="consumption"
-                stroke="#60a5fa"
-                strokeWidth={3}
-                dot={{ fill: '#60a5fa', strokeWidth: 2, r: 6 }}
-                name="Actual Consumption (kWh)"
-              />
-              <Line
-                type="monotone"
-                dataKey="prediction"
-                stroke="#22c55e"
-                strokeWidth={2}
-                strokeDashArray="5 5"
-                dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }}
-                name="ML Prediction (kWh)"
-              />
+              <Line type="monotone" dataKey="consumption" stroke="#60a5fa" strokeWidth={3}
+                dot={{ fill: '#60a5fa', strokeWidth: 2, r: 6 }} name="Actual Consumption (kWh)" />
+
+              <Line type="monotone" dataKey="prediction" stroke="#22c55e" strokeWidth={2}
+                strokeDashArray="5 5" dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }} name="ML Prediction (kWh)" />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5" />
             24-Hour Energy Consumption Patterns (Live Device Impact)
           </CardTitle>
-          <p className="text-zinc-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
+          <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -540,36 +516,23 @@ export default function Analytics() {
                   color: 'white'
                 }}
               />
-              <Area
-                type="monotone"
-                dataKey="avg_consumption"
-                stroke="#8b5cf6"
-                fillOpacity={1}
-                fill="url(#hourlyGradient)"
-                strokeWidth={2}
-                name="Average Consumption"
-              />
-              <Area
-                type="monotone"
-                dataKey="device_contribution"
-                stroke="#f59e0b"
-                fill="#f59e0b"
-                fillOpacity={0.3}
-                strokeWidth={2}
-                name="Device Contribution"
-              />
+              <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
+                fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
+
+              <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
+                fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
             </AreaChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-zinc-900 to-zinc-900/90 backdrop-blur-md border border-zinc-800">
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Target className="w-5 h-5" />
             AI-Powered Cost Optimization
           </CardTitle>
-          <p className="text-zinc-400 text-sm">Machine learning optimization showing potential cost savings through smart energy management</p>
+          <p className="text-gray-400 text-sm">Machine learning optimization showing potential cost savings through smart energy management</p>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -592,15 +555,15 @@ export default function Analytics() {
           <div className="mt-4 grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-xl font-bold text-red-400">${costOptimization.reduce((sum, item) => sum + item.actual, 0)}</div>
-              <div className="text-sm text-zinc-400">Total Actual Cost</div>
+              <div className="text-sm text-gray-400">Total Actual Cost</div>
             </div>
             <div>
               <div className="text-xl font-bold text-green-400">${costOptimization.reduce((sum, item) => sum + item.optimized, 0)}</div>
-              <div className="text-sm text-zinc-400">Optimized Cost</div>
+              <div className="text-sm text-gray-400">Optimized Cost</div>
             </div>
             <div>
               <div className="text-xl font-bold text-blue-400">${totalSavings}</div>
-              <div className="text-sm text-zinc-400">Total Savings</div>
+              <div className="text-sm text-gray-400">Total Savings</div>
             </div>
           </div>
         </CardContent>

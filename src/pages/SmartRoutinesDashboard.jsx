@@ -32,13 +32,20 @@ function SmartRoutinesDashboard() {
   const [routines, setRoutines] = useState(storage.routines);
   const [notes, setNotes] = useState(storage.notes);
   const [newNote, setNewNote] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+
+  const icons = ['Sun', 'Moon', 'Clock', 'Calendar'];
+  const colors = ['indigo', 'amber', 'emerald', 'rose', 'purple'];
+
+  const getRandomIcon = () => icons[Math.floor(Math.random() * icons.length)];
+  const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
   const [newRoutine, setNewRoutine] = useState({
     name: '',
     time: '',
     days: '',
-    icon: 'Sun',
-    color: 'indigo'
+    icon: getRandomIcon(),
+    color: getRandomColor()
   });
 
   const iconMap = {
@@ -61,6 +68,10 @@ function SmartRoutinesDashboard() {
     storage.notes = notes;
   }, [routines, notes]);
 
+  useEffect(() => {
+    setIsVisible(true);
+  }, []);
+
   const handleEdit = (index) => {
     setEditingIndex(index);
     setNewRoutine(routines[index]);
@@ -79,10 +90,10 @@ function SmartRoutinesDashboard() {
       );
     } else {
       const newId = Math.max(...routines.map(r => r.id), 0) + 1;
-      setRoutines([...routines, { ...newRoutine, id: newId }]);
+      setRoutines([...routines, { ...newRoutine, id: newId, icon: getRandomIcon(), color: getRandomColor() }]);
     }
     setEditingIndex(null);
-    setNewRoutine({ name: '', time: '', days: '', icon: 'Sun', color: 'indigo' });
+    setNewRoutine({ name: '', time: '', days: '', icon: getRandomIcon(), color: getRandomColor() });
   };
 
   const addNote = () => {
@@ -112,13 +123,13 @@ function SmartRoutinesDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1A2C2C] via-[#3A1B3A] to-[#1A2C2C] p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-[#0A1C1C] via-[#2A0B2A] to-[#0A1C1C] p-4 font-sans text-white">
+      <div className={`max-w-6xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
             Smart Routines
           </h1>
-          <p className="text-slate-300 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto">
             Build better habits with intelligent routine management. Create, track, and optimize your daily routines for maximum productivity and well-being.
           </p>
         </div>
@@ -129,13 +140,13 @@ function SmartRoutinesDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-1">Your Routines</h2>
-                  <p className="text-slate-400">Manage your daily habits and schedules</p>
+                  <p className="text-gray-400">Manage your daily habits and schedules</p>
                 </div>
                 <button
                   onClick={() => {
                     setIsEditing(!isEditing);
                     setEditingIndex(null);
-                    setNewRoutine({ name: '', time: '', days: '', icon: 'Sun', color: 'indigo' });
+                    setNewRoutine({ name: '', time: '', days: '', icon: getRandomIcon(), color: getRandomColor() });
                   }}
                   className="px-4 py-2 bg-indigo-600/20 text-indigo-400 rounded-xl hover:bg-indigo-600/30 transition-all duration-200 border border-indigo-500/30"
                 >
@@ -154,47 +165,24 @@ function SmartRoutinesDashboard() {
                       placeholder="Routine Name"
                       value={newRoutine.name}
                       onChange={(e) => setNewRoutine({ ...newRoutine, name: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                      className="w-full bg-black/30 border border-emerald-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                     <input
                       type="time"
                       value={newRoutine.time}
                       onChange={(e) => setNewRoutine({ ...newRoutine, time: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                      className="w-full bg-black/30 border border-emerald-500/30 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
                     <input
                       type="text"
                       placeholder="Days (e.g., Weekdays, Every day, Mon-Fri)"
                       value={newRoutine.days}
                       onChange={(e) => setNewRoutine({ ...newRoutine, days: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                      className="w-full bg-black/30 border border-emerald-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
                     />
-                    <div className="grid grid-cols-2 gap-3">
-                      <select
-                        value={newRoutine.icon}
-                        onChange={(e) => setNewRoutine({ ...newRoutine, icon: e.target.value })}
-                        className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                      >
-                        <option value="Sun">Sun</option>
-                        <option value="Moon">Moon</option>
-                        <option value="Clock">Clock</option>
-                        <option value="Calendar">Calendar</option>
-                      </select>
-                      <select
-                        value={newRoutine.color}
-                        onChange={(e) => setNewRoutine({ ...newRoutine, color: e.target.value })}
-                        className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                      >
-                        <option value="indigo">Indigo</option>
-                        <option value="amber">Amber</option>
-                        <option value="emerald">Emerald</option>
-                        <option value="rose">Rose</option>
-                        <option value="purple">Purple</option>
-                      </select>
-                    </div>
                     <button
                       onClick={handleSave}
-                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 font-medium"
+                      className="w-full bg-gradient-to-r from-emerald-600 to-purple-600 text-white py-3 rounded-lg hover:from-emerald-700 hover:to-purple-700 transition-all duration-200 font-medium"
                     >
                       Save Routine
                     </button>
@@ -206,31 +194,31 @@ function SmartRoutinesDashboard() {
                 {routines.map((routine, index) => {
                   const IconComponent = iconMap[routine.icon];
                   return (
-                    <div key={routine.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-200">
+                    <div key={routine.id} className="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-emerald-500/20 hover:bg-black/30 transition-all duration-200">
                       <div className="flex items-center">
                         <div className={`p-3 rounded-xl border ${colorMap[routine.color]} mr-4`}>
-                          <IconComponent size={20} />
+                          <IconComponent size={24} />
                         </div>
                         <div>
                           <h3 className="text-white font-medium">{routine.name}</h3>
-                          <p className="text-slate-400 text-sm">
+                          <p className="text-gray-400 text-sm">
                             {formatTime(routine.time)} • {routine.days}
                           </p>
                         </div>
                       </div>
                       {isEditing && (
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-3">
                           <button
                             onClick={() => handleEdit(index)}
-                            className="p-2 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/20 rounded-lg transition-all duration-200"
+                            className="p-3 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20 rounded-lg transition-all duration-200"
                           >
-                            <Edit3 size={16} />
+                            <Edit3 size={24} />
                           </button>
                           <button
                             onClick={() => handleDelete(index)}
-                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-200"
+                            className="p-3 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-200"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={24} />
                           </button>
                         </div>
                       )}
@@ -241,10 +229,10 @@ function SmartRoutinesDashboard() {
                 {isEditing && editingIndex === null && (
                   <button
                     onClick={() => setEditingIndex(routines.length)}
-                    className="w-full flex items-center justify-center space-x-2 p-4 bg-white/5 rounded-xl border border-dashed border-white/20 text-indigo-400 hover:text-indigo-300 hover:bg-white/10 transition-all duration-200"
+                    className="w-full flex items-center justify-center space-x-2 p-4 bg-black/20 rounded-xl border border-dashed border-emerald-500/30 text-emerald-400 hover:text-emerald-300 hover:bg-black/30 transition-all duration-200"
                   >
-                    <Plus size={20} />
-                    <span>Add New Routine</span>
+                    <Plus size={28} />
+                    <span className="text-lg">Add New Routine</span>
                   </button>
                 )}
               </div>
@@ -254,10 +242,10 @@ function SmartRoutinesDashboard() {
           <div className="lg:col-span-1">
             <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl">
               <div className="flex items-center mb-6">
-                <StickyNote className="text-amber-400 mr-3" size={24} />
+                <StickyNote className="text-amber-400 mr-3" size={32} />
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Quick Notes</h2>
-                  <p className="text-slate-400 text-sm">Track your daily tasks</p>
+                  <h2 className="text-2xl font-bold text-white mb-1">Quick Notes</h2>
+                  <p className="text-gray-400 text-base">Track your daily tasks</p>
                 </div>
               </div>
 
@@ -269,13 +257,13 @@ function SmartRoutinesDashboard() {
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && addNote()}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                   />
                   <button
                     onClick={addNote}
-                    className="p-2 bg-amber-600/20 text-amber-400 rounded-lg hover:bg-amber-600/30 transition-all duration-200 border border-amber-500/30"
+                    className="p-3 bg-amber-600/20 text-amber-400 rounded-lg hover:bg-amber-600/30 transition-all duration-200 border border-amber-500/30"
                   >
-                    <Plus size={16} />
+                    <Plus size={20} />
                   </button>
                 </div>
               </div>
@@ -288,45 +276,45 @@ function SmartRoutinesDashboard() {
                       className={`mt-0.5 transition-all duration-200 ${
                         note.completed
                           ? 'text-emerald-400 hover:text-emerald-300'
-                          : 'text-slate-400 hover:text-slate-300'
+                          : 'text-gray-400 hover:text-gray-300'
                       }`}
                     >
-                      <CheckCircle2 size={16} />
+                      <CheckCircle2 size={20} />
                     </button>
-                    <span className={`flex-1 text-sm ${
+                    <span className={`flex-1 text-base ${
                       note.completed
-                        ? 'text-slate-400 line-through'
+                        ? 'text-gray-400 line-through'
                         : 'text-white'
                     }`}>
                       {note.text}
                     </span>
                     <button
                       onClick={() => deleteNote(note.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors duration-200"
+                      className="text-red-400 hover:text-red-300 transition-colors duration-200 p-1"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 ))}
                 {notes.length === 0 && (
-                  <div className="text-center py-8 text-slate-400">
-                    <StickyNote size={32} className="mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No notes yet. Add your first task!</p>
+                  <div className="text-center py-8 text-gray-400">
+                    <StickyNote size={40} className="mx-auto mb-2 opacity-50" />
+                    <p className="text-base">No notes yet. Add your first task!</p>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="mt-6 bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-2xl">
-              <h3 className="text-lg font-semibold text-white mb-4">Today's Progress</h3>
+              <h3 className="text-2xl font-bold text-white mb-4">Today's Progress</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300">Active Routines</span>
-                  <span className="text-indigo-400 font-medium">{routines.length}</span>
+                  <span className="text-gray-300 text-lg">Active Routines</span>
+                  <span className="text-indigo-400 font-medium text-lg">{routines.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-300">Completed Tasks</span>
-                  <span className="text-emerald-400 font-medium">
+                  <span className="text-gray-300 text-lg">Completed Tasks</span>
+                  <span className="text-emerald-400 font-medium text-lg">
                     {notes.filter(n => n.completed).length}/{notes.length}
                   </span>
                 </div>

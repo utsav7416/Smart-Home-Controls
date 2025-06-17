@@ -18,14 +18,14 @@ function CalendarHeatmap({ data, deviceName, room }) {
   const getLast5DaysData = () => {
     const today = new Date();
     const last5Days = [];
-    
+
     for (let i = 4; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
       const dateString = date.toISOString().split('T')[0];
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
       const dayNumber = date.getDate();
-      
+
       last5Days.push({
         date: dateString,
         dayName,
@@ -33,7 +33,7 @@ function CalendarHeatmap({ data, deviceName, room }) {
         count: data[dateString]?.count || 0
       });
     }
-    
+
     return last5Days;
   };
 
@@ -41,12 +41,12 @@ function CalendarHeatmap({ data, deviceName, room }) {
   const maxCount = Math.max(...daysData.map(d => d.count), 1);
 
   const getIntensityColor = (count) => {
-    if (count === 0) return '#0f172a'; // slate-900 (darker than before)
+    if (count === 0) return '#0F172A'; 
     const intensity = count / maxCount;
-    if (intensity <= 0.25) return '#1e293b'; // slate-800
-    if (intensity <= 0.5) return '#334155'; // slate-700  
-    if (intensity <= 0.75) return '#475569'; // slate-600
-    return '#64748b'; // slate-500 (lightest for highest activity)
+    if (intensity <= 0.25) return '#4CAF50'; 
+    if (intensity <= 0.5) return '#8BC34A';  
+    if (intensity <= 0.75) return '#CDDC39';
+    return '#FFEB3B';
   };
 
   return (
@@ -57,7 +57,7 @@ function CalendarHeatmap({ data, deviceName, room }) {
           {deviceName} Usage Activity
         </h4>
       </div>
-      
+
       <p className="text-xs text-slate-400 mb-3">
         Track your device usage patterns over the last 5 days. Lighter squares indicate higher activity.
       </p>
@@ -164,7 +164,7 @@ function DeviceControl({ room }) {
         console.error('Failed to parse saved device states:', error);
       }
     }
-    
+
     const defaultStates = {
       "Living Room": addIconsToDevices(initialLivingRoomDevices),
       "Bedroom": addIconsToDevices(initialBedroomDevices),
@@ -227,7 +227,7 @@ function DeviceControl({ room }) {
   const recordUsage = (deviceName, actionType, value = null) => {
     const today = new Date().toISOString().split('T')[0];
     const deviceKey = `${room}-${deviceName}`;
-    
+
     setUsageData(prevData => {
       const newData = { ...prevData };
       if (!newData[deviceKey]) {
@@ -381,8 +381,8 @@ function DeviceControl({ room }) {
                     <button
                       onClick={() => toggleHeatmap(deviceKey)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        showHeatmap[deviceKey] 
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
+                        showHeatmap[deviceKey]
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                           : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                       }`}
                     >
@@ -404,9 +404,9 @@ function DeviceControl({ room }) {
                   />
                 </button>
               </div>
-              
+
               {renderDeviceControls(device)}
-              
+
               {showHeatmap[deviceKey] && hasUsageData && (
                 <div className="mt-4">
                   <CalendarHeatmap

@@ -182,7 +182,6 @@ export default function Geofencing() {
 
   const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
-  const { data: activity, error: activityError } = useApiData('geofence-activity', fetchGeofenceActivity, 15000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
 
   const createMutation = useMutation(createGeofence, {
@@ -216,7 +215,7 @@ export default function Geofencing() {
     }
   };
 
-  const overallError = geofenceError || statsError || activityError || analyticsError || createMutation.error || optimizeMutation.error;
+  const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
   if (isLoading) {
     return (

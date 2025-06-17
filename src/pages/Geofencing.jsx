@@ -56,7 +56,7 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
 };
 
 const fetchGeofences = async () => {
-  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`); 
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -66,7 +66,7 @@ const fetchGeofences = async () => {
 };
 
 const fetchGeofenceStats = async () => {
-  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`); 
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -98,7 +98,7 @@ const fetchGeofenceActivity = async () => {
 };
 
 const fetchAnalytics = async () => {
-  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`); 
+  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));

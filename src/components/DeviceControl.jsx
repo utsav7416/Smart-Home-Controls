@@ -48,7 +48,7 @@ function CalendarHeatmap({ data, deviceName, room }) {
         <FaChartBar className="w-4 h-4 text-emerald-400" />
         <h4 className="text-sm font-semibold text-white">{deviceName} Usage Activity</h4>
       </div>
-      <p className="text-xs text-gray-400 mb-3">
+      <p className="text-sm text-gray-400 mb-3">
         Track your device usage patterns over the last 5 days. Green = low activity, Yellow = medium, Red = high activity.
       </p>
       <div className="grid grid-cols-5 gap-2 mb-3">
@@ -59,13 +59,13 @@ function CalendarHeatmap({ data, deviceName, room }) {
               style={{ backgroundColor: getIntensityColor(d.count) }}
               title={`${d.dayName}, ${d.dayNumber}: ${d.count} actions`}
             >
-              <span className="text-xs text-white font-medium">{d.count}</span>
+              <span className="text-sm text-white font-medium">{d.count}</span>
             </div>
-            <span className="text-xs text-gray-400 mt-1">{d.dayName}</span>
+            <span className="text-sm text-gray-400 mt-1">{d.dayName}</span>
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+      <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
         <span>Less activity</span>
         <div className="flex gap-1">
           <div className="w-3 h-3 rounded-sm border border-gray-700" style={{ backgroundColor: '#1f2937' }} />
@@ -246,7 +246,7 @@ function DeviceControl({ room }) {
                   {dev.icon && <dev.icon className={`w-7 h-7 transition-colors flex-shrink-0 ${dev.isOn ? 'text-emerald-400' : 'text-gray-500'}`} />}
                   <div className="min-w-0">
                     <span className="font-semibold text-lg">{dev.name}</span>
-                    <p className="text-xs text-gray-400">{dev.isOn ? 'Currently active' : 'Currently off'}</p>
+                    <p className="text-sm text-gray-400">{dev.isOn ? 'Currently active' : 'Currently off'}</p>
                   </div>
                   {hasData && (
                     <button

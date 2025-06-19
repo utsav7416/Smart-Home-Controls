@@ -456,7 +456,7 @@ export default function Analytics() {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+      <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
             <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
@@ -496,7 +496,7 @@ export default function Analytics() {
             </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+        <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5" />

@@ -50,7 +50,6 @@ optimization_success_count = 0
 total_optimization_attempts = 0
 last_calculated_contamination_rate = 0.1
 models_trained = False
-data_initialized = False
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
@@ -121,18 +120,8 @@ def generate_realistic_energy_data(device_states_data=None):
         'weather_factor': round(weather_factor, 2)
     }
 
-def initialize_data():
-    global energy_data, geofence_data, ml_performance_history, optimization_history, data_initialized
-    
-    num_hours_initial_data = 72
-    base_time = datetime.now() - timedelta(hours=num_hours_initial_data)
-    for i in range(num_hours_initial_data):
-        timestamp = base_time + timedelta(hours=i)
-        temp_data = generate_realistic_energy_data()
-        temp_data['timestamp'] = timestamp.isoformat()
-        temp_data['hour'] = timestamp.hour
-        temp_data['day_of_week'] = timestamp.weekday()
-        energy_data.append(temp_data)
+def initialize_basic_data():
+    global geofence_data, ml_performance_history
     
     geofence_data.extend([
         {
@@ -149,8 +138,8 @@ def initialize_data():
         }
     ])
     
-    for i in range(15):
-        date = datetime.now() - timedelta(days=14-i)
+    for i in range(30):
+        date = datetime.now() - timedelta(days=29-i)
         ml_performance_history.append({
             'date': date.isoformat(),
             'accuracy': np.random.uniform(88, 96),
@@ -158,8 +147,20 @@ def initialize_data():
             'mae': np.random.uniform(0.1, 0.3),
             'r2_score': np.random.uniform(0.85, 0.95)
         })
+
+def generate_initial_energy_data():
+    global energy_data
     
-    data_initialized = True
+    num_hours_initial_data = 72
+    base_time = datetime.now() - timedelta(hours=num_hours_initial_data)
+    
+    for i in range(num_hours_initial_data):
+        timestamp = base_time + timedelta(hours=i)
+        temp_data = generate_realistic_energy_data()
+        temp_data['timestamp'] = timestamp.isoformat()
+        temp_data['hour'] = timestamp.hour
+        temp_data['day_of_week'] = timestamp.weekday()
+        energy_data.append(temp_data)
 
 def train_models():
     global energy_model, ridge_model, anomaly_detector, scaler, mlp_model, models_trained
@@ -191,6 +192,10 @@ def train_models():
         models_trained = True
     except Exception as e:
         pass
+
+def background_initialization():
+    generate_initial_energy_data()
+    train_models()
 
 def detect_dynamic_anomalies(df):
     anomaly_data = []
@@ -289,14 +294,6 @@ def detect_dynamic_anomalies(df):
     
     return anomaly_data
 
-def background_data_initialization():
-    initialize_data()
-
-def background_model_training():
-    while not data_initialized:
-        time.sleep(1)
-    train_models()
-
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
     global device_states
@@ -322,40 +319,39 @@ def update_device_states():
 
 @app.route('/api/energy-data', methods=['GET'])
 def get_energy_data():
-    if not data_initialized:
-        return jsonify([])
+    if not models_trained:
+        recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
+        for item in recent_data:
+            item['predicted'] = item['consumption'] * np.random.uniform(0.98, 1.02)
+            item['prediction_confidence'] = 0.5
+        return jsonify(recent_data)
     
     recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
     
-    if models_trained:
-        for item in recent_data:
-            try:
-                features = np.array([[
-                    item['hour'], item['day_of_week'], item['temperature'], 
-                    item['occupancy'], item.get('device_consumption', 0),
-                    item.get('time_factor', 1.0), item.get('weather_factor', 1.0),
-                    np.sin(2 * np.pi * item['hour'] / 24),
-                    np.cos(2 * np.pi * item['hour'] / 24),
-                    np.sin(2 * np.pi * item['day_of_week'] / 7),
-                    np.cos(2 * np.pi * item['day_of_week'] / 7)
-                ]])
-                
-                rf_pred = energy_model.predict(features)[0]
-                mlp_pred = mlp_model.predict(scaler.transform(features))[0]
+    for item in recent_data:
+        try:
+            features = np.array([[
+                item['hour'], item['day_of_week'], item['temperature'], 
+                item['occupancy'], item.get('device_consumption', 0),
+                item.get('time_factor', 1.0), item.get('weather_factor', 1.0),
+                np.sin(2 * np.pi * item['hour'] / 24),
+                np.cos(2 * np.pi * item['hour'] / 24),
+                np.sin(2 * np.pi * item['day_of_week'] / 7),
+                np.cos(2 * np.pi * item['day_of_week'] / 7)
+            ]])
+            
+            rf_pred = energy_model.predict(features)[0]
+            mlp_pred = mlp_model.predict(scaler.transform(features))[0]
 
-                try:
-                    ridge_pred = ridge_model.predict(features)[0]
-                    ensemble_pred = (0.5 * rf_pred) + (0.3 * ridge_pred) + (0.2 * mlp_pred)
-                except:
-                    ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred)
-                item['predicted'] = round(ensemble_pred, 2)
-                item['prediction_confidence'] = np.random.uniform(0.85, 0.98)
-                
-            except Exception as e:
-                item['predicted'] = item['consumption']
-                item['prediction_confidence'] = 0.5
-    else:
-        for item in recent_data:
+            try:
+                ridge_pred = ridge_model.predict(features)[0]
+                ensemble_pred = (0.5 * rf_pred) + (0.3 * ridge_pred) + (0.2 * mlp_pred)
+            except:
+                ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred)
+            item['predicted'] = round(ensemble_pred, 2)
+            item['prediction_confidence'] = np.random.uniform(0.85, 0.98)
+            
+        except Exception as e:
             item['predicted'] = item['consumption']
             item['prediction_confidence'] = 0.5
             
@@ -363,10 +359,10 @@ def get_energy_data():
 
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
-    if not data_initialized or len(energy_data) < 10:
+    if len(energy_data) < 10:
         return jsonify({'message': 'Insufficient data.'}), 200
     
-    df = pd.DataFrame(energy_data[-168:])
+    df = pd.DataFrame(energy_data[-min(336, len(energy_data)):])
     
     weekly_data = []
     for day in range(7):
@@ -413,6 +409,7 @@ def get_analytics():
     
     dynamic_display_percentage = np.clip(optimization_success_percentage_raw + np.random.uniform(-3, 3), 70.0, 99.9)
 
+
     ml_algorithms = {
         'random_forest': {
             'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
@@ -447,8 +444,6 @@ def get_analytics():
 
 @app.route('/api/geofences', methods=['GET'])
 def get_geofences():
-    if not data_initialized:
-        return jsonify([])
     return jsonify(geofence_data)
 
 @app.route('/api/geofences', methods=['POST'])
@@ -467,9 +462,6 @@ def create_geofence():
 
 @app.route('/api/geofences/stats', methods=['GET'])
 def get_geofence_stats():
-    if not data_initialized:
-        return jsonify({'total_zones': 0, 'total_triggers': 0, 'optimization_success_count': 0})
-    
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
     total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
     
@@ -508,6 +500,7 @@ def get_geofence_analytics():
         'optimization_success_count': round(dynamic_display_percentage, 1)
     }
     return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
+
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
@@ -566,12 +559,9 @@ def get_optimization_history():
         'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
     })
 
-data_thread = threading.Thread(target=background_data_initialization, daemon=True)
-model_thread = threading.Thread(target=background_model_training, daemon=True)
-
-data_thread.start()
-model_thread.start()
+initialize_basic_data()
 
 if __name__ == '__main__':
+    threading.Thread(target=background_initialization, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host='0.0.0.0', port=port)

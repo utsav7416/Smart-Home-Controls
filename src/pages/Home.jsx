@@ -13,6 +13,7 @@ function Home() {
   const [activeDevices, setActiveDevices] = useState(8);
   const [totalDevices, setTotalDevices] = useState(16);
   const [emergencyActive, setEmergencyActive] = useState(false);
+  const [heatmapData, setHeatmapData] = useState({});
   const audioContextRef = useRef(null);
   const oscillatorRef = useRef(null);
 
@@ -22,6 +23,17 @@ function Home() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const savedHeatmapData = JSON.parse(window.localStorage?.getItem('smartHomeHeatmapData') || '{}');
+    setHeatmapData(savedHeatmapData);
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(heatmapData).length > 0) {
+      window.localStorage?.setItem('smartHomeHeatmapData', JSON.stringify(heatmapData));
+    }
+  }, [heatmapData]);
 
   useEffect(() => {
     if (emergencyActive) {
@@ -76,11 +88,7 @@ function Home() {
       day: 'numeric'
     };
     const formattedDate = date.toLocaleDateString('en-US', options);
-    const day = date.getDate();
-    const suffix = day % 10 === 1 && day !== 11 ? 'st' :
-      day % 10 === 2 && day !== 12 ? 'nd' :
-      day % 10 === 3 && day !== 13 ? 'rd' : 'th';
-    return `${formattedDate.replace(/\d+/, '')}${day}${suffix}`;
+    return formattedDate;
   };
 
   const rooms = [
@@ -125,8 +133,6 @@ function Home() {
   }
 ];
 
-
-
   const environmentData = {
     humidity: 42,
     airQuality: 'Good',
@@ -161,6 +167,18 @@ function Home() {
     setEnergyUsage(usage.toFixed(1));
     setActiveDevices(activeCount);
     setTotalDevices(totalCount);
+
+    const today = new Date().toDateString();
+    const currentHour = new Date().getHours();
+    const activityLevel = Math.min(activeCount * 2 + Math.floor(usage / 5), 10);
+    
+    setHeatmapData(prev => ({
+      ...prev,
+      [today]: {
+        ...prev[today],
+        [currentHour]: activityLevel
+      }
+    }));
   };
 
   return (
@@ -272,7 +290,7 @@ function Home() {
             <EnvironmentStats data={environmentData} tempUnit={'F'} />
           </div>
         )}
-        <div className={`lg:col-span-${selectedRoom === 'All Rooms' ? '2' : '1'}`}>
+        <div className={`${selectedRoom === 'All Rooms' ? 'lg:col-span-2' : 'lg:col-span-1'} flex-shrink-0`}>
           {selectedRoom === 'All Rooms' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div className="w-full h-64 md:h-72 lg:h-80 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-900 to-teal-700 p-6 text-white text-2xl font-semibold text-center leading-relaxed shadow-lg">
@@ -285,26 +303,26 @@ function Home() {
                   key={idx}
                   src={img}
                   alt={`All Room ${idx + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '500px',
-                    maxWidth: '100%',
-                    objectFit: 'cover',
-                    borderRadius: '12px'
-                  }}
+                  className="w-full h-[500px] object-cover rounded-xl flex-shrink-0"
                 />
               ))}
             </div>
           ) : (
-            <img
-              src={currentRoom.image}
-              alt={currentRoom.name}
-              className="w-full h-full object-cover rounded-xl"
-            />
+            <div className="w-full h-full min-h-[400px]">
+              <img
+                src={currentRoom.image}
+                alt={currentRoom.name}
+                className="w-full h-full object-cover rounded-xl flex-shrink-0"
+              />
+            </div>
           )}
         </div>
-        <div className="lg:col-span-2">
-          <DeviceControl room={selectedRoom} onDeviceChange={handleDeviceChange} />
+        <div className={`${selectedRoom === 'All Rooms' ? 'lg:col-span-1' : 'lg:col-span-2'} flex-shrink-0`}>
+          <DeviceControl 
+            room={selectedRoom} 
+            onDeviceChange={handleDeviceChange}
+            heatmapData={heatmapData}
+          />
         </div>
       </div>
 

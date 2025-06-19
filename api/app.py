@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import random
 import json
 import time
-import threading
 from sklearn.ensemble import RandomForestRegressor, IsolationForest
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import DBSCAN
@@ -49,7 +48,6 @@ optimization_history = []
 optimization_success_count = 0
 total_optimization_attempts = 0
 last_calculated_contamination_rate = 0.1
-models_trained = False
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
@@ -120,8 +118,18 @@ def generate_realistic_energy_data(device_states_data=None):
         'weather_factor': round(weather_factor, 2)
     }
 
-def initialize_basic_data():
-    global geofence_data, ml_performance_history
+def initialize_data():
+    global energy_data, geofence_data, ml_performance_history, optimization_history
+    
+    num_hours_initial_data = 240
+    base_time = datetime.now() - timedelta(hours=num_hours_initial_data)
+    for i in range(num_hours_initial_data):
+        timestamp = base_time + timedelta(hours=i)
+        temp_data = generate_realistic_energy_data()
+        temp_data['timestamp'] = timestamp.isoformat()
+        temp_data['hour'] = timestamp.hour
+        temp_data['day_of_week'] = timestamp.weekday()
+        energy_data.append(temp_data)
     
     geofence_data.extend([
         {
@@ -148,22 +156,8 @@ def initialize_basic_data():
             'r2_score': np.random.uniform(0.85, 0.95)
         })
 
-def generate_initial_energy_data():
-    global energy_data
-    
-    num_hours_initial_data = 72
-    base_time = datetime.now() - timedelta(hours=num_hours_initial_data)
-    
-    for i in range(num_hours_initial_data):
-        timestamp = base_time + timedelta(hours=i)
-        temp_data = generate_realistic_energy_data()
-        temp_data['timestamp'] = timestamp.isoformat()
-        temp_data['hour'] = timestamp.hour
-        temp_data['day_of_week'] = timestamp.weekday()
-        energy_data.append(temp_data)
-
 def train_models():
-    global energy_model, ridge_model, anomaly_detector, scaler, mlp_model, models_trained
+    global energy_model, ridge_model, anomaly_detector, scaler, mlp_model
     
     if len(energy_data) < 50:
         return
@@ -189,13 +183,8 @@ def train_models():
         ridge_model.fit(X_train, y_train)
         anomaly_detector.fit(X_train_scaled)
         mlp_model.fit(X_train_scaled, y_train)
-        models_trained = True
     except Exception as e:
         pass
-
-def background_initialization():
-    generate_initial_energy_data()
-    train_models()
 
 def detect_dynamic_anomalies(df):
     anomaly_data = []
@@ -304,11 +293,11 @@ def update_device_states():
     new_energy_point = generate_realistic_energy_data(device_states)
     energy_data.append(new_energy_point)
     
-    if len(energy_data) > 500:
+    if len(energy_data) > 1000:
         energy_data.pop(0)
     
-    if len(energy_data) % 25 == 0 and models_trained:
-        threading.Thread(target=train_models, daemon=True).start()
+    if len(energy_data) % 50 == 0:
+        train_models()
     
     return jsonify({
         'status': 'success',
@@ -319,13 +308,6 @@ def update_device_states():
 
 @app.route('/api/energy-data', methods=['GET'])
 def get_energy_data():
-    if not models_trained:
-        recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
-        for item in recent_data:
-            item['predicted'] = item['consumption'] * np.random.uniform(0.98, 1.02)
-            item['prediction_confidence'] = 0.5
-        return jsonify(recent_data)
-    
     recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
     
     for item in recent_data:
@@ -362,7 +344,7 @@ def get_analytics():
     if len(energy_data) < 10:
         return jsonify({'message': 'Insufficient data.'}), 200
     
-    df = pd.DataFrame(energy_data[-min(336, len(energy_data)):])
+    df = pd.DataFrame(energy_data[-336:])
     
     weekly_data = []
     for day in range(7):
@@ -378,7 +360,7 @@ def get_analytics():
     
     anomaly_data = detect_dynamic_anomalies(df)
     anomaly_count = len(anomaly_data)
-
+    
     ml_performance = {
         'accuracy': round(float(np.mean([p['accuracy'] for p in ml_performance_history[-7:]]) if ml_performance_history else 92.5), 1),
         'precision': round(float(np.random.uniform(87, 94)), 1),
@@ -550,9 +532,9 @@ def get_optimization_history():
         'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
     })
 
-initialize_basic_data()
+initialize_data()
+train_models()
 
 if __name__ == '__main__':
-    threading.Thread(target=background_initialization, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0', port=port) 

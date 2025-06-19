@@ -432,7 +432,7 @@ export default function Analytics() {
             <Network className="w-5 h-5" />
             AI-Powered Machine Learning Pipeline
           </CardTitle>
-          <p className="text-gray-400 text-sm">Advanced ensemble of ML algorithms working together to optimize your energy consumption</p>
+          <p className="text-gray-400 text-sm">An advanced ensemble working together to optimize your energy consumption</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -458,73 +458,95 @@ export default function Analytics() {
 
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             Weekly Consumption vs ML Predictions (Device-Adjusted)
-          </CardTitle>
-          <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
+            </CardTitle>
+            <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={adjustedWeeklyData}>
-              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-              <XAxis dataKey="day" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Line type="monotone" dataKey="consumption" stroke="#60a5fa" strokeWidth={3}
-                dot={{ fill: '#60a5fa', strokeWidth: 2, r: 6 }} name="Actual Consumption (kWh)" />
+            <div className="flex gap-4">
+            <div className="w-[70%]">
+                <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={adjustedWeeklyData}>
+                    <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                    <XAxis dataKey="day" stroke="#9ca3af" />
+                    <YAxis stroke="#9ca3af" />
+                    <Tooltip
+                    contentStyle={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white'
+                    }}
+                    />
+                    <Line type="monotone" dataKey="consumption" stroke="#60a5fa" strokeWidth={3}
+                    dot={{ fill: '#60a5fa', strokeWidth: 2, r: 6 }} name="Actual Consumption (kWh)" />
 
-              <Line type="monotone" dataKey="prediction" stroke="#22c55e" strokeWidth={2}
-                strokeDashArray="5 5" dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }} name="ML Prediction (kWh)" />
-            </LineChart>
-          </ResponsiveContainer>
+                    <Line type="monotone" dataKey="prediction" stroke="#22c55e" strokeWidth={2}
+                    strokeDashArray="5 5" dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }} name="ML Prediction (kWh)" />
+                </LineChart>
+                </ResponsiveContainer>
+            </div>
+            <div className="w-[30%]">
+                <img 
+                src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg" 
+                alt="Smart Home Analytics" 
+                className="w-full h-[400px] object-cover rounded-lg"
+                />
+            </div>
+            </div>
         </CardContent>
-      </Card>
+        </Card>
 
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+        <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5" />
             24-Hour Energy Consumption Patterns (Live Device Impact)
-          </CardTitle>
-          <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
+            </CardTitle>
+            <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={adjustedHourlyPatterns}>
-              <defs>
-                <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-              <XAxis dataKey="hour" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
-                fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
+            <div className="flex gap-4">
+            <div className="w-[70%]">
+                <ResponsiveContainer width="100%" height={350}>
+                <AreaChart data={adjustedHourlyPatterns}>
+                    <defs>
+                    <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                    <XAxis dataKey="hour" stroke="#9ca3af" />
+                    <YAxis stroke="#9ca3af" />
+                    <Tooltip
+                    contentStyle={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white'
+                    }}
+                    />
+                    <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
+                    fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
 
-              <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
-                fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
-            </AreaChart>
-          </ResponsiveContainer>
+                    <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
+                    fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
+                </AreaChart>
+                </ResponsiveContainer>
+            </div>
+            <div className="w-[30%]">
+                <img 
+                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
+                alt="Smart Home Interior" 
+                className="w-full h-[350px] object-cover rounded-lg"
+                />
+            </div>
+            </div>
         </CardContent>
-      </Card>
+        </Card>
 
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>

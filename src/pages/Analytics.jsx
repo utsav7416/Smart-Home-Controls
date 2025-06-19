@@ -457,93 +457,92 @@ export default function Analytics() {
       </Card>
 
       <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
-            <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                    <BarChart3 className="w-5 h-5" />
-                    Weekly Consumption vs ML Predictions (Device-Adjusted)
-                </CardTitle>
-                <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
-            </CardHeader>
-            <CardContent>
-                <div className="flex gap-4">
-                    <div className="w-[70%]">
-                        <ResponsiveContainer width="100%" height={400}>
-                            <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
-                                <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                                <XAxis dataKey="day" stroke="#9ca3af" />
-                                <YAxis stroke="#9ca3af" />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '8px',
-                                        color: 'white'
-                                    }}
-                                />
-                                <Bar dataKey="consumption" fill="#60a5fa" name="Actual Consumption (kWh)" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="prediction" fill="#22c55e" name="ML Prediction (kWh)" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="w-[30%]">
-                        <img 
-                            src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
-                            alt="Smart Home Analytics"
-                            className="w-full h-[400px] object-cover rounded-lg"
-                        />
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+       <CardHeader>
+         <CardTitle className="text-white flex items-center gap-2">
+           <BarChart3 className="w-5 h-5" />
+           Weekly Consumption vs ML Predictions (Device-Adjusted)
+         </CardTitle>
+         <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
+       </CardHeader>
+       <CardContent>
+         <div className="flex gap-4">
+           <div className="w-[70%]">
+             <ResponsiveContainer width="100%" height={400}>
+               <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
+                 <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                 <XAxis dataKey="day" stroke="#9ca3af" />
+                 <YAxis stroke="#9ca3af" />
+                 <Tooltip
+                   contentStyle={{
+                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                     border: '1px solid rgba(255, 255, 255, 0.1)',
+                     borderRadius: '8px',
+                     color: 'white'
+                   }}
+                 />
+                 <Bar dataKey="consumption" fill="#60a5fa" name="Actual Consumption (kWh)" radius={[4, 4, 0, 0]} />
+                 <Bar dataKey="prediction" fill="#22c55e" name="ML Prediction (kWh)" radius={[4, 4, 0, 0]} />
+               </BarChart>
+             </ResponsiveContainer>
+           </div>
+           <div className="w-[30%]">
+             <img 
+               src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
+               alt="Smart Home Analytics"
+               className="w-full h-[400px] object-cover rounded-lg"
+             />
+           </div>
+         </div>
+       </CardContent>
+     </Card>
 
-        <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
-        <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-            <Activity className="w-5 h-5" />
-            24-Hour Energy Consumption Patterns (Live Device Impact)
-            </CardTitle>
-            <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
-        </CardHeader>
-        <CardContent>
-            <div className="flex gap-4">
-            <div className="w-[70%]">
-                <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={adjustedHourlyPatterns}>
-                    <defs>
-                    <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                    </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                    <XAxis dataKey="hour" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                    contentStyle={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: 'white'
-                    }}
-                    />
-                    <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
-                    fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
-
-                    <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
-                    fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
-                </AreaChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="w-[30%]">
-                <img 
-                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
-                alt="Smart Home Interior" 
-                className="w-full h-[350px] object-cover rounded-lg"
-                />
-            </div>
-            </div>
-        </CardContent>
-        </Card>
+     <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+       <CardHeader>
+         <CardTitle className="text-white flex items-center gap-2">
+           <Activity className="w-5 h-5" />
+           24-Hour Energy Consumption Patterns (Live Device Impact)
+         </CardTitle>
+         <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
+       </CardHeader>
+       <CardContent>
+         <div className="flex gap-4">
+           <div className="w-[70%]">
+             <ResponsiveContainer width="100%" height={350}>
+               <AreaChart data={adjustedHourlyPatterns}>
+                 <defs>
+                   <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
+                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                   </linearGradient>
+                 </defs>
+                 <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                 <XAxis dataKey="hour" stroke="#9ca3af" />
+                 <YAxis stroke="#9ca3af" />
+                 <Tooltip
+                   contentStyle={{
+                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                     border: '1px solid rgba(255, 255, 255, 0.1)',
+                     borderRadius: '8px',
+                     color: 'white'
+                   }}
+                 />
+                 <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
+                   fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
+                 <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
+                   fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
+               </AreaChart>
+             </ResponsiveContainer>
+           </div>
+           <div className="w-[30%]">
+             <img 
+               src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
+               alt="Smart Home Interior" 
+               className="w-full h-[350px] object-cover rounded-lg"
+             />
+           </div>
+         </div>
+       </CardContent>
+     </Card>
     </div>
   );
 }

@@ -80,7 +80,7 @@ function SmartRoutinesDashboard() {
     const loadedRoutines = loadFromStorage('routines', defaultStorage.routines);
     const loadedNotes = loadFromStorage('notes', defaultStorage.notes);
     const loadedVoiceNotes = loadFromStorage('voiceNotes', defaultStorage.voiceNotes);
-    
+
     setRoutines(loadedRoutines);
     setNotes(loadedNotes);
     setVoiceNotes(loadedVoiceNotes);
@@ -251,19 +251,27 @@ function SmartRoutinesDashboard() {
 
   if (!isDataLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-950 to-lime-950">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Inter', sans-serif" }}>
         <div className="text-white text-xl">Loading your routines...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative p-4 font-sans text-white overflow-hidden">
+    <div className="min-h-screen relative p-4 text-white overflow-hidden" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Inter', sans-serif" }}>
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
+          body {
+            font-family: 'Inter', sans-serif;
+          }
+        `}
+      </style>
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(https://thumbs.dreamstime.com/b/exploring-future-smart-homes-iot-revolutionizing-your-lawn-care-automation-image-showcases-lush-being-357455920.jpg?w=992)'
-        }}a
+        }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/70 to-lime-950/70"></div>
       </div>
@@ -276,7 +284,7 @@ function SmartRoutinesDashboard() {
 
       <audio ref={audioRef} style={{ display: 'none' }} />
 
-      <div className={`max-w-6xl mx-auto relative z-10`}> 
+      <div className={`max-w-7xl mx-auto relative z-10`}>
         <div className="text-center mb-16 pt-12">
           <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4 bg-gradient-to-r from-green-300 via-teal-300 to-lime-300 bg-clip-text text-transparent">
             Smart Routines
@@ -289,12 +297,14 @@ function SmartRoutinesDashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
+        {/* 2x2 Grid Layout for the four main sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 auto-rows-[1fr]"> {/* auto-rows-[1fr] for equal height rows */}
+
+          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h2 className="text-2xl font-semibold text-white mb-2 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Your Routines</h2>
-                <p className="text-gray-300 text-sm">Manage your daily habits and schedules</p>
+                <h2 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Your Routines</h2>
+                <p className="text-gray-300 text-base">Manage your daily habits and schedules with ease.</p>
               </div>
               <button
                 onClick={() => {
@@ -302,18 +312,18 @@ function SmartRoutinesDashboard() {
                   setEditingIndex(null);
                   setNewRoutine({ name: '', time: '', days: '', icon: getRandomIcon(), color: getRandomColor() });
                 }}
-                className="px-4 py-2 bg-black/30 text-green-300 rounded-xl hover:bg-black/40 transition-all duration-200 border border-green-500/20 backdrop-blur-xl"
+                className="px-5 py-2.5 bg-black/30 text-green-300 rounded-xl hover:bg-black/40 transition-all duration-200 border border-green-500/20 backdrop-blur-xl font-medium"
               >
-                {isEditing ? 'Done' : 'Edit'}
+                {isEditing ? 'Done' : 'Edit Routines'}
               </button>
             </div>
 
             {isEditing && editingIndex !== null && (
-              <div className="mb-6 p-4 bg-black/30 rounded-xl border border-white/20 backdrop-blur-xl">
-                <h3 className="text-white font-medium mb-3 text-lg">
+              <div className="mb-6 p-6 bg-black/30 rounded-xl border border-white/20 backdrop-blur-xl">
+                <h3 className="text-white font-semibold mb-4 text-xl">
                   {editingIndex < routines.length ? 'Edit Routine' : 'Add New Routine'}
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <input
                     type="text"
                     placeholder="Enter routine name"
@@ -344,17 +354,17 @@ function SmartRoutinesDashboard() {
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-4 overflow-y-auto pr-2 flex-grow">
               {routines.map((routine, index) => {
                 const IconComponent = iconMap[routine.icon];
                 return (
                   <div key={routine.id} className="flex items-center justify-between p-4 bg-black/25 rounded-xl border border-green-500/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
                     <div className="flex items-center">
                       <div className={`p-3 rounded-xl border ${colorMap[routine.color]} mr-4`}>
-                        <IconComponent size={20} />
+                        <IconComponent size={24} />
                       </div>
                       <div>
-                        <h3 className="text-white font-medium text-lg mb-1">{routine.name}</h3>
+                        <h3 className="text-white font-medium text-xl mb-1">{routine.name}</h3>
                         <p className="text-gray-300 text-sm">
                           {formatTime(routine.time)} • {routine.days}
                         </p>
@@ -366,13 +376,13 @@ function SmartRoutinesDashboard() {
                           onClick={() => handleEdit(index)}
                           className="p-2 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all duration-200"
                         >
-                          <Edit3 size={18} />
+                          <Edit3 size={20} />
                         </button>
                         <button
                           onClick={() => handleDelete(index)}
                           className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     )}
@@ -385,46 +395,46 @@ function SmartRoutinesDashboard() {
                   onClick={() => setEditingIndex(routines.length)}
                   className="w-full flex items-center justify-center space-x-2 p-4 bg-black/25 rounded-xl border border-dashed border-green-500/30 text-green-400 hover:text-green-300 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl"
                 >
-                  <Plus size={20} />
+                  <Plus size={24} />
                   <span>Add New Routine</span>
                 </button>
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
+          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
             <div className="flex items-center mb-6">
-              <div className="p-2 bg-amber-500/15 rounded-xl border border-amber-500/20 mr-3">
-                <StickyNote className="text-amber-400" size={20} />
+              <div className="p-3 bg-amber-500/15 rounded-xl border border-amber-500/20 mr-4">
+                <StickyNote className="text-amber-400" size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-semibold text-white mb-1 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Quick Notes</h2>
-                <p className="text-gray-300 text-sm">Track your daily tasks</p>
+                <h2 className="text-3xl font-bold text-white mb-1 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Quick Notes</h2>
+                <p className="text-gray-300 text-base">Jot down your tasks and reminders.</p>
               </div>
             </div>
 
-            <div className="mb-4">
-              <div className="flex space-x-2 mb-3">
+            <div className="mb-6">
+              <div className="flex space-x-3 mb-3">
                 <input
                   type="text"
                   placeholder="Add your task or note here..."
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addNote()}
-                  className="flex-1 bg-black/50 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50 backdrop-blur-xl"
+                  className="flex-1 bg-black/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50 backdrop-blur-xl"
                 />
                 <button
                   onClick={addNote}
-                  className="p-2 bg-black/50 text-amber-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-amber-500/20"
+                  className="p-3 bg-black/50 text-amber-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-amber-500/20"
                 >
-                  <Plus size={18} />
+                  <Plus size={20} />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-3 overflow-y-auto pr-2 flex-grow">
               {notes.map((note) => (
-                <div key={note.id} className="flex items-start space-x-3 p-3 bg-black/25 rounded-lg border border-white/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
+                <div key={note.id} className="flex items-start space-x-4 p-4 bg-black/25 rounded-lg border border-white/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
                   <button
                     onClick={() => toggleNote(note.id)}
                     className={`mt-0.5 transition-all duration-200 ${
@@ -433,10 +443,10 @@ function SmartRoutinesDashboard() {
                         : 'text-gray-400 hover:text-gray-300'
                     }`}
                   >
-                    <CheckCircle2 size={18} />
+                    <CheckCircle2 size={20} />
                   </button>
                   <div className="flex-1">
-                    <span className={`${
+                    <span className={`text-lg ${
                       note.completed
                         ? 'text-gray-400 line-through'
                         : 'text-white'
@@ -448,79 +458,79 @@ function SmartRoutinesDashboard() {
                     onClick={() => deleteNote(note.id)}
                     className="text-red-400 hover:text-red-300 transition-all duration-200"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
               ))}
               {notes.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
-                  <StickyNote size={32} className="mx-auto mb-3 opacity-50" />
-                  <p>No notes yet. Add your first task!</p>
+                <div className="text-center py-10 text-gray-400">
+                  <StickyNote size={40} className="mx-auto mb-4 opacity-50" />
+                  <p className="text-lg">No notes yet. Add your first task!</p>
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
+          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
             <div className="flex items-center mb-6">
-              <div className="p-2 bg-green-500/15 rounded-xl border border-green-500/20 mr-3">
-                <Mic className="text-green-400" size={20} />
+              <div className="p-3 bg-green-500/15 rounded-xl border border-green-500/20 mr-4">
+                <Mic className="text-green-400" size={24} />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white mb-1 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Voice Notes</h2>
-                <p className="text-gray-300 text-sm">Record your thoughts</p>
+                <h2 className="text-3xl font-bold text-white mb-1 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Voice Notes</h2>
+                <p className="text-gray-300 text-base">Capture your thoughts on the go.</p>
               </div>
             </div>
 
-            <div className="flex space-x-2 mb-4">
+            <div className="flex space-x-3 mb-6">
               <button
                 onClick={isRecording ? stopRecording : startRecording}
-                className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
                   isRecording
                     ? 'bg-black/50 text-red-400 border border-red-500/20'
                     : 'bg-black/50 text-green-400 border border-green-500/20'
                 }`}
               >
-                {isRecording ? <MicOff size={14} /> : <Mic size={14} />}
-                <span className="text-sm">{isRecording ? 'Stop' : 'Record'}</span>
+                {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+                <span className="text-base">{isRecording ? 'Stop Recording' : 'Start Recording'}</span>
               </button>
               {audioBlob && (
                 <button
                   onClick={addVoiceNote}
-                  className="px-3 py-2 bg-black/50 text-blue-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-blue-500/20 text-sm"
+                  className="px-4 py-2.5 bg-black/50 text-blue-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-blue-500/20 text-base font-medium"
                 >
-                  Save
+                  Save Note
                 </button>
               )}
             </div>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-3 overflow-y-auto pr-2 flex-grow">
               {voiceNotes.length === 0 && (
-                <div className="text-center py-6 text-gray-400">
-                  <Mic size={24} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No voice notes yet</p>
+                <div className="text-center py-8 text-gray-400">
+                  <Mic size={32} className="mx-auto mb-3 opacity-50" />
+                  <p className="text-base">No voice notes yet. Record one!</p>
                 </div>
               )}
               {voiceNotes.map((note) => (
-                <div key={note.id} className="flex items-center justify-between p-2 bg-black/25 rounded-lg border border-white/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
+                <div key={note.id} className="flex items-center justify-between p-3 bg-black/25 rounded-lg border border-white/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
                   <div className="flex flex-col items-start space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                       <button
                         onClick={() => playVoiceNote(note.id, note.audioUrl, note.playbackSpeed)}
-                        className="p-1 bg-black/50 text-green-400 rounded-full hover:bg-black/60 transition-all duration-200"
+                        className="p-1.5 bg-black/50 text-green-400 rounded-full hover:bg-black/60 transition-all duration-200"
                       >
-                        {currentPlayingId === note.id ? <Square size={12} /> : <Play size={12} />}
+                        {currentPlayingId === note.id ? <Square size={14} /> : <Play size={14} />}
                       </button>
-                      <span className="text-white text-sm">{note.text}</span>
+                      <span className="text-white text-base">{note.text}</span>
                     </div>
-                    <span className="text-gray-400 text-sm">{note.timestamp}</span>
-                    <div className="flex items-center mt-1">
+                    <span className="text-gray-400 text-xs pl-8">{note.timestamp}</span>
+                    <div className="flex items-center mt-2 pl-8">
                       <span className="text-gray-400 text-sm mr-2">Speed:</span>
                       {[0.5, 1, 1.5, 2].map(speed => (
                         <button
                           key={speed}
                           onClick={() => handleSpeedChange(note.id, speed)}
-                          className={`px-2 py-0.5 rounded-md text-sm transition-all duration-200 mr-1 ${
+                          className={`px-2.5 py-1 rounded-md text-sm transition-all duration-200 mr-1 ${
                             note.playbackSpeed === speed
                               ? 'bg-green-600 text-white'
                               : 'bg-black/50 text-gray-300 hover:bg-black/60'
@@ -535,24 +545,24 @@ function SmartRoutinesDashboard() {
                     onClick={() => deleteVoiceNote(note.id)}
                     className="text-red-400 hover:text-red-300 transition-all duration-200"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={16} />
                   </button>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="bg-black/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg">
-            <h3 className="text-2xl font-semibold text-white mb-6 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Today's Progress</h3>
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col items-center p-4 bg-black/30 rounded-lg backdrop-blur-xl">
-                  <span className="text-gray-300 text-sm mb-2">Active Routines</span>
-                  <span className="text-green-400 font-bold text-3xl">{routines.length}</span>
+          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
+            <h3 className="text-3xl font-bold text-white mb-6 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Today's Progress</h3>
+            <div className="space-y-6 flex-grow flex flex-col justify-evenly">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col items-center p-5 bg-black/30 rounded-lg backdrop-blur-xl border border-white/10">
+                  <span className="text-gray-300 text-base mb-2">Active Routines</span>
+                  <span className="text-green-400 font-bold text-4xl">{routines.length}</span>
                 </div>
-                <div className="flex flex-col items-center p-4 bg-black/30 rounded-lg backdrop-blur-xl">
-                  <span className="text-gray-300 text-sm mb-2">Completed Tasks</span>
-                  <span className="text-green-400 font-bold text-3xl">
+                <div className="flex flex-col items-center p-5 bg-black/30 rounded-lg backdrop-blur-xl border border-white/10">
+                  <span className="text-gray-300 text-base mb-2">Completed Tasks</span>
+                  <span className="text-green-400 font-bold text-4xl">
                     {notes.filter(n => n.completed).length}/{notes.length}
                   </span>
                 </div>
@@ -560,14 +570,14 @@ function SmartRoutinesDashboard() {
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-300 text-sm">Daily Progress</span>
-                  <span className="text-green-400 font-medium">
+                  <span className="text-gray-300 text-base">Overall Daily Progress</span>
+                  <span className="text-green-400 font-medium text-lg">
                     {notes.length > 0 ? Math.round((notes.filter(n => n.completed).length / notes.length) * 100) : 0}%
                   </span>
                 </div>
-                <div className="w-full bg-black/50 rounded-full h-4 overflow-hidden">
+                <div className="w-full bg-black/50 rounded-full h-5 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-green-500 to-teal-500 h-4 rounded-full transition-all duration-700"
+                    className="bg-gradient-to-r from-green-500 to-teal-500 h-5 rounded-full transition-all duration-700"
                     style={{
                       width: notes.length > 0 ? `${(notes.filter(n => n.completed).length / notes.length) * 100}%` : '0%'
                     }}
@@ -575,52 +585,69 @@ function SmartRoutinesDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-3 bg-black/20 rounded-lg">
-                  <div className="text-amber-400 font-semibold text-lg">{voiceNotes.length}</div>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="p-4 bg-black/20 rounded-lg border border-white/10">
+                  <div className="text-amber-400 font-semibold text-xl">{voiceNotes.length}</div>
                   <div className="text-gray-400 text-sm">Voice Notes</div>
                 </div>
-                <div className="p-3 bg-black/20 rounded-lg">
-                  <div className="text-blue-400 font-semibold text-lg">{notes.filter(n => !n.completed).length}</div>
+                <div className="p-4 bg-black/20 rounded-lg border border-white/10">
+                  <div className="text-blue-400 font-semibold text-xl">{notes.filter(n => !n.completed).length}</div>
                   <div className="text-gray-400 text-sm">Pending</div>
                 </div>
-                <div className="p-3 bg-black/20 rounded-lg">
-                  <div className="text-green-400 font-semibold text-lg">{notes.filter(n => n.completed).length}</div>
+                <div className="p-4 bg-black/20 rounded-lg border border-white/10">
+                  <div className="text-green-400 font-semibold text-xl">{notes.filter(n => n.completed).length}</div>
                   <div className="text-gray-400 text-sm">Done</div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-          <div className="w-full rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://img.freepik.com/premium-photo/secluded-cabin-forest-blending-smart-home-technology-with-beauty-nature-this-ecofriendly-retreat-offers-contemporary-design-sustainable-living-peacefulwoodland-setting_924727-44886.jpg"
-              alt="Secluded Cabin"
-              className="w-full h-64 object-cover"
-            />
-          </div>
-          <div className="w-full rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://ml9yftkh0gk2.i.optimole.com/cb:kjVW.6ef/w:322/h:220/q:mauto/ig:avif/https://esyncsecurity.com/wp-content/uploads/smart-surveillance-system-transforming-security-in-chennai-mjy.jpg"
-              alt="Smart Surveillance System"
-              className="w-full h-64 object-cover"
-            />
-          </div>
-          <div className="w-full rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://atsmarthomesg.com/wp-content/uploads/2024/10/smart-light-dimming-and-brightness-control.png"
-              alt="Smart Light Dimming and Brightness Control"
-              className="w-full h-64 object-cover"
-            />
-          </div>
-          <div className="w-full rounded-xl overflow-hidden shadow-lg">
-            <img
-              src="https://ueeshop.ly200-cdn.com/u_file/UPAC/UPAC480/2002/photo/441c133573.jpg"
-              alt="Smart Home Technology"
-              className="w-full h-64 object-cover"
-            />
+
+        <div className="mt-16 text-center">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-10 bg-gradient-to-r from-lime-300 via-emerald-300 to-green-300 bg-clip-text text-transparent">
+            Smart Home Integration
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
+              <img
+                src="https://img.freepik.com/premium-photo/secluded-cabin-forest-blending-smart-home-technology-with-beauty-nature-this-ecofriendly-retreat-offers-contemporary-design-sustainable-living-peacefulwoodland-setting_924727-44886.jpg"
+                alt="Secluded Cabin"
+                className="w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white text-lg font-semibold px-4 text-center">Eco-Friendly Smart Cabin</p>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
+              <img
+                src="https://ml9yftkh0gk2.i.optimole.com/cb:kjVW.6ef/w:322/h:220/q:mauto/ig:avif/https://esyncsecurity.com/wp-content/uploads/smart-surveillance-system-transforming-security-in-chennai-mjy.jpg"
+                alt="Smart Surveillance System"
+                className="w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white text-lg font-semibold px-4 text-center">Advanced Security Systems</p>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
+              <img
+                src="https://atsmarthomesg.com/wp-content/uploads/2024/10/smart-light-dimming-and-brightness-control.png"
+                alt="Smart Light Dimming and Brightness Control"
+                className="w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white text-lg font-semibold px-4 text-center">Intelligent Lighting Control</p>
+              </div>
+            </div>
+            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
+              <img
+                src="https://ueeshop.ly200-cdn.com/u_file/UPAC/UPAC480/2002/photo/441c133573.jpg"
+                alt="Smart Home Technology"
+                className="w-full h-80 object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <p className="text-white text-lg font-semibold px-4 text-center">Seamless Smart Home Tech</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

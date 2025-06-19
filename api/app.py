@@ -378,16 +378,7 @@ def get_analytics():
     
     anomaly_data = detect_dynamic_anomalies(df)
     anomaly_count = len(anomaly_data)
-    
-    cost_optimization = []
-    for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']:
-        actual_kwh = np.random.uniform(800, 1200)
-        optimized_kwh = actual_kwh * np.random.uniform(0.75, 0.88)
-        cost_optimization.append({
-            'month': month, 'actual': round(float(actual_kwh * 0.15)),
-            'optimized': round(float(optimized_kwh * 0.15)), 'saved': round(float((actual_kwh - optimized_kwh) * 0.15))
-        })
-    
+
     ml_performance = {
         'accuracy': round(float(np.mean([p['accuracy'] for p in ml_performance_history[-7:]]) if ml_performance_history else 92.5), 1),
         'precision': round(float(np.random.uniform(87, 94)), 1),
@@ -438,7 +429,7 @@ def get_analytics():
     }
     
     return jsonify({
-        'weeklyData': weekly_data, 'anomalyData': anomaly_data, 'costOptimization': cost_optimization,
+        'weeklyData': weekly_data, 'anomalyData': anomaly_data,
         'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
     })
 

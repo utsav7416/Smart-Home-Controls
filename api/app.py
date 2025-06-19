@@ -15,6 +15,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPRegressor
 import warnings
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 warnings.filterwarnings('ignore')
 
@@ -33,12 +35,13 @@ class NumpyEncoder(json.JSONEncoder):
 
 app.json_encoder = NumpyEncoder
 
-energy_model = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
-ridge_model = Ridge(alpha=1.0, random_state=42)
-anomaly_detector = IsolationForest(contamination=0.1, random_state=42)
-scaler = StandardScaler()
-location_clusterer = DBSCAN(eps=0.01, min_samples=3)
-mlp_model = MLPRegressor(hidden_layer_sizes=(100, 50), activation='relu', solver='adam', max_iter=200, random_state=42, alpha=0.0001)
+energy_model = None
+ridge_model = None
+anomaly_detector = None
+scaler = None
+location_clusterer = None
+mlp_model = None
+models_trained = False
 
 energy_data = []
 geofence_data = []
@@ -118,12 +121,13 @@ def generate_realistic_energy_data(device_states_data=None):
         'weather_factor': round(weather_factor, 2)
     }
 
-def initialize_data():
-    global energy_data, geofence_data, ml_performance_history, optimization_history
+def initialize_minimal_data():
+    global energy_data, geofence_data, ml_performance_history
     
-    num_hours_initial_data = 240
+    num_hours_initial_data = 72
     base_time = datetime.now() - timedelta(hours=num_hours_initial_data)
-    for i in range(num_hours_initial_data):
+    
+    for i in range(0, num_hours_initial_data, 2):
         timestamp = base_time + timedelta(hours=i)
         temp_data = generate_realistic_energy_data()
         temp_data['timestamp'] = timestamp.isoformat()
@@ -135,64 +139,69 @@ def initialize_data():
         {
             'id': 1, 'name': 'Home', 'address': 'A-101, Ashoka Apartments, New Delhi, IN',
             'lat': 37.7749, 'lng': -122.4194, 'radius': 200, 'isActive': True, 'automations': 8,
-            'trigger_count': np.random.randint(120, 180), 'energy_savings': np.random.uniform(220, 280),
+            'trigger_count': random.randint(120, 180), 'energy_savings': random.uniform(220, 280),
             'created_at': (datetime.now() - timedelta(days=30)).isoformat()
         },
         {
             'id': 2, 'name': 'Work Office', 'address': 'K-15, The Sinclairs Bayview, Dubai, UAE',
             'lat': 37.7849, 'lng': -122.4094, 'radius': 150, 'isActive': True, 'automations': 5,
-            'trigger_count': np.random.randint(80, 120), 'energy_savings': np.random.uniform(150, 200),
+            'trigger_count': random.randint(80, 120), 'energy_savings': random.uniform(150, 200),
             'created_at': (datetime.now() - timedelta(days=20)).isoformat()
         }
     ])
     
-    for i in range(30):
-        date = datetime.now() - timedelta(days=29-i)
+    for i in range(7):
+        date = datetime.now() - timedelta(days=6-i)
         ml_performance_history.append({
             'date': date.isoformat(),
-            'accuracy': np.random.uniform(88, 96),
-            'mse': np.random.uniform(0.02, 0.08),
-            'mae': np.random.uniform(0.1, 0.3),
-            'r2_score': np.random.uniform(0.85, 0.95)
+            'accuracy': random.uniform(88, 96),
+            'mse': random.uniform(0.02, 0.08),
+            'mae': random.uniform(0.1, 0.3),
+            'r2_score': random.uniform(0.85, 0.95)
         })
 
-def train_models():
-    global energy_model, ridge_model, anomaly_detector, scaler, mlp_model
-    
-    if len(energy_data) < 50:
-        return
-    
-    df = pd.DataFrame(energy_data)
-    df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
-    df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
-    df['day_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
-    df['day_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
-    
-    features = ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 
-                'time_factor', 'weather_factor', 'hour_sin', 'hour_cos', 'day_sin', 'day_cos']
-    
-    X = df[features].fillna(0).values
-    y = df['consumption'].values
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+def train_models_background():
+    global energy_model, ridge_model, anomaly_detector, scaler, location_clusterer, mlp_model, models_trained
     
     try:
-        energy_model.fit(X_train, y_train)
-        ridge_model.fit(X_train, y_train)
-        anomaly_detector.fit(X_train_scaled)
-        mlp_model.fit(X_train_scaled, y_train)
+        energy_model = RandomForestRegressor(n_estimators=50, max_depth=8, random_state=42, n_jobs=1)
+        ridge_model = Ridge(alpha=1.0, random_state=42)
+        anomaly_detector = IsolationForest(contamination=0.1, random_state=42, n_jobs=1)
+        scaler = StandardScaler()
+        location_clusterer = DBSCAN(eps=0.01, min_samples=3)
+        mlp_model = MLPRegressor(hidden_layer_sizes=(50, 25), activation='relu', solver='adam', max_iter=100, random_state=42, alpha=0.0001)
+        
+        if len(energy_data) >= 20:
+            df = pd.DataFrame(energy_data)
+            df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
+            df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
+            df['day_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
+            df['day_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
+            
+            features = ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 
+                        'time_factor', 'weather_factor', 'hour_sin', 'hour_cos', 'day_sin', 'day_cos']
+            
+            X = df[features].fillna(0).values
+            y = df['consumption'].values
+            
+            X_scaled = scaler.fit_transform(X)
+            
+            energy_model.fit(X, y)
+            ridge_model.fit(X, y)
+            anomaly_detector.fit(X_scaled)
+            mlp_model.fit(X_scaled, y)
+            
+        models_trained = True
     except Exception as e:
-        pass
+        models_trained = False
 
 def detect_dynamic_anomalies(df):
     anomaly_data = []
     
-    if len(df) < 20:
+    if len(df) < 10:
         return anomaly_data
     
-    recent_data = df[-min(168, len(df)):]
+    recent_data = df[-min(48, len(df)):]
     consumption_values = recent_data['consumption'].values
     
     for _, row in recent_data.iterrows():
@@ -226,11 +235,10 @@ def detect_dynamic_anomalies(df):
     
     if overall_std > 0:
         upper_bound = overall_mean + (2.8 * overall_std)
-        lower_bound = max(0, overall_mean - (2.8 * overall_std))
         
         for _, row in recent_data.iterrows():
             consumption = row['consumption']
-            if consumption > upper_bound or consumption < lower_bound:
+            if consumption > upper_bound:
                 if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
                     deviation_ratio = abs(consumption - overall_mean) / overall_mean
                     severity = 'high' if deviation_ratio > 0.5 else 'medium'
@@ -242,7 +250,7 @@ def detect_dynamic_anomalies(df):
                         'type': 'statistical'
                     })
     
-    if len(recent_data) > 30:
+    if len(recent_data) > 15 and models_trained:
         try:
             features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy']].fillna(0).values
             global last_calculated_contamination_rate
@@ -250,7 +258,7 @@ def detect_dynamic_anomalies(df):
             if len(energy_data) > 0:
                 total_anomalies_so_far = sum(1 for d in energy_data if 'anomaly' in d and d['anomaly'])
                 estimated_contamination = total_anomalies_so_far / len(energy_data)
-                contamination_rate = max(0.01, min(0.2, estimated_contamination + np.random.uniform(-0.02, 0.02)))
+                contamination_rate = max(0.01, min(0.2, estimated_contamination + random.uniform(-0.02, 0.02)))
             else:
                 contamination_rate = 0.1
             
@@ -259,14 +267,15 @@ def detect_dynamic_anomalies(df):
             temp_detector = IsolationForest(
                 contamination=contamination_rate,
                 random_state=int(time.time()) % 1000,
-                n_estimators=100
+                n_estimators=50,
+                n_jobs=1
             )
             temp_detector.fit(features)
             ml_anomalies = temp_detector.predict(features)
             ml_scores = temp_detector.decision_function(features)
             
             for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
-                if is_anomaly == -1:
+                if is_anomaly == -1 and len(anomaly_data) < 10:
                     row = recent_data.iloc[i]
                     if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
                         severity = 'high' if abs(score) > 0.4 else 'medium'
@@ -281,139 +290,158 @@ def detect_dynamic_anomalies(df):
         except Exception as e:
             pass
     
-    return anomaly_data
+    return anomaly_data[:20]
+
+@app.route('/')
+def health_check():
+    return jsonify({'status': 'ok', 'models_trained': models_trained})
 
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
     global device_states
     
-    data = request.json
-    device_states = data.get('deviceStates', {})
-    
-    new_energy_point = generate_realistic_energy_data(device_states)
-    energy_data.append(new_energy_point)
-    
-    if len(energy_data) > 1000:
-        energy_data.pop(0)
-    
-    if len(energy_data) % 50 == 0:
-        train_models()
-    
-    return jsonify({
-        'status': 'success',
-        'current_consumption': new_energy_point['consumption'],
-        'device_consumption': new_energy_point['device_consumption'],
-        'timestamp': new_energy_point['timestamp']
-    })
+    try:
+        data = request.json
+        device_states = data.get('deviceStates', {})
+        
+        new_energy_point = generate_realistic_energy_data(device_states)
+        energy_data.append(new_energy_point)
+        
+        if len(energy_data) > 500:
+            energy_data.pop(0)
+        
+        if len(energy_data) % 20 == 0 and models_trained:
+            threading.Thread(target=train_models_background, daemon=True).start()
+        
+        return jsonify({
+            'status': 'success',
+            'current_consumption': new_energy_point['consumption'],
+            'device_consumption': new_energy_point['device_consumption'],
+            'timestamp': new_energy_point['timestamp']
+        })
+    except Exception as e:
+        return jsonify({'error': 'Failed to update device states'}), 500
 
 @app.route('/api/energy-data', methods=['GET'])
 def get_energy_data():
-    recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
-    
-    for item in recent_data:
-        try:
-            features = np.array([[
-                item['hour'], item['day_of_week'], item['temperature'], 
-                item['occupancy'], item.get('device_consumption', 0),
-                item.get('time_factor', 1.0), item.get('weather_factor', 1.0),
-                np.sin(2 * np.pi * item['hour'] / 24),
-                np.cos(2 * np.pi * item['hour'] / 24),
-                np.sin(2 * np.pi * item['day_of_week'] / 7),
-                np.cos(2 * np.pi * item['day_of_week'] / 7)
-            ]])
-            
-            rf_pred = energy_model.predict(features)[0]
-            mlp_pred = mlp_model.predict(scaler.transform(features))[0]
+    try:
+        recent_data = energy_data[-24:] if len(energy_data) >= 24 else energy_data
+        
+        if models_trained:
+            for item in recent_data:
+                try:
+                    features = np.array([[
+                        item['hour'], item['day_of_week'], item['temperature'], 
+                        item['occupancy'], item.get('device_consumption', 0),
+                        item.get('time_factor', 1.0), item.get('weather_factor', 1.0),
+                        np.sin(2 * np.pi * item['hour'] / 24),
+                        np.cos(2 * np.pi * item['hour'] / 24),
+                        np.sin(2 * np.pi * item['day_of_week'] / 7),
+                        np.cos(2 * np.pi * item['day_of_week'] / 7)
+                    ]])
+                    
+                    rf_pred = energy_model.predict(features)[0]
+                    mlp_pred = mlp_model.predict(scaler.transform(features))[0]
 
-            try:
-                ridge_pred = ridge_model.predict(features)[0]
-                ensemble_pred = (0.5 * rf_pred) + (0.3 * ridge_pred) + (0.2 * mlp_pred)
-            except:
-                ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred)
-            item['predicted'] = round(ensemble_pred, 2)
-            item['prediction_confidence'] = np.random.uniform(0.85, 0.98)
-            
-        except Exception as e:
-            item['predicted'] = item['consumption']
-            item['prediction_confidence'] = 0.5
-            
-    return jsonify(recent_data)
+                    try:
+                        ridge_pred = ridge_model.predict(features)[0]
+                        ensemble_pred = (0.5 * rf_pred) + (0.3 * ridge_pred) + (0.2 * mlp_pred)
+                    except:
+                        ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred)
+                    item['predicted'] = round(ensemble_pred, 2)
+                    item['prediction_confidence'] = random.uniform(0.85, 0.98)
+                    
+                except Exception as e:
+                    item['predicted'] = item['consumption']
+                    item['prediction_confidence'] = 0.5
+        else:
+            for item in recent_data:
+                item['predicted'] = item['consumption']
+                item['prediction_confidence'] = 0.5
+                
+        return jsonify(recent_data)
+    except Exception as e:
+        return jsonify([]), 500
 
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
-    if len(energy_data) < 10:
-        return jsonify({'message': 'Insufficient data.'}), 200
-    
-    df = pd.DataFrame(energy_data[-336:])
-    
-    weekly_data = []
-    for day in range(7):
-        day_data = df[df['day_of_week'] == day]
-        if not day_data.empty:
-            avg_consumption = day_data['consumption'].mean()
-            weekly_data.append({
-                'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][day],
-                'consumption': round(float(avg_consumption), 1),
-                'prediction': round(float(avg_consumption * np.random.uniform(0.96, 1.04)), 1),
-                'efficiency': round(float(np.random.uniform(75, 95)), 1)
-            })
-    
-    anomaly_data = detect_dynamic_anomalies(df)
-    anomaly_count = len(anomaly_data)
-    
-    ml_performance = {
-        'accuracy': round(float(np.mean([p['accuracy'] for p in ml_performance_history[-7:]]) if ml_performance_history else 92.5), 1),
-        'precision': round(float(np.random.uniform(87, 94)), 1),
-        'recall': round(float(np.random.uniform(89, 96)), 1),
-        'f1_score': round(float(np.random.uniform(88, 95)), 1)
-    }
-    
-    hourly_patterns = []
-    for hour in range(24):
-        hour_data = df[df['hour'] == hour]
-        if not hour_data.empty:
-            hourly_patterns.append({
-                'hour': f"{hour:02d}:00",
-                'avg_consumption': round(float(hour_data['consumption'].mean()), 1),
-                'device_contribution': round(float(hour_data['device_consumption'].mean()), 1)
-            })
-    
-    optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-    
-    dynamic_display_percentage = np.clip(optimization_success_percentage_raw + np.random.uniform(-3, 3), 70.0, 99.9)
-
-
-    ml_algorithms = {
-        'random_forest': {
-            'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
-            'parameters': {'n_estimators': 100, 'max_depth': 10, 'random_state': 42},
-            'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 'time_factor', 'weather_factor'],
-            'accuracy': ml_performance['accuracy'],
-            'description': 'An ensemble learning method that builds multiple decision trees to improve predictive accuracy and control overfitting. It is robust for forecasting energy consumption patterns.'
-        },
-        'isolation_forest': {
-            'name': 'Isolation Forest', 'purpose': 'Anomaly detection in energy consumption patterns',
-            'parameters': {'contamination': 'dynamic', 'random_state': 'dynamic', 'last_used_contamination_rate': round(last_calculated_contamination_rate, 3)},
-            'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'], 'anomalies_detected': anomaly_count,
-            'description': 'An unsupervised learning algorithm that efficiently identifies outliers by isolating observations that deviate from the norm. It\'s ideal for detecting unusual energy spikes or drops.'
-        },
-        'ridge_regression': {
-            'name': 'Ridge Regression', 'purpose': 'Linear model component in ensemble',
-            'parameters': {'alpha': 1.0, 'random_state': 42}, 'weight_in_ensemble': 0.3,
-            'description': 'A type of linear regression that adds a regularization penalty to prevent overfitting. It\'s used as a stable baseline predictor within our ensemble model for energy data.'
-        },
-        'mlp_regressor': {
-            'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
-            'parameters': {'hidden_layer_sizes': '(100, 50)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 200, 'alpha': 0.0001},
-            'weight_in_ensemble': 0.2,
-            'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
+    try:
+        if len(energy_data) < 5:
+            return jsonify({'message': 'Insufficient data.'}), 200
+        
+        df = pd.DataFrame(energy_data[-168:] if len(energy_data) >= 168 else energy_data)
+        
+        weekly_data = []
+        for day in range(7):
+            day_data = df[df['day_of_week'] == day]
+            if not day_data.empty:
+                avg_consumption = day_data['consumption'].mean()
+                weekly_data.append({
+                    'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][day],
+                    'consumption': round(float(avg_consumption), 1),
+                    'prediction': round(float(avg_consumption * random.uniform(0.96, 1.04)), 1),
+                    'efficiency': round(float(random.uniform(75, 95)), 1)
+                })
+        
+        anomaly_data = detect_dynamic_anomalies(df)
+        anomaly_count = len(anomaly_data)
+        
+        ml_performance = {
+            'accuracy': round(float(np.mean([p['accuracy'] for p in ml_performance_history[-7:]]) if ml_performance_history else 92.5), 1),
+            'precision': round(float(random.uniform(87, 94)), 1),
+            'recall': round(float(random.uniform(89, 96)), 1),
+            'f1_score': round(float(random.uniform(88, 95)), 1)
         }
-    }
-    
-    return jsonify({
-        'weeklyData': weekly_data, 'anomalyData': anomaly_data,
-        'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
-    })
+        
+        hourly_patterns = []
+        for hour in range(0, 24, 2):
+            hour_data = df[df['hour'] == hour]
+            if not hour_data.empty:
+                hourly_patterns.append({
+                    'hour': f"{hour:02d}:00",
+                    'avg_consumption': round(float(hour_data['consumption'].mean()), 1),
+                    'device_contribution': round(float(hour_data['device_consumption'].mean()), 1)
+                })
+        
+        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
+        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
+        
+        total_savings = sum(g.get('energy_savings', 0) for g in geofence_data)
+
+        ml_algorithms = {
+            'random_forest': {
+                'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
+                'parameters': {'n_estimators': 50, 'max_depth': 8, 'random_state': 42},
+                'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 'time_factor', 'weather_factor'],
+                'accuracy': ml_performance['accuracy'],
+                'description': 'An ensemble learning method that builds multiple decision trees to improve predictive accuracy and control overfitting. It is robust for forecasting energy consumption patterns.'
+            },
+            'isolation_forest': {
+                'name': 'Isolation Forest', 'purpose': 'Anomaly detection in energy consumption patterns',
+                'parameters': {'contamination': 'dynamic', 'random_state': 'dynamic', 'last_used_contamination_rate': round(last_calculated_contamination_rate, 3)},
+                'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'], 'anomalies_detected': anomaly_count,
+                'description': 'An unsupervised learning algorithm that efficiently identifies outliers by isolating observations that deviate from the norm. It\'s ideal for detecting unusual energy spikes or drops.'
+            },
+            'ridge_regression': {
+                'name': 'Ridge Regression', 'purpose': 'Linear model component in ensemble',
+                'parameters': {'alpha': 1.0, 'random_state': 42}, 'weight_in_ensemble': 0.3,
+                'description': 'A type of linear regression that adds a regularization penalty to prevent overfitting. It\'s used as a stable baseline predictor within our ensemble model for energy data.'
+            },
+            'mlp_regressor': {
+                'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
+                'parameters': {'hidden_layer_sizes': '(50, 25)', 'activation': 'relu', 'solver': 'adam', 'max_iter': 100, 'alpha': 0.0001},
+                'weight_in_ensemble': 0.2,
+                'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
+            }
+        }
+        
+        return jsonify({
+            'weeklyData': weekly_data, 'anomalyData': anomaly_data,
+            'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 
+            'mlAlgorithms': ml_algorithms, 'totalSavings': round(total_savings, 1)
+        })
+    except Exception as e:
+        return jsonify({'error': 'Analytics unavailable'}), 500
 
 @app.route('/api/geofences', methods=['GET'])
 def get_geofences():
@@ -421,120 +449,134 @@ def get_geofences():
 
 @app.route('/api/geofences', methods=['POST'])
 def create_geofence():
-    data = request.json
-    new_geofence = {
-        'id': len(geofence_data) + 1, 'name': data.get('name', 'New Zone'),
-        'address': data.get('address', 'Unknown Address'),
-        'lat': data.get('lat', 37.7749 + np.random.uniform(-0.01, 0.01)),
-        'lng': data.get('lng', -122.4194 + np.random.uniform(-0.01, 0.01)),
-        'radius': data.get('radius', 200), 'isActive': True, 'automations': int(np.random.randint(1, 6)),
-        'trigger_count': 0, 'energy_savings': 0, 'created_at': datetime.now().isoformat()
-    }
-    geofence_data.append(new_geofence)
-    return jsonify(new_geofence)
+    try:
+        data = request.json
+        new_geofence = {
+            'id': len(geofence_data) + 1, 'name': data.get('name', 'New Zone'),
+            'address': data.get('address', 'Unknown Address'),
+            'lat': data.get('lat', 37.7749 + random.uniform(-0.01, 0.01)),
+            'lng': data.get('lng', -122.4194 + random.uniform(-0.01, 0.01)),
+            'radius': data.get('radius', 200), 'isActive': True, 'automations': int(random.randint(1, 6)),
+            'trigger_count': 0, 'energy_savings': 0, 'created_at': datetime.now().isoformat()
+        }
+        geofence_data.append(new_geofence)
+        return jsonify(new_geofence)
+    except Exception as e:
+        return jsonify({'error': 'Failed to create geofence'}), 500
 
 @app.route('/api/geofences/stats', methods=['GET'])
 def get_geofence_stats():
-    total_zones = len([g for g in geofence_data if g.get('isActive', False)])
-    total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
-    
-    optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-    dynamic_display_percentage = np.clip(optimization_success_percentage_raw + np.random.uniform(-3, 3), 70.0, 99.9)
+    try:
+        total_zones = len([g for g in geofence_data if g.get('isActive', False)])
+        total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
+        
+        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
+        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
 
-    return jsonify({
-        'total_zones': total_zones, 'total_triggers': int(total_triggers),
-        'optimization_success_count': round(dynamic_display_percentage, 1)
-    })
+        return jsonify({
+            'total_zones': total_zones, 'total_triggers': int(total_triggers),
+            'optimization_success_count': round(dynamic_display_percentage, 1)
+        })
+    except Exception as e:
+        return jsonify({'error': 'Stats unavailable'}), 500
 
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():
-    global total_optimization_attempts, optimization_success_count
-    
-    energy_optimization = []
-    for hour in range(24):
-        consumption = 15 + 10 * np.sin(2 * np.pi * hour / 24) + np.random.normal(0, 2)
-        optimized = consumption * np.random.uniform(0.78, 0.92)
+    try:
+        global total_optimization_attempts, optimization_success_count
         
-        energy_optimization.append({
-            'hour': f"{hour:02d}:00", 'consumption': round(float(max(0, consumption)), 1),
-            'optimized': round(float(max(0, optimized)), 1)
-        })
-    
-    zone_efficiency = []
-    for geofence in geofence_data:
-        zone_efficiency.append({'name': geofence['name'], 'efficiency': round(float(np.random.uniform(75, 96)), 1)})
-    
-    optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-    dynamic_display_percentage = np.clip(optimization_success_percentage_raw + np.random.uniform(-3, 3), 70.0, 99.9)
+        energy_optimization = []
+        for hour in range(0, 24, 2):
+            consumption = 15 + 10 * np.sin(2 * np.pi * hour / 24) + random.uniform(-2, 2)
+            optimized = consumption * random.uniform(0.78, 0.92)
+            
+            energy_optimization.append({
+                'hour': f"{hour:02d}:00", 'consumption': round(float(max(0, consumption)), 1),
+                'optimized': round(float(max(0, optimized)), 1)
+            })
+        
+        zone_efficiency = []
+        for geofence in geofence_data:
+            zone_efficiency.append({'name': geofence['name'], 'efficiency': round(float(random.uniform(75, 96)), 1)})
+        
+        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
+        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
 
-    ml_metrics = {
-        'model_accuracy': round(float(np.random.uniform(91, 97)), 1),
-        'prediction_confidence': round(float(np.random.uniform(88, 96)), 1),
-        'optimization_success_count': round(dynamic_display_percentage, 1)
-    }
-    return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
-
+        ml_metrics = {
+            'model_accuracy': round(float(random.uniform(91, 97)), 1),
+            'prediction_confidence': round(float(random.uniform(88, 96)), 1),
+            'optimization_success_count': round(dynamic_display_percentage, 1)
+        }
+        return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
+    except Exception as e:
+        return jsonify({'error': 'Analytics unavailable'}), 500
 
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
-    global optimization_history, optimization_success_count, total_optimization_attempts
-    
-    total_optimization_attempts += 1
-    improvements = []
-    total_energy_improvement = 0
-    
-    for geofence in geofence_data:
-        old_savings = geofence['energy_savings']
-        energy_improvement = float(np.random.uniform(3, 12))
-        geofence['energy_savings'] = min(500, old_savings + energy_improvement)
+    try:
+        global optimization_history, optimization_success_count, total_optimization_attempts
         
-        old_radius = geofence['radius']
-        radius_change = float(np.random.uniform(-15, 15))
-        geofence['radius'] = max(50, old_radius + radius_change)
+        total_optimization_attempts += 1
+        improvements = []
+        total_energy_improvement = 0
         
-        improvements.append({
-            'zone_name': geofence['name'], 'energy_improvement': round(energy_improvement, 1),
-            'radius_change': round(radius_change, 1)
+        for geofence in geofence_data:
+            old_savings = geofence['energy_savings']
+            energy_improvement = float(random.uniform(3, 12))
+            geofence['energy_savings'] = min(500, old_savings + energy_improvement)
+            
+            old_radius = geofence['radius']
+            radius_change = float(random.uniform(-15, 15))
+            geofence['radius'] = max(50, old_radius + radius_change)
+            
+            improvements.append({
+                'zone_name': geofence['name'], 'energy_improvement': round(energy_improvement, 1),
+                'radius_change': round(radius_change, 1)
+            })
+            total_energy_improvement += energy_improvement
+        
+        if random.random() < 0.90: 
+            optimization_success_count += 1
+        else: 
+            if optimization_success_count > 0:
+                optimization_success_count = max(0, optimization_success_count - random.randint(1, 3)) 
+
+        optimization_record = {
+            'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
+            'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count
+        }
+        
+        optimization_history.append(optimization_record)
+        if len(optimization_history) > 10:
+            optimization_history.pop(0)
+        
+        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
+        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
+
+        return jsonify({
+            'success': True, 'message': 'Geofences optimized using ML algorithms',
+            'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),
+            'improvements': improvements, 'timestamp': optimization_record['timestamp'],
+            'optimization_success_count': round(dynamic_display_percentage, 1)
         })
-        total_energy_improvement += energy_improvement
-    
-    if np.random.rand() < 0.90: 
-        optimization_success_count += 1
-    else: 
-        if optimization_success_count > 0:
-            optimization_success_count = max(0, optimization_success_count - np.random.randint(1, 3)) 
-
-    optimization_record = {
-        'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
-        'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count
-    }
-    
-    optimization_history.append(optimization_record)
-    if len(optimization_history) > 10:
-        optimization_history.pop(0)
-    
-    optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-    dynamic_display_percentage = np.clip(optimization_success_percentage_raw + np.random.uniform(-3, 3), 70.0, 99.9)
-
-    return jsonify({
-        'success': True, 'message': 'Geofences optimized using ML algorithms',
-        'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),
-        'improvements': improvements, 'timestamp': optimization_record['timestamp'],
-        'optimization_success_count': round(dynamic_display_percentage, 1)
-    })
+    except Exception as e:
+        return jsonify({'error': 'Optimization failed'}), 500
 
 @app.route('/api/geofences/optimization-history', methods=['GET'])
 def get_optimization_history():
-    global optimization_success_count, total_optimization_attempts
-    
-    return jsonify({
-        'history': optimization_history, 'total_optimizations': len(optimization_history),
-        'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
-    })
+    try:
+        global optimization_success_count, total_optimization_attempts
+        
+        return jsonify({
+            'history': optimization_history, 'total_optimizations': len(optimization_history),
+            'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
+        })
+    except Exception as e:
+        return jsonify({'error': 'History unavailable'}), 500
 
-initialize_data()
-train_models()
+initialize_minimal_data()
+threading.Thread(target=train_models_background, daemon=True).start()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host='0.0.0.0', port=port) 
+    app.run(debug=False, host='0.0.0.0', port=port)

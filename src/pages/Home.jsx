@@ -80,47 +80,52 @@ function Home() {
     const suffix = day % 10 === 1 && day !== 11 ? 'st' :
       day % 10 === 2 && day !== 12 ? 'nd' :
       day % 10 === 3 && day !== 13 ? 'rd' : 'th';
-    return formattedDate.replace(/\d+/, `${day}${suffix}`);
+    return `${formattedDate.replace(/\d+/, '')}${day}${suffix}`;
   };
 
   const rooms = [
-    {
-      id: 'all',
-      name: 'All Rooms',
-      icon: FaHome,
-      image: "https://images.unsplash.com/photo-1604014237800-1c9102c219da?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    },
-    {
-      id: 'living',
-      name: 'Living Room',
-      icon: FaCouch,
-      image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bGl2aW5ncm9vbXxlbnwwfHwwfHx8MA%3D%3D"
-    },
-    {
-      id: 'bedroom',
-      name: 'Bedroom',
-      icon: FaBed,
-      image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmVkcm9vbXxlbnwwfHwwfHx8MA%3D"
-    },
-    {
-      id: 'kitchen',
-      name: 'Kitchen',
-      icon: FaUtensils,
-      image: "https://images.unsplash.com/photo-1588854337221-4cf9fa96059c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGtpdGNoZW58ZW52cnwwfHwwfHx8MA%3D%3D"
-    },
-    {
-      id: 'office',
-      name: 'Office',
-      icon: FaBriefcase,
-      image: "https://images.unsplash.com/photo-1547586696-ea22b4d4235d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    },
-    {
-      id: 'bathroom',
-      name: 'Bathroom',
-      icon: FaBath,
-      image: "https://plus.unsplash.com/premium_photo-1661963215502-dc2bc471ab2a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    },
-  ];
+  {
+    id: 'all',
+    name: 'All Rooms',
+    icon: FaHome,
+    images: [
+      "https://miro.medium.com/v2/resize:fit:1200/1*IZfPiiLy0JeDTf_yxnf4AQ.jpeg", 
+      "https://images.squarespace-cdn.com/content/v1/62d704c68efed3295c893226/1658261003959-302B2EG3QZLT1QEY2FYL/smarthome02.jpeg" 
+    ]
+  },
+  {
+    id: 'living',
+    name: 'Living Room',
+    icon: FaCouch,
+    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8bGl2aW5ncm9vbXxlbnwwfHwwfHx8MA%3D%3D"
+  },
+  {
+    id: 'bedroom',
+    name: 'Bedroom',
+    icon: FaBed,
+    image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzY2FybHR5c2R8Mnx8YmVkcm9vbXxlbnwwfHwwfHx8MA%3D"
+  },
+  {
+    id: 'kitchen',
+    name: 'Kitchen',
+    icon: FaUtensils,
+    image: "https://jumanji.livspace-cdn.com/magazine/wp-content/uploads/sites/2/2022/05/25153058/AdobeStock_290534151-1.jpeg"
+  },
+  {
+    id: 'office',
+    name: 'Office',
+    icon: FaBriefcase,
+    image: "https://images.unsplash.com/photo-1547586696-ea22b4d4235d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+  },
+  {
+    id: 'bathroom',
+    name: 'Bathroom',
+    icon: FaBath,
+    image: "https://plus.unsplash.com/premium_photo-1661963215502-dc2bc471ab2a?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxz"
+  }
+];
+
+
 
   const environmentData = {
     humidity: 42,
@@ -268,11 +273,35 @@ function Home() {
           </div>
         )}
         <div className={`lg:col-span-${selectedRoom === 'All Rooms' ? '2' : '1'}`}>
-          <img
-            src={currentRoom.image}
-            alt={currentRoom.name}
-            className="w-full h-full object-cover rounded-xl"
-          />
+          {selectedRoom === 'All Rooms' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="w-full h-64 md:h-72 lg:h-80 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-900 to-teal-700 p-6 text-white text-2xl font-semibold text-center leading-relaxed shadow-lg">
+                <p>
+                  Navigate to different rooms and their controls via the upper room navbar (Kitchen, Bathroom, Living Room, Office). Adjust power and lights accordingly (microwave, AC, heater, etc.) and view usage details, energy saved, active devices, and cost at the bottom by scrolling down.
+                </p>
+              </div>
+              {currentRoom.images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`All Room ${idx + 1}`}
+                  style={{
+                    width: '100%',
+                    height: '500px',
+                    maxWidth: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '12px'
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <img
+              src={currentRoom.image}
+              alt={currentRoom.name}
+              className="w-full h-full object-cover rounded-xl"
+            />
+          )}
         </div>
         <div className="lg:col-span-2">
           <DeviceControl room={selectedRoom} onDeviceChange={handleDeviceChange} />

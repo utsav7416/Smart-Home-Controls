@@ -263,7 +263,7 @@ function SmartRoutinesDashboard() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(https://thumbs.dreamstime.com/b/exploring-future-smart-homes-iot-revolutionizing-your-lawn-care-automation-image-showcases-lush-being-357455920.jpg?w=992)'
-        }}
+        }}a
       >
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/70 to-lime-950/70"></div>
       </div>
@@ -468,7 +468,7 @@ function SmartRoutinesDashboard() {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-white mb-1 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Voice Notes</h2>
-                <p className="text-gray-300 text-xs">Record your thoughts</p>
+                <p className="text-gray-300 text-sm">Record your thoughts</p>
               </div>
             </div>
 
@@ -482,12 +482,12 @@ function SmartRoutinesDashboard() {
                 }`}
               >
                 {isRecording ? <MicOff size={14} /> : <Mic size={14} />}
-                <span className="text-xs">{isRecording ? 'Stop' : 'Record'}</span>
+                <span className="text-sm">{isRecording ? 'Stop' : 'Record'}</span>
               </button>
               {audioBlob && (
                 <button
                   onClick={addVoiceNote}
-                  className="px-3 py-2 bg-black/50 text-blue-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-blue-500/20 text-xs"
+                  className="px-3 py-2 bg-black/50 text-blue-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-blue-500/20 text-sm"
                 >
                   Save
                 </button>
@@ -498,7 +498,7 @@ function SmartRoutinesDashboard() {
               {voiceNotes.length === 0 && (
                 <div className="text-center py-6 text-gray-400">
                   <Mic size={24} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-xs">No voice notes yet</p>
+                  <p className="text-sm">No voice notes yet</p>
                 </div>
               )}
               {voiceNotes.map((note) => (
@@ -511,16 +511,16 @@ function SmartRoutinesDashboard() {
                       >
                         {currentPlayingId === note.id ? <Square size={12} /> : <Play size={12} />}
                       </button>
-                      <span className="text-white text-xs">{note.text}</span>
+                      <span className="text-white text-sm">{note.text}</span>
                     </div>
-                    <span className="text-gray-400 text-xs">{note.timestamp}</span>
+                    <span className="text-gray-400 text-sm">{note.timestamp}</span>
                     <div className="flex items-center mt-1">
-                      <span className="text-gray-400 text-xs mr-2">Speed:</span>
+                      <span className="text-gray-400 text-sm mr-2">Speed:</span>
                       {[0.5, 1, 1.5, 2].map(speed => (
                         <button
                           key={speed}
                           onClick={() => handleSpeedChange(note.id, speed)}
-                          className={`px-2 py-0.5 rounded-md text-xs transition-all duration-200 mr-1 ${
+                          className={`px-2 py-0.5 rounded-md text-sm transition-all duration-200 mr-1 ${
                             note.playbackSpeed === speed
                               ? 'bg-green-600 text-white'
                               : 'bg-black/50 text-gray-300 hover:bg-black/60'
@@ -578,15 +578,15 @@ function SmartRoutinesDashboard() {
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="p-3 bg-black/20 rounded-lg">
                   <div className="text-amber-400 font-semibold text-lg">{voiceNotes.length}</div>
-                  <div className="text-gray-400 text-xs">Voice Notes</div>
+                  <div className="text-gray-400 text-sm">Voice Notes</div>
                 </div>
                 <div className="p-3 bg-black/20 rounded-lg">
                   <div className="text-blue-400 font-semibold text-lg">{notes.filter(n => !n.completed).length}</div>
-                  <div className="text-gray-400 text-xs">Pending</div>
+                  <div className="text-gray-400 text-sm">Pending</div>
                 </div>
                 <div className="p-3 bg-black/20 rounded-lg">
                   <div className="text-green-400 font-semibold text-lg">{notes.filter(n => n.completed).length}</div>
-                  <div className="text-gray-400 text-xs">Done</div>
+                  <div className="text-gray-400 text-sm">Done</div>
                 </div>
               </div>
             </div>

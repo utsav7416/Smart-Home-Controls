@@ -298,9 +298,7 @@ def detect_dynamic_anomalies(df):
     
     return anomaly_data
 
-@app.before_first_request
-def startup():
-    background_initialization()
+background_initialization()
 
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():

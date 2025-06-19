@@ -21,7 +21,7 @@ function CalendarHeatmap({ data, deviceName, room }) {
     for (let i = 4; i >= 0; i--) {
       const d = new Date(today)
       d.setDate(today.getDate() - i)
-      const key = d.toISOString().split('T')[0]
+      const key = d.toLocaleDateString('en-CA')
       last5.push({
         date: key,
         dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -37,9 +37,9 @@ function CalendarHeatmap({ data, deviceName, room }) {
 
   const getIntensityColor = count => {
     if (count === 0) return '#1f2937'
-    if (count >= 1 && count < 5) return '#22c55e'
-    if (count >= 5 && count < 10) return '#eab308'
-    if (count >= 10) return '#ef4444'
+    if (count < 5) return '#22c55e'
+    if (count < 10) return '#eab308'
+    return '#ef4444'
   }
 
   return (
@@ -122,38 +122,57 @@ function DeviceControl({ room }) {
   }
 
   const addIcons = list => list.map(d => ({ ...d, icon: ICON_MAP[d.name] || null }))
-  
-  const [allDeviceStates, setAllDeviceStates] = useState(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('deviceStates') : null
-    return saved
-      ? JSON.parse(saved)
-      : Object.fromEntries(Object.entries(baseDevices).map(([k, v]) => [k, addIcons(v)]))
-  })
-  
-  const [usageData, setUsageData] = useState(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('deviceUsageData') : null
-    return saved ? JSON.parse(saved) : {}
-  })
-  
+
+  const loadSaved = () => {
+    try {
+      return JSON.parse(localStorage.getItem('deviceStates')) || {}
+    } catch {
+      return {}
+    }
+  }
+  const loadUsage = () => {
+    try {
+      return JSON.parse(localStorage.getItem('deviceUsageData')) || {}
+    } catch {
+      return {}
+    }
+  }
+
+  const [allDeviceStates, setAllDeviceStates] = useState(() =>
+    Object.fromEntries(
+      Object.entries(baseDevices).map(([k, v]) => [
+        k,
+        addIcons(loadSaved()[k] || v),
+      ])
+    )
+  )
+  const [usageData, setUsageData] = useState(loadUsage)
   const [showHeatmap, setShowHeatmap] = useState({})
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('deviceStates', JSON.stringify(allDeviceStates))
-      window.dispatchEvent && window.dispatchEvent(new Event('deviceStateChange'))
-    }
+    localStorage.setItem('deviceStates', JSON.stringify(allDeviceStates))
+    window.dispatchEvent && window.dispatchEvent(new Event('deviceStateChange'))
   }, [allDeviceStates])
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('deviceUsageData', JSON.stringify(usageData))
-    }
+    localStorage.setItem('deviceUsageData', JSON.stringify(usageData))
   }, [usageData])
+
+  useEffect(() => {
+    const now = new Date()
+    const midnight = new Date(now)
+    midnight.setHours(24, 0, 0, 0)
+    const msUntilMidnight = midnight - now
+    const timer = setTimeout(() => {
+      setUsageData(loadUsage())
+    }, msUntilMidnight)
+    return () => clearTimeout(timer)
+  }, [])
 
   const current = allDeviceStates[room] || []
 
   const recordUsage = (name, type, val = null) => {
-    const day = new Date().toISOString().split('T')[0]
+    const day = new Date().toLocaleDateString('en-CA') 
     const key = `${room}-${name}`
     setUsageData(prev => {
       const next = { ...prev }
@@ -198,8 +217,17 @@ function DeviceControl({ room }) {
       ;[min, max] = [40, 120]
     }
     const label = ['temp', 'temperature'].includes(dev.property) ? `${dev.value}°F` : `${dev.value}%`
-    const minLabel = ['temp', 'temperature'].includes(dev.property) ? `${min}°F` : dev.property === 'volume' ? 'Mute' : 'Low'
-    const maxLabel = ['temp', 'temperature'].includes(dev.property) ? `${max}°F` : dev.property === 'volume' ? 'Max' : 'High'
+    const minLabel = ['temp', 'temperature'].includes(dev.property)
+      ? `${min}°F`
+      : dev.property === 'volume'
+      ? 'Mute'
+      : 'Low'
+    const maxLabel = ['temp', 'temperature'].includes(dev.property)
+      ? `${max}°F`
+      : dev.property === 'volume'
+      ? 'Max'
+      : 'High'
+
     return (
       <div className="mt-3 p-3 bg-gray-900 rounded-lg border border-gray-700">
         <label className="text-sm font-medium text-gray-200 mb-2 block">

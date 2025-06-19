@@ -57,6 +57,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold mb-3 text-base">Navigation</h3>
             <ul className="space-y-2">
               <li><a href="/" className="text-green-400 hover:text-white transition-colors text-base">Dashboard</a></li>
+              <li><a href="/smart-routines" className="text-green-400 hover:text-white transition-colors text-base">Smart Routines</a></li>
               <li><a href="/analytics" className="text-green-400 hover:text-white transition-colors text-base">Analytics</a></li>
               <li><a href="/geofencing" className="text-green-400 hover:text-white transition-colors text-base">Geofencing</a></li>
             </ul>
@@ -88,7 +89,6 @@ export default function Footer() {
               </li>
             </ul>
             
-            {/* Additional compact home image */}
             <div className="mt-4">
               <img
                 src="https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=200&h=100&fit=crop&crop=center"

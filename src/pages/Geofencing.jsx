@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, CheckCircle, Activity } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
-import { motion } from 'framer-motion';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -445,33 +444,6 @@ export default function Geofencing() {
                 </ResponsiveContainer>
               ) : (
                 <p className="text-green-300 text-center">No zone efficiency data available.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-white">ML Model Accuracy Over Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {analytics.prediction_accuracy && analytics.prediction_accuracy.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={analytics.prediction_accuracy}>
-                    <defs>
-                      <linearGradient id="accuracyGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="day" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: 'white' }} />
-                    <Area type="monotone" dataKey="accuracy" stroke="#22c55e" fillOpacity={1} fill="url(#accuracyGradient)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-green-300 text-center">No prediction accuracy data available.</p>
               )}
             </CardContent>
           </Card>

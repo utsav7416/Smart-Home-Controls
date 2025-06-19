@@ -1,27 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaHome, FaCouch, FaBed, FaUtensils, FaBriefcase, FaBath, FaClock, FaCalendarAlt } from 'react-icons/fa';
 import RoomSelector from '../components/RoomSelector';
 import DeviceControl from '../components/DeviceControl';
 import EnvironmentStats from '../components/EnvironmentStats';
 import HomeCarousel from '../components/HomeCarousel';
 import EnergyStats from '../components/EnergyStats';
-import SmartRoutines from '../components/SmartRoutines';
 
 function Home() {
   const [selectedRoom, setSelectedRoom] = useState('All Rooms');
   const [currentTime, setCurrentTime] = useState(new Date());
-
   const [energyUsage, setEnergyUsage] = useState(24.6);
   const [activeDevices, setActiveDevices] = useState(8);
   const [totalDevices, setTotalDevices] = useState(16);
+  const [emergencyActive, setEmergencyActive] = useState(false);
+  const audioContextRef = useRef(null);
+  const oscillatorRef = useRef(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (emergencyActive) {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (!oscillatorRef.current) {
+        oscillatorRef.current = audioContextRef.current.createOscillator();
+        oscillatorRef.current.type = 'sine';
+        oscillatorRef.current.frequency.setValueAtTime(880, audioContextRef.current.currentTime);
+        oscillatorRef.current.connect(audioContextRef.current.destination);
+        oscillatorRef.current.start();
+      }
+    } else {
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop();
+        oscillatorRef.current.disconnect();
+        oscillatorRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    }
+    return () => {
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop();
+        oscillatorRef.current.disconnect();
+        oscillatorRef.current = null;
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
+  }, [emergencyActive]);
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', {
@@ -42,9 +78,8 @@ function Home() {
     const formattedDate = date.toLocaleDateString('en-US', options);
     const day = date.getDate();
     const suffix = day % 10 === 1 && day !== 11 ? 'st' :
-                   day % 10 === 2 && day !== 12 ? 'nd' :
-                   day % 10 === 3 && day !== 13 ? 'rd' : 'th';
-
+      day % 10 === 2 && day !== 12 ? 'nd' :
+      day % 10 === 3 && day !== 13 ? 'rd' : 'th';
     return formattedDate.replace(/\d+/, `${day}${suffix}`);
   };
 
@@ -99,41 +134,24 @@ function Home() {
   const handleDeviceChange = (updatedDevices) => {
     const activeCount = updatedDevices.filter(device => device.isOn).length;
     const totalCount = updatedDevices.length;
-
     const baseUsage = 5;
     const deviceConsumption = updatedDevices.reduce((sum, device) => {
       if (device.isOn) {
         let factor = 0.05;
         switch (device.property) {
-          case 'brightness':
-            factor = 0.05;
-            break;
-          case 'speed':
-            factor = 0.03;
-            break;
-          case 'temp':
-            factor = 0.1;
-            break;
-          case 'volume':
-            factor = 0.02;
-            break;
-          case 'pressure':
-            factor = 0.04;
-            break;
-          case 'temperature':
-            factor = 0.08;
-            break;
-          case 'power':
-            factor = 0.12;
-            break;
-          default:
-            factor = 0.05;
+          case 'brightness': factor = 0.05; break;
+          case 'speed': factor = 0.03; break;
+          case 'temp': factor = 0.1; break;
+          case 'volume': factor = 0.02; break;
+          case 'pressure': factor = 0.04; break;
+          case 'temperature': factor = 0.08; break;
+          case 'power': factor = 0.12; break;
+          default: factor = 0.05;
         }
         return sum + (device.value * factor);
       }
       return sum;
     }, 0);
-
     const usage = baseUsage + deviceConsumption;
     setEnergyUsage(usage.toFixed(1));
     setActiveDevices(activeCount);
@@ -176,6 +194,69 @@ function Home() {
             </div>
           </div>
         </div>
+
+        <div className="mt-8">
+          <button
+            onClick={() => setEmergencyActive(true)}
+            className="w-full md:w-2/5 mx-auto block
+                       bg-red-700 hover:bg-red-600
+                       text-white text-xl md:text-3xl font-bold
+                       py-4 px-8 rounded-full
+                       shadow-lg transform transition-all duration-300
+                       hover:scale-105 active:scale-95
+                       border-2 border-red-400 animate-pulse-slow"
+          >
+            Activate Emergency
+          </button>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <img
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSWgpqhO9T1j7eU_CqQooRWnxrFiqKfL_LMw&s"
+            alt="1"
+            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          />
+          <img
+            src="https://i.pinimg.com/736x/19/98/e2/1998e2348d8feede91e9094a2f81a402.jpg"
+            alt="2"
+            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          />
+          <img
+            src="https://thumbs.dreamstime.com/b/modern-smart-home-apartment-night-view-stylish-showcasing-comfortable-living-space-large-windows-offering-stunning-368499538.jpg"
+            alt="3"
+            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          />
+          <img
+            src="https://thumbs.dreamstime.com/b/living-room-boasts-modern-aesthetic-stunning-city-sunset-view-pink-led-lighting-accents-372979994.jpg"
+            alt="4"
+            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
+          />
+          <img
+            src="https://img.freepik.com/premium-photo/futuristic-smart-home-diverse-connected-devices-digital-icons-seamless-integration_951586-139549.jpg?ga=GA1.1.355402728.1750275417&semt=ais_hybrid&w=740"
+            alt="5"
+            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
+          />
+          <img
+            src="https://thumbs.dreamstime.com/b/futuristic-smart-kitchens-innovative-appliances-collection-high-tech-featuring-modern-automated-systems-sustainable-353602406.jpg?w=992"
+            alt="6"
+            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
+          />
+        </div>
+
+        {emergencyActive && (
+          <div className="fixed inset-0 bg-red-900 bg-opacity-90 flex flex-col items-center justify-center z-50 animate-pulse-fast">
+            <div className="bg-white rounded-3xl p-10 text-center shadow-red-glow animate-bounce-slow">
+              <h2 className="text-5xl font-extrabold mb-6 text-red-700 animate-fade-in-up">EMERGENCY ACTIVE!</h2>
+              <p className="text-2xl text-red-600 mb-8 animate-fade-in-up delay-200">Immediate attention required.</p>
+              <button
+                onClick={() => setEmergencyActive(false)}
+                className="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-4 px-8 rounded-full text-xl shadow-lg transition duration-300 animate-scale-in delay-400"
+              >
+                Deactivate Emergency
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <RoomSelector rooms={rooms} selectedRoom={selectedRoom} onSelectRoom={setSelectedRoom} />
@@ -199,12 +280,38 @@ function Home() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <EnergyStats
-          energyUsage={energyUsage}
-          activeDevices={activeDevices}
-          totalDevices={totalDevices}
-        />
-        <SmartRoutines />
+        <div>
+          <EnergyStats
+            energyUsage={energyUsage}
+            activeDevices={activeDevices}
+            totalDevices={totalDevices}
+          />
+          <p className="mt-4 text-xl font-semibold bg-gradient-to-r from-white to-green-600 bg-clip-text text-transparent">
+            Monitor your home's energy in real time, track active devices, and optimize consumption for a smarter, greener living space.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <img
+            src="https://thumbs.dreamstime.com/b/exploring-future-smart-homes-iot-cozy-room-featuring-tv-lush-green-plant-image-showcases-modern-equipped-357647550.jpg?w=768"
+            alt="Cozy smart home with TV and plant"
+            className="w-full h-48 object-cover rounded-lg shadow-md"
+          />
+          <img
+            src="https://thumbs.dreamstime.com/b/experience-iot-living-modern-smart-home-stunning-forest-views-your-cozy-room-innovative-integrates-technology-357457898.jpg?w=768"
+            alt="Modern smart home with forest view"
+            className="w-full h-48 object-cover rounded-lg shadow-md"
+          />
+          <img
+            src="https://thumbs.dreamstime.com/b/exploring-future-iot-long-walkway-integrating-smart-homes-home-automation-experience-seamless-integration-357459918.jpg?w=768"
+            alt="Walkway integrating smart home automation"
+            className="w-full h-48 object-cover rounded-lg shadow-md"
+          />
+          <img
+            src="https://thumbs.dreamstime.com/b/exploring-future-smart-homes-house-green-roof-integrating-iot-technology-urban-living-environments-image-356852611.jpg?w=992"
+            alt="Smart home with green roof"
+            className="w-full h-48 object-cover rounded-lg shadow-md"
+          />
+        </div>
       </div>
     </main>
   );

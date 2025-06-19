@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import random
 import json
 import time
+import threading
 from sklearn.ensemble import RandomForestRegressor, IsolationForest
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import DBSCAN
@@ -48,12 +49,26 @@ optimization_history = []
 optimization_success_count = 0
 total_optimization_attempts = 0
 last_calculated_contamination_rate = 0.1
+initialized = False
+models_trained = False
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
     'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
     'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
 }
+
+def ensure_initialization():
+    global initialized, models_trained
+    if not initialized:
+        initialize_data()
+        initialized = True
+    if not models_trained:
+        train_models()
+        models_trained = True
+
+def background_initialization():
+    threading.Thread(target=ensure_initialization, daemon=True).start()
 
 def calculate_device_consumption(device_name, is_on, value, property_type):
     if not is_on or device_name not in DEVICE_POWER_MAP:
@@ -283,9 +298,14 @@ def detect_dynamic_anomalies(df):
     
     return anomaly_data
 
+@app.before_first_request
+def startup():
+    background_initialization()
+
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
     global device_states
+    ensure_initialization()
     
     data = request.json
     device_states = data.get('deviceStates', {})
@@ -308,6 +328,7 @@ def update_device_states():
 
 @app.route('/api/energy-data', methods=['GET'])
 def get_energy_data():
+    ensure_initialization()
     recent_data = energy_data[-48:] if len(energy_data) >= 48 else energy_data
     
     for item in recent_data:
@@ -341,6 +362,7 @@ def get_energy_data():
 
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
+    ensure_initialization()
     if len(energy_data) < 10:
         return jsonify({'message': 'Insufficient data.'}), 200
     
@@ -388,9 +410,7 @@ def get_analytics():
             })
     
     optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-    
     dynamic_display_percentage = np.clip(optimization_success_percentage_raw + np.random.uniform(-3, 3), 70.0, 99.9)
-
 
     ml_algorithms = {
         'random_forest': {
@@ -426,10 +446,12 @@ def get_analytics():
 
 @app.route('/api/geofences', methods=['GET'])
 def get_geofences():
+    ensure_initialization()
     return jsonify(geofence_data)
 
 @app.route('/api/geofences', methods=['POST'])
 def create_geofence():
+    ensure_initialization()
     data = request.json
     new_geofence = {
         'id': len(geofence_data) + 1, 'name': data.get('name', 'New Zone'),
@@ -444,6 +466,7 @@ def create_geofence():
 
 @app.route('/api/geofences/stats', methods=['GET'])
 def get_geofence_stats():
+    ensure_initialization()
     total_zones = len([g for g in geofence_data if g.get('isActive', False)])
     total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
     
@@ -458,6 +481,7 @@ def get_geofence_stats():
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():
     global total_optimization_attempts, optimization_success_count
+    ensure_initialization()
     
     energy_optimization = []
     for hour in range(24):
@@ -483,10 +507,10 @@ def get_geofence_analytics():
     }
     return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
 
-
 @app.route('/api/geofences/optimize', methods=['POST'])
 def optimize_geofences():
     global optimization_history, optimization_success_count, total_optimization_attempts
+    ensure_initialization()
     
     total_optimization_attempts += 1
     improvements = []
@@ -535,14 +559,12 @@ def optimize_geofences():
 @app.route('/api/geofences/optimization-history', methods=['GET'])
 def get_optimization_history():
     global optimization_success_count, total_optimization_attempts
+    ensure_initialization()
     
     return jsonify({
         'history': optimization_history, 'total_optimizations': len(optimization_history),
         'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
     })
-
-initialize_data()
-train_models()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

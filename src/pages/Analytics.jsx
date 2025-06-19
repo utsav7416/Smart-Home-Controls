@@ -457,46 +457,43 @@ export default function Analytics() {
       </Card>
 
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
-        <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Weekly Consumption vs ML Predictions (Device-Adjusted)
-            </CardTitle>
-            <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
-        </CardHeader>
-        <CardContent>
-            <div className="flex gap-4">
-            <div className="w-[70%]">
-                <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={adjustedWeeklyData}>
-                    <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                    <XAxis dataKey="day" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip
-                    contentStyle={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: 'white'
-                    }}
-                    />
-                    <Line type="monotone" dataKey="consumption" stroke="#60a5fa" strokeWidth={3}
-                    dot={{ fill: '#60a5fa', strokeWidth: 2, r: 6 }} name="Actual Consumption (kWh)" />
-
-                    <Line type="monotone" dataKey="prediction" stroke="#22c55e" strokeWidth={2}
-                    strokeDashArray="5 5" dot={{ fill: '#22c55e', strokeWidth: 2, r: 4 }} name="ML Prediction (kWh)" />
-                </LineChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="w-[30%]">
-                <img 
-                src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg" 
-                alt="Smart Home Analytics" 
-                className="w-full h-[400px] object-cover rounded-lg"
-                />
-            </div>
-            </div>
-        </CardContent>
+            <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Weekly Consumption vs ML Predictions (Device-Adjusted)
+                </CardTitle>
+                <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
+            </CardHeader>
+            <CardContent>
+                <div className="flex gap-4">
+                    <div className="w-[70%]">
+                        <ResponsiveContainer width="100%" height={400}>
+                            <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
+                                <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                                <XAxis dataKey="day" stroke="#9ca3af" />
+                                <YAxis stroke="#9ca3af" />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '8px',
+                                        color: 'white'
+                                    }}
+                                />
+                                <Bar dataKey="consumption" fill="#60a5fa" name="Actual Consumption (kWh)" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="prediction" fill="#22c55e" name="ML Prediction (kWh)" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div className="w-[30%]">
+                        <img 
+                            src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
+                            alt="Smart Home Analytics"
+                            className="w-full h-[400px] object-cover rounded-lg"
+                        />
+                    </div>
+                </div>
+            </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
@@ -547,49 +544,6 @@ export default function Analytics() {
             </div>
         </CardContent>
         </Card>
-
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Target className="w-5 h-5" />
-            AI-Powered Cost Optimization
-          </CardTitle>
-          <p className="text-gray-400 text-sm">Machine learning optimization showing potential cost savings through smart energy management</p>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={costOptimization}>
-              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-              <XAxis dataKey="month" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Bar dataKey="actual" fill="#ef4444" radius={[4, 4, 0, 0]} name="Actual Cost ($)" />
-              <Bar dataKey="optimized" fill="#22c55e" radius={[4, 4, 0, 0]} name="Optimized Cost ($)" />
-            </BarChart>
-          </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-xl font-bold text-red-400">${costOptimization.reduce((sum, item) => sum + item.actual, 0)}</div>
-              <div className="text-sm text-gray-400">Total Actual Cost</div>
-            </div>
-            <div>
-              <div className="text-xl font-bold text-green-400">${costOptimization.reduce((sum, item) => sum + item.optimized, 0)}</div>
-              <div className="text-sm text-gray-400">Optimized Cost</div>
-            </div>
-            <div>
-              <div className="text-xl font-bold text-blue-400">${totalSavings}</div>
-              <div className="text-sm text-gray-400">Total Savings</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

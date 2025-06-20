@@ -251,19 +251,19 @@ function SmartRoutinesDashboard() {
 
   if (!isDataLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Inter', sans-serif" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Onest', sans-serif" }}>
         <div className="text-white text-xl">Loading your routines...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative p-4 text-white overflow-hidden" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen relative p-4 text-white overflow-hidden" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Onest', sans-serif" }}>
       <style>
         {`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;700&display=swap');
           body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Onest', sans-serif;
           }
         `}
       </style>
@@ -285,20 +285,55 @@ function SmartRoutinesDashboard() {
       <audio ref={audioRef} style={{ display: 'none' }} />
 
       <div className={`max-w-7xl mx-auto relative z-10`}>
-        <div className="text-center mb-16 pt-12">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4 bg-gradient-to-r from-green-300 via-teal-300 to-lime-300 bg-clip-text text-transparent">
+        <div className="flex flex-col items-center mb-16 pt-12">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-white bg-clip-text drop-shadow-lg mb-8 tracking-tight">
             Smart Routines
           </h1>
-          <p className="text-gray-200 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed font-light">
-            Craft your day, effortlessly. Our intelligent routine management system helps you build <span className="font-semibold text-blue-300">better habits</span>, track your progress, and optimize your daily schedule for maximum <span className="font-semibold text-blue-300">productivity and well-being</span>.
-          </p>
-          <div className="mt-4 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg inline-block">
-            <span className="text-blue-300 text-lg font-extrabold">✓ Data automatically saved - your changes persist across sessions</span>
+
+          <div className="flex flex-col md:flex-row items-center gap-8 w-full max-w-4xl justify-center">
+            <div className="flex flex-col items-center">
+              <div className="bg-green-700 p-4 rounded-full shadow-lg animate-bounce">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <span className="mt-3 text-lg font-bold text-black">Plan</span>
+              <span className="text-md text-gray-300 font-semibold">Craft your day</span>
+            </div>
+            <div className="hidden md:block w-16 h-1 bg-gradient-to-r from-blue-500 via-teal-300 to-lime-300 rounded-full"></div>
+            <div className="flex flex-col items-center">
+              <div className="bg-blue-800 p-4 rounded-full shadow-lg animate-pulse">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+              <span className="mt-3 text-lg font-bold text-black">Act</span>
+              <span className="text-md text-gray-300 font-semibold">Build habits</span>
+            </div>
+            <div className="hidden md:block w-16 h-1 bg-gradient-to-r from-teal-900 via-green-300 to-lime-300 rounded-full"></div>
+            <div className="flex flex-col items-center">
+              <div className="bg-red-600 p-4 rounded-full shadow-lg animate-bounce">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M3 17v-2a4 4 0 014-4h10a4 4 0 014 4v2M16 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+              </div>
+              <span className="mt-3 text-lg font-bold text-black">Track</span>
+              <span className="text-md text-gray-300 font-semibold">See progress</span>
+            </div>
+          </div>
+
+          <div className="mt-10 px-6 py-3 bg-gradient-to-r from-green-500/20 via-teal-400/20 to-lime-400/20 border border-green-400/30 rounded-xl flex items-center gap-2 shadow-md">
+            <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7"/>
+            </svg>
+            <span className="text-black text-lg font-extrabold">
+              Data auto-saved — your progress is always safe!
+            </span>
           </div>
         </div>
 
-        {/* 2x2 Grid Layout for the four main sections */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 auto-rows-[1fr]"> {/* auto-rows-[1fr] for equal height rows */}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 auto-rows-[1fr]"> 
 
           <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
             <div className="flex justify-between items-center mb-6">
@@ -365,7 +400,7 @@ function SmartRoutinesDashboard() {
                       </div>
                       <div>
                         <h3 className="text-white font-medium text-xl mb-1">{routine.name}</h3>
-                        <p className="text-gray-300 text-sm">
+                        <p className="text-gray-300 text-md">
                           {formatTime(routine.time)} • {routine.days}
                         </p>
                       </div>
@@ -525,12 +560,12 @@ function SmartRoutinesDashboard() {
                     </div>
                     <span className="text-gray-400 text-xs pl-8">{note.timestamp}</span>
                     <div className="flex items-center mt-2 pl-8">
-                      <span className="text-gray-400 text-sm mr-2">Speed:</span>
+                      <span className="text-gray-400 text-md mr-2">Speed:</span>
                       {[0.5, 1, 1.5, 2].map(speed => (
                         <button
                           key={speed}
                           onClick={() => handleSpeedChange(note.id, speed)}
-                          className={`px-2.5 py-1 rounded-md text-sm transition-all duration-200 mr-1 ${
+                          className={`px-2.5 py-1 rounded-md text-md transition-all duration-200 mr-1 ${
                             note.playbackSpeed === speed
                               ? 'bg-green-600 text-white'
                               : 'bg-black/50 text-gray-300 hover:bg-black/60'
@@ -588,15 +623,15 @@ function SmartRoutinesDashboard() {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="p-4 bg-black/20 rounded-lg border border-white/10">
                   <div className="text-amber-400 font-semibold text-xl">{voiceNotes.length}</div>
-                  <div className="text-gray-400 text-sm">Voice Notes</div>
+                  <div className="text-gray-400 text-md">Voice Notes</div>
                 </div>
                 <div className="p-4 bg-black/20 rounded-lg border border-white/10">
                   <div className="text-blue-400 font-semibold text-xl">{notes.filter(n => !n.completed).length}</div>
-                  <div className="text-gray-400 text-sm">Pending</div>
+                  <div className="text-gray-400 text-md">Pending</div>
                 </div>
                 <div className="p-4 bg-black/20 rounded-lg border border-white/10">
                   <div className="text-green-400 font-semibold text-xl">{notes.filter(n => n.completed).length}</div>
-                  <div className="text-gray-400 text-sm">Done</div>
+                  <div className="text-gray-400 text-md">Done</div>
                 </div>
               </div>
             </div>

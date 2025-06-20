@@ -83,7 +83,42 @@ const useDeviceSync = () => {
   return { deviceStates, totalDevicePower };
 };
 
+export const preloadAnalyticsData = async () => {
+  try {
+    console.log('🚀 Preloading analytics data in background...');
+    const response = await fetch(`${FLASK_API_URL}/api/analytics`);
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem('preloaded_analytics', JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+      console.log('✅ Analytics data preloaded successfully');
+      return data;
+    }
+  } catch (error) {
+    console.log('❌ Analytics preload failed:', error);
+  }
+  return null;
+};
+
 const fetchAnalyticsData = async () => {
+  const preloaded = localStorage.getItem('preloaded_analytics');
+  if (preloaded) {
+    try {
+      const { data, timestamp } = JSON.parse(preloaded);
+      const age = Date.now() - timestamp;
+      if (age < 300000) { 
+        console.log('📦 Using preloaded analytics data');
+        return data;
+      }
+    } catch (e) {
+      console.log('🗑️ Clearing invalid preloaded data');
+      localStorage.removeItem('preloaded_analytics');
+    }
+  }
+
+  console.log('🔄 Fetching fresh analytics data');
   const response = await fetch(`${FLASK_API_URL}/api/analytics`);
   if (!response.ok) throw new Error('Failed to fetch analytics data');
   return await response.json();
@@ -257,7 +292,7 @@ export default function Analytics() {
       <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
         <div className="text-white text-lg flex items-center gap-3">
           <Brain className="w-6 h-6 animate-pulse" />
-          Loading ML analytics... This may take some time... Your patience is appreciated
+          Loading ML analytics...
         </div>
       </div>
     );

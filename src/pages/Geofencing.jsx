@@ -55,66 +55,8 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
   );
 };
 
-export const preloadGeofencingData = async () => {
-  try {
-    console.log('🚀 Preloading geofencing data in background...');
-    
-    const [geofencesRes, statsRes, analyticsRes] = await Promise.all([
-      fetch(`${FLASK_API_URL}/api/geofences`),
-      fetch(`${FLASK_API_URL}/api/geofences/stats`),
-      fetch(`${FLASK_API_URL}/api/geofences/analytics`)
-    ]);
-
-    const results = {};
-    
-    if (geofencesRes.ok) {
-      results.geofences = await geofencesRes.json();
-      localStorage.setItem('preloaded_geofences', JSON.stringify({
-        data: results.geofences,
-        timestamp: Date.now()
-      }));
-    }
-
-    if (statsRes.ok) {
-      results.stats = await statsRes.json();
-      localStorage.setItem('preloaded_geofence_stats', JSON.stringify({
-        data: results.stats,
-        timestamp: Date.now()
-      }));
-    }
-
-    if (analyticsRes.ok) {
-      results.analytics = await analyticsRes.json();
-      localStorage.setItem('preloaded_geofence_analytics', JSON.stringify({
-        data: results.analytics,
-        timestamp: Date.now()
-      }));
-    }
-
-    console.log('✅ Geofencing data preloaded successfully');
-    return results;
-  } catch (error) {
-    console.log('❌ Geofencing preload failed:', error);
-    return {};
-  }
-};
-
 const fetchGeofences = async () => {
-  const preloaded = localStorage.getItem('preloaded_geofences');
-  if (preloaded) {
-    try {
-      const { data, timestamp } = JSON.parse(preloaded);
-      const age = Date.now() - timestamp;
-      if (age < 300000) { 
-        console.log('📦 Using preloaded geofences data');
-        return data;
-      }
-    } catch (e) {
-      localStorage.removeItem('preloaded_geofences');
-    }
-  }
-
-  console.log('🔄 Fetching fresh geofences data');
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -124,22 +66,7 @@ const fetchGeofences = async () => {
 };
 
 const fetchGeofenceStats = async () => {
-  // Check for preloaded data first
-  const preloaded = localStorage.getItem('preloaded_geofence_stats');
-  if (preloaded) {
-    try {
-      const { data, timestamp } = JSON.parse(preloaded);
-      const age = Date.now() - timestamp;
-      if (age < 300000) { 
-        console.log('📦 Using preloaded geofence stats');
-        return data;
-      }
-    } catch (e) {
-      localStorage.removeItem('preloaded_geofence_stats');
-    }
-  }
-
-  console.log('🔄 Fetching fresh geofence stats');
+  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -160,22 +87,7 @@ const createGeofence = async (geofenceData) => {
 };
 
 const fetchAnalytics = async () => {
-  // Check for preloaded data first
-  const preloaded = localStorage.getItem('preloaded_geofence_analytics');
-  if (preloaded) {
-    try {
-      const { data, timestamp } = JSON.parse(preloaded);
-      const age = Date.now() - timestamp;
-      if (age < 300000) { // 5 minutes
-        console.log('📦 Using preloaded geofence analytics');
-        return data;
-      }
-    } catch (e) {
-      localStorage.removeItem('preloaded_geofence_analytics');
-    }
-  }
-
-  console.log('🔄 Fetching fresh geofence analytics');
+  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -308,7 +220,7 @@ export default function Geofencing() {
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen flex-col">
-        <div className="text-white text-lg mb-4">Loading ML-powered geofencing data...</div>
+        <div className="text-white text-lg mb-4">Loading ML-powered geofencing data...This may take some time... Your patience is appreciated</div>
         <p className="text-green-300 text-md italic animate-pulse">
           {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
         </p>
@@ -500,7 +412,7 @@ export default function Geofencing() {
               {analytics.energy_optimization && analytics.energy_optimization.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={analytics.energy_optimization}>
-                    <CartesianGrid strokeDashArray="3 3" stroke="#374151" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="hour" stroke="#9ca3af" />
                     <YAxis stroke="#9ca3af" />
                     <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: 'white' }} />
@@ -523,7 +435,7 @@ export default function Geofencing() {
               {analytics.zone_efficiency && analytics.zone_efficiency.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={analytics.zone_efficiency}>
-                    <CartesianGrid strokeDashArray="3 3" stroke="#374151" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis dataKey="name" stroke="#9ca3af" />
                     <YAxis stroke="#9ca3af" />
                     <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: 'white' }} />

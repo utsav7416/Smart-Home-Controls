@@ -308,6 +308,14 @@ def get_analytics():
             })
     anomaly_data = detect_dynamic_anomalies(df)
     anomaly_count = len(anomaly_data)
+    cost_optimization = []
+    for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']:
+        actual_kwh = np.random.uniform(800, 1200)
+        optimized_kwh = actual_kwh * np.random.uniform(0.75, 0.88)
+        cost_optimization.append({
+            'month': month, 'actual': round(float(actual_kwh * 0.15)),
+            'optimized': round(float(optimized_kwh * 0.15)), 'saved': round(float((actual_kwh - optimized_kwh) * 0.15))
+        })
     ml_performance = {
         'accuracy': round(float(np.mean([p['accuracy'] for p in ml_performance_history[-7:]]) if ml_performance_history else 92.5), 1),
         'precision': round(float(np.random.uniform(87, 94)), 1),
@@ -352,7 +360,7 @@ def get_analytics():
         }
     }
     return jsonify({
-        'weeklyData': weekly_data, 'anomalyData': anomaly_data,
+        'weeklyData': weekly_data, 'anomalyData': anomaly_data, 'costOptimization': cost_optimization,
         'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
     })
 
@@ -384,21 +392,6 @@ def get_geofence_stats():
         'total_zones': total_zones, 'total_triggers': int(total_triggers),
         'optimization_success_count': round(dynamic_display_percentage, 1)
     })
-
-@app.route('/api/geofences/total-savings', methods=['GET'])
-def get_total_savings():
-    now = datetime.now()
-    current_month = now.month
-    current_year = now.year
-    total_savings = 0
-    for g in geofence_data:
-        try:
-            created_at = datetime.fromisoformat(g['created_at'])
-            if created_at.year == current_year and created_at.month == current_month:
-                total_savings += float(g.get('energy_savings', 0))
-        except Exception:
-            continue
-    return jsonify({'totalSavings': round(total_savings, 2)})
 
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():

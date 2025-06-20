@@ -117,15 +117,107 @@ const fetchAnalyticsData = async () => {
       localStorage.removeItem('preloaded_analytics');
     }
   }
-
+  
   console.log('🔄 Fetching fresh analytics data');
   const response = await fetch(`${FLASK_API_URL}/api/analytics`);
   if (!response.ok) throw new Error('Failed to fetch analytics data');
   return await response.json();
 };
 
+const LoadingScreen = () => {
+  const [currentFactIndex, setCurrentFactIndex] = useState(0);
+
+  const smartHomeFacts = [
+    "LED smart lights are 80% more energy efficient than traditional halogen bulbs and last 25 times longer.",
+    "AI-powered thermostats learn your daily routines and can save up to $180 annually on heating and cooling costs.",
+    "Energy analytics software can identify hidden energy waste patterns that are invisible to the human eye.",
+    "Machine learning models can forecast future energy demand based on weather patterns and occupancy data.",
+    "The first smart home was actually created in 1975 - long before the internet was widely available!",
+    "AI algorithms can distinguish between normal and abnormal energy consumption patterns in real-time.",
+    "Energy analytics can identify the exact moment when appliances start consuming more power than normal."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentFactIndex((prev) => (prev + 1) % smartHomeFacts.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+      <div className="max-w-4xl mx-auto text-center space-y-8">
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <Brain className="w-12 h-12 text-green-400 animate-pulse" />
+          <div className="text-3xl font-bold text-white">Loading ML Analytics...</div>
+          <Zap className="w-12 h-12 text-blue-400 animate-bounce" />
+        </div>
+
+        <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 backdrop-blur-sm rounded-2xl p-8 border border-green-400/20">
+          <div className="text-green-300 text-sm font-semibold mb-4 flex items-center justify-center gap-2">
+            <Target className="w-5 h-5" />
+            DID YOU KNOW?
+          </div>
+          <div 
+            key={currentFactIndex}
+            className="text-xl text-gray-200 leading-relaxed animate-fade-in"
+          >
+            {smartHomeFacts[currentFactIndex]}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-purple-900/20 rounded-xl p-6 border border-purple-400/30">
+            <Activity className="w-8 h-8 text-purple-400 mx-auto mb-3 animate-pulse" />
+            <div className="text-purple-300 text-sm font-medium">AI Models</div>
+            <div className="text-white text-lg font-bold">Training...</div>
+          </div>
+          <div className="bg-blue-900/20 rounded-xl p-6 border border-blue-400/30">
+            <BarChart3 className="w-8 h-8 text-blue-400 mx-auto mb-3 animate-pulse" />
+            <div className="text-blue-300 text-sm font-medium">Energy Data</div>
+            <div className="text-white text-lg font-bold">Analyzing...</div>
+          </div>
+          <div className="bg-green-900/20 rounded-xl p-6 border border-green-400/30">
+            <Shield className="w-8 h-8 text-green-400 mx-auto mb-3 animate-pulse" />
+            <div className="text-green-300 text-sm font-medium">Anomaly Detection</div>
+            <div className="text-white text-lg font-bold">Initializing...</div>
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-2 mt-8">
+          {smartHomeFacts.map((_, index) => (
+            <div
+              key={index}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                index === currentFactIndex ? 'bg-green-400 scale-125' : 'bg-gray-600'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="text-sm text-gray-400 mt-6">
+          🔬 Preparing advanced machine learning insights for your smart home...
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AlgorithmCard = ({ algorithm, icon: Icon }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!algorithm || !algorithm.name) {
+    return (
+      <div className="w-full">
+        <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden">
+          <div className="p-6">
+            <div className="text-gray-400 text-center">Algorithm data loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -149,52 +241,52 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
 
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4 mb-6">
-            {algorithm?.name === "Random Forest Regressor" && (
+            {algorithm.name === "Random Forest Regressor" && (
               <>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.accuracy}%</div>
+                  <div className="text-2xl font-bold text-white">{algorithm.accuracy || 0}%</div>
                   <div className="text-xs text-gray-400">Accuracy</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.parameters.n_estimators}</div>
+                  <div className="text-2xl font-bold text-white">{algorithm.parameters?.n_estimators || 0}</div>
                   <div className="text-xs text-gray-400">Trees</div>
                 </div>
               </>
             )}
-            {algorithm?.name === "Isolation Forest" && (
-            <>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
-                <div className="text-xs text-gray-400">Anomalies Found</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">
-                  {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
-                </div>
-                <div className="text-xs text-gray-400">Contamination Rate</div>
-              </div>
-            </>
-          )}
-            {algorithm?.name === "MLP Regressor" && (
+            {algorithm.name === "Isolation Forest" && (
               <>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.parameters.hidden_layer_sizes?.length || 0}</div>
+                  <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected || 0}</div>
+                  <div className="text-xs text-gray-400">Anomalies Found</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">
+                    {algorithm.parameters?.contamination ? (algorithm.parameters.contamination * 100).toFixed(1) : 0}%
+                  </div>
+                  <div className="text-xs text-gray-400">Contamination Rate</div>
+                </div>
+              </>
+            )}
+            {algorithm.name === "MLP Regressor" && (
+              <>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.parameters?.hidden_layer_sizes?.length || 0}</div>
                   <div className="text-xs text-gray-400">Hidden Layers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
+                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble || 0}</div>
                   <div className="text-xs text-gray-400">Ensemble Weight</div>
                 </div>
               </>
             )}
-            {algorithm?.name === "Ridge Regression" && (
+            {algorithm.name === "Ridge Regression" && (
               <>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
+                  <div className="text-2xl font-bold text-white">{algorithm.parameters?.alpha || 0}</div>
                   <div className="text-xs text-gray-400">Alpha (α)</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
+                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble || 0}</div>
                   <div className="text-xs text-gray-400">Ensemble Weight</div>
                 </div>
               </>
@@ -231,31 +323,6 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                   ))}
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Activity className="w-4 h-4 text-blue-400" />
-                    <span className="text-white text-sm font-medium">Performance</span>
-                  </div>
-                  <div className="text-blue-400 font-mono text-sm">
-                    {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
-                      algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                      algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
-                      `α = ${algorithm?.parameters?.alpha}`}
-                  </div>
-                </div>
-
-                <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Cpu className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">Status</span>
-                  </div>
-                  <div className="text-purple-400 font-mono text-sm">
-                    Processing
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -288,14 +355,7 @@ export default function Analytics() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-white text-lg flex items-center gap-3">
-          <Brain className="w-6 h-6 animate-pulse" />
-          Loading ML analytics...
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {
@@ -319,25 +379,28 @@ export default function Analytics() {
 
   const adjustedWeeklyData = weeklyData.map((item) => ({
     ...item,
-    consumption: item.consumption + (totalDevicePower * 0.001),
-    prediction: item.prediction + (totalDevicePower * 0.0009)
+    consumption: (item?.consumption || 0) + (totalDevicePower * 0.001),
+    prediction: (item?.prediction || 0) + (totalDevicePower * 0.0009)
   }));
 
   const adjustedHourlyPatterns = hourlyPatterns.map((item) => ({
     ...item,
-    avg_consumption: item.avg_consumption + (totalDevicePower * 0.001),
+    avg_consumption: (item?.avg_consumption || 0) + (totalDevicePower * 0.001),
     device_contribution: totalDevicePower * 0.001
   }));
 
   const predictionAccuracy = adjustedWeeklyData.length > 0
     ? adjustedWeeklyData.reduce((sum, item) => {
-        const accuracy = 100 - Math.abs(item.consumption - item.prediction) / item.consumption * 100;
+        const consumption = item?.consumption || 0;
+        const prediction = item?.prediction || 0;
+        if (consumption === 0) return sum;
+        const accuracy = 100 - Math.abs(consumption - prediction) / consumption * 100;
         return sum + Math.max(0, accuracy);
       }, 0) / adjustedWeeklyData.length
     : 0;
 
-  const anomaliesDetected = anomalyData.length;
-  const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
+  const anomaliesDetected = anomalyData?.length || 0;
+  const totalSavings = costOptimization?.reduce((sum, item) => sum + (item?.saved || 0), 0) || 0;
 
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
@@ -442,7 +505,7 @@ export default function Analytics() {
                 {anomalyData?.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'}
+                    fill={entry?.severity === 'high' ? '#ef4444' : '#f59e0b'}
                   />
                 ))}
               </Scatter>
@@ -451,11 +514,11 @@ export default function Analytics() {
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-              <span>High severity: {anomalyData.filter((a) => a.severity === 'high').length}</span>
+              <span>High severity: {anomalyData?.filter((a) => a?.severity === 'high').length || 0}</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-              <span>Medium severity: {anomalyData.filter((a) => a.severity === 'medium').length}</span>
+              <span>Medium severity: {anomalyData?.filter((a) => a?.severity === 'medium').length || 0}</span>
             </div>
           </div>
         </CardContent>
@@ -471,22 +534,30 @@ export default function Analytics() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AlgorithmCard
-              algorithm={mlAlgorithms.random_forest}
-              icon={GitBranch}
-            />
-            <AlgorithmCard
-              algorithm={mlAlgorithms.isolation_forest}
-              icon={Shield}
-            />
-            <AlgorithmCard
-              algorithm={mlAlgorithms.mlp_regressor}
-              icon={Layers}
-            />
-            <AlgorithmCard
-              algorithm={mlAlgorithms.ridge_regression}
-              icon={TrendingUp}
-            />
+            {mlAlgorithms?.random_forest && (
+              <AlgorithmCard
+                algorithm={mlAlgorithms.random_forest}
+                icon={GitBranch}
+              />
+            )}
+            {mlAlgorithms?.isolation_forest && (
+              <AlgorithmCard
+                algorithm={mlAlgorithms.isolation_forest}
+                icon={Shield}
+              />
+            )}
+            {mlAlgorithms?.mlp_regressor && (
+              <AlgorithmCard
+                algorithm={mlAlgorithms.mlp_regressor}
+                icon={Layers}
+              />
+            )}
+            {mlAlgorithms?.ridge_regression && (
+              <AlgorithmCard
+                algorithm={mlAlgorithms.ridge_regression}
+                icon={TrendingUp}
+              />
+            )}
           </div>
         </CardContent>
       </Card>

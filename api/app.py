@@ -36,7 +36,6 @@ class NumpyEncoder(json.JSONEncoder):
 
 app.json_encoder = NumpyEncoder
 
-# Global variables
 energy_model = None
 ridge_model = None
 anomaly_detector = None
@@ -53,7 +52,6 @@ total_optimization_attempts = 0
 last_calculated_contamination_rate = 0.15
 last_device_change_time = None
 
-# Pre-computed data stores
 precomputed_analytics = None
 precomputed_geofence_analytics = None
 precomputed_geofence_stats = None
@@ -194,11 +192,10 @@ def train_models():
         models_ready = True
     except Exception as e:
         print(f"Model training error: {e}")
-        models_ready = True  # Continue even if training fails
+        models_ready = True
 
 @lru_cache(maxsize=64)
 def get_cached_anomalies(data_hash):
-    # Simplified anomaly detection for better performance
     return [
         {
             'time': random.randint(0, 23), 'consumption': round(random.uniform(80, 150), 1),
@@ -211,11 +208,6 @@ def get_cached_anomalies(data_hash):
 def precompute_analytics():
     global precomputed_analytics
     try:
-        if len(energy_data) < 5:
-            precomputed_analytics = {'message': 'Insufficient data.'}
-            return
-        
-        # Pre-compute weekly data
         weekly_data = []
         for day in range(7):
             avg_consumption = random.uniform(80, 120)
@@ -226,10 +218,8 @@ def precompute_analytics():
                 'efficiency': round(random.uniform(75, 95), 1)
             })
         
-        # Pre-compute anomaly data
-        anomaly_data = get_cached_anomalies(hash(str(energy_data[-10:])))
+        anomaly_data = get_cached_anomalies(hash(str(energy_data[-10:] if energy_data else [])))
         
-        # Pre-compute cost optimization
         cost_optimization = []
         for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']:
             actual_kwh = np.random.uniform(800, 1200)
@@ -239,7 +229,6 @@ def precompute_analytics():
                 'optimized': round(optimized_kwh * 0.15), 'saved': round((actual_kwh - optimized_kwh) * 0.15)
             })
         
-        # Pre-compute ML performance
         ml_performance = {
             'accuracy': round(np.mean([p['accuracy'] for p in ml_performance_history[-7:]]) if ml_performance_history else 92.5, 1),
             'precision': round(random.uniform(87, 94), 1),
@@ -247,7 +236,6 @@ def precompute_analytics():
             'f1_score': round(random.uniform(88, 95), 1)
         }
         
-        # Pre-compute hourly patterns
         hourly_patterns = []
         for hour in range(0, 24, 3):
             hourly_patterns.append({
@@ -256,62 +244,83 @@ def precompute_analytics():
                 'device_contribution': round(random.uniform(20, 80), 1)
             })
         
-        # Pre-compute ML algorithms info
         ml_algorithms = {
             'random_forest': {
-                'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
+                'name': 'Random Forest Regressor',
+                'purpose': 'Primary energy consumption prediction',
                 'parameters': {'n_estimators': 20, 'max_depth': 5, 'random_state': 42},
-                'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 'time_factor', 'weather_factor'],
+                'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption'],
                 'accuracy': ml_performance['accuracy'],
                 'description': 'An ensemble learning method that builds multiple decision trees to improve predictive accuracy and control overfitting.'
             },
             'isolation_forest': {
-                'name': 'Isolation Forest', 'purpose': 'Anomaly detection in energy consumption patterns',
-                'parameters': {'contamination': 'dynamic', 'random_state': 'dynamic'},
-                'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'], 'anomalies_detected': len(anomaly_data),
+                'name': 'Isolation Forest',
+                'purpose': 'Anomaly detection in energy consumption patterns',
+                'parameters': {'contamination': 0.15, 'random_state': 42},
+                'features_used': ['hour', 'day_of_week', 'temperature', 'occupancy'],
+                'anomalies_detected': len(anomaly_data),
                 'description': 'An unsupervised learning algorithm that efficiently identifies outliers by isolating observations.'
             },
             'ridge_regression': {
-                'name': 'Ridge Regression', 'purpose': 'Linear model component in ensemble',
-                'parameters': {'alpha': 1.0, 'random_state': 42}, 'weight_in_ensemble': 0.3,
+                'name': 'Ridge Regression',
+                'purpose': 'Linear model component in ensemble',
+                'parameters': {'alpha': 1.0, 'random_state': 42},
+                'weight_in_ensemble': 0.3,
                 'description': 'A type of linear regression that adds a regularization penalty to prevent overfitting.'
             },
             'mlp_regressor': {
-                'name': 'MLP Regressor', 'purpose': 'Advanced non-linear prediction',
-                'parameters': {'hidden_layer_sizes': '(20, 10)', 'activation': 'relu', 'solver': 'adam'},
+                'name': 'MLP Regressor',
+                'purpose': 'Advanced non-linear prediction',
+                'parameters': {'hidden_layer_sizes': [20, 10], 'activation': 'relu', 'solver': 'adam', 'max_iter': 30},
                 'weight_in_ensemble': 0.2,
                 'description': 'A Multi-Layer Perceptron capable of learning non-linear relationships in complex energy datasets.'
             }
         }
         
         precomputed_analytics = {
-            'weeklyData': weekly_data, 'anomalyData': anomaly_data, 'costOptimization': cost_optimization,
-            'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
+            'weeklyData': weekly_data,
+            'anomalyData': anomaly_data,
+            'costOptimization': cost_optimization,
+            'mlPerformance': ml_performance,
+            'hourlyPatterns': hourly_patterns,
+            'mlAlgorithms': ml_algorithms
         }
     except Exception as e:
         print(f"Analytics precomputation error: {e}")
-        precomputed_analytics = {'error': 'Analytics temporarily unavailable'}
+        precomputed_analytics = {
+            'weeklyData': [],
+            'anomalyData': [],
+            'costOptimization': [],
+            'mlPerformance': {'accuracy': 85.0},
+            'hourlyPatterns': [],
+            'mlAlgorithms': {
+                'random_forest': {'name': 'Random Forest Regressor', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'},
+                'isolation_forest': {'name': 'Isolation Forest', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'},
+                'ridge_regression': {'name': 'Ridge Regression', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'},
+                'mlp_regressor': {'name': 'MLP Regressor', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'}
+            }
+        }
 
 def precompute_geofence_data():
     global precomputed_geofence_stats, precomputed_geofence_analytics
     try:
-        # Pre-compute geofence stats
         total_zones = len([g for g in geofence_data if g.get('isActive', False)])
         total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
         optimization_success_percentage = random.uniform(75, 95)
         
         precomputed_geofence_stats = {
-            'total_zones': total_zones, 'total_triggers': int(total_triggers),
+            'total_zones': total_zones,
+            'total_triggers': int(total_triggers),
             'optimization_success_count': round(optimization_success_percentage, 1)
         }
         
-        # Pre-compute geofence analytics
         energy_optimization = []
         for hour in range(0, 24, 3):
             consumption = 15 + 10 * np.sin(2 * np.pi * hour / 24) + random.uniform(-2, 2)
             optimized = consumption * random.uniform(0.92, 0.98)
             energy_optimization.append({
-                'hour': f"{hour:02d}:00", 'consumption': round(max(0, consumption), 1),
+                'hour': f"{hour:02d}:00",
+                'consumption': round(max(0, consumption), 1),
                 'optimized': round(max(0, optimized), 1)
             })
         
@@ -326,20 +335,20 @@ def precompute_geofence_data():
         }
         
         precomputed_geofence_analytics = {
-            'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics
+            'energy_optimization': energy_optimization,
+            'zone_efficiency': zone_efficiency,
+            'ml_metrics': ml_metrics
         }
     except Exception as e:
         print(f"Geofence precomputation error: {e}")
 
 def background_initialization():
-    """Background thread for heavy initialization"""
     print("Starting background initialization...")
     initialize_minimal_data()
     train_models()
     precompute_analytics()
     precompute_geofence_data()
     
-    # Cache all precomputed data
     cache.set('analytics', precomputed_analytics, timeout=3600)
     cache.set('geofences', geofence_data, timeout=3600)
     cache.set('geofence_stats', precomputed_geofence_stats, timeout=3600)
@@ -350,9 +359,8 @@ def background_initialization():
     print("Background initialization complete!")
 
 def periodic_data_refresh():
-    """Periodically refresh precomputed data"""
     while True:
-        time.sleep(1800)  # Refresh every 30 minutes
+        time.sleep(1800)
         if initialization_complete:
             try:
                 precompute_analytics()
@@ -363,11 +371,9 @@ def periodic_data_refresh():
             except Exception as e:
                 print(f"Periodic refresh error: {e}")
 
-# Start background initialization
 initialization_thread = threading.Thread(target=background_initialization, daemon=True)
 initialization_thread.start()
 
-# Start periodic refresh
 refresh_thread = threading.Thread(target=periodic_data_refresh, daemon=True)
 refresh_thread.start()
 
@@ -406,11 +412,9 @@ def get_energy_data():
     try:
         recent_data = energy_data[-12:] if len(energy_data) >= 12 else energy_data
         
-        # Simplified prediction for better performance
         for item in recent_data[-3:]:
             if models_ready:
                 try:
-                    # Simple prediction without complex feature engineering
                     base_pred = item['consumption'] * random.uniform(0.95, 1.05)
                     item['predicted'] = round(base_pred, 2)
                     item['prediction_confidence'] = random.uniform(0.85, 0.98)
@@ -428,23 +432,25 @@ def get_energy_data():
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
     try:
-        # Return precomputed analytics immediately
         if precomputed_analytics:
             return jsonify(precomputed_analytics)
         
-        # Fallback to cached data
         analytics = cache.get('analytics')
         if analytics:
             return jsonify(analytics)
         
-        # Last resort - minimal analytics
         return jsonify({
             'weeklyData': [{'day': 'Mon', 'consumption': 100, 'prediction': 105, 'efficiency': 85}],
             'anomalyData': [],
             'costOptimization': [{'month': 'Jan', 'actual': 120, 'optimized': 110, 'saved': 10}],
             'mlPerformance': {'accuracy': 92.5, 'precision': 90, 'recall': 93, 'f1_score': 91},
             'hourlyPatterns': [{'hour': '00:00', 'avg_consumption': 80, 'device_contribution': 30}],
-            'mlAlgorithms': {}
+            'mlAlgorithms': {
+                'random_forest': {'name': 'Random Forest Regressor', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'},
+                'isolation_forest': {'name': 'Isolation Forest', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'},
+                'ridge_regression': {'name': 'Ridge Regression', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'},
+                'mlp_regressor': {'name': 'MLP Regressor', 'purpose': 'Loading...', 'parameters': {}, 'description': 'Loading...'}
+            }
         })
     except Exception as e:
         return jsonify({'error': 'Analytics temporarily unavailable'}), 500
@@ -464,12 +470,16 @@ def create_geofence():
     try:
         data = request.json
         new_geofence = {
-            'id': len(geofence_data) + 1, 'name': data.get('name', 'New Zone'),
+            'id': len(geofence_data) + 1,
+            'name': data.get('name', 'New Zone'),
             'address': data.get('address', 'Unknown Address'),
             'lat': data.get('lat', 37.7749 + random.uniform(-0.01, 0.01)),
             'lng': data.get('lng', -122.4194 + random.uniform(-0.01, 0.01)),
-            'radius': data.get('radius', 200), 'isActive': True, 'automations': random.randint(1, 6),
-            'trigger_count': 0, 'energy_savings': random.uniform(5, 15),
+            'radius': data.get('radius', 200),
+            'isActive': True,
+            'automations': random.randint(1, 6),
+            'trigger_count': 0,
+            'energy_savings': random.uniform(5, 15),
             'created_at': datetime.now().isoformat()
         }
         geofence_data.append(new_geofence)
@@ -488,7 +498,6 @@ def get_geofence_stats():
         if cached_stats:
             return jsonify(cached_stats)
         
-        # Fallback
         return jsonify({
             'total_zones': len(geofence_data),
             'total_triggers': 200,
@@ -507,7 +516,6 @@ def get_geofence_analytics():
         if cached_analytics:
             return jsonify(cached_analytics)
         
-        # Fallback
         return jsonify({
             'energy_optimization': [{'hour': '00:00', 'consumption': 15, 'optimized': 14}],
             'zone_efficiency': [{'name': 'Home', 'efficiency': 80}],
@@ -531,7 +539,8 @@ def optimize_geofences():
             geofence['radius'] = max(50, geofence['radius'] + radius_change)
             
             improvements.append({
-                'zone_name': geofence['name'], 'energy_improvement': round(energy_improvement, 1),
+                'zone_name': geofence['name'],
+                'energy_improvement': round(energy_improvement, 1),
                 'radius_change': round(radius_change, 1)
             })
             total_energy_improvement += energy_improvement
@@ -540,8 +549,10 @@ def optimize_geofences():
             optimization_success_count += 1
         
         optimization_record = {
-            'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
-            'zones_optimized': len(geofence_data), 'improvements': improvements
+            'timestamp': datetime.now().isoformat(),
+            'total_improvement': round(total_energy_improvement, 1),
+            'zones_optimized': len(geofence_data),
+            'improvements': improvements
         }
         optimization_history.append(optimization_record)
         if len(optimization_history) > 10:
@@ -550,9 +561,12 @@ def optimize_geofences():
         success_rate = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 85.0
         
         return jsonify({
-            'success': True, 'message': 'Geofences optimized using ML algorithms',
-            'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),
-            'improvements': improvements, 'timestamp': optimization_record['timestamp'],
+            'success': True,
+            'message': 'Geofences optimized using ML algorithms',
+            'total_improvement': round(total_energy_improvement, 1),
+            'zones_optimized': len(geofence_data),
+            'improvements': improvements,
+            'timestamp': optimization_record['timestamp'],
             'optimization_success_count': round(success_rate, 1)
         })
     except Exception as e:
@@ -561,8 +575,10 @@ def optimize_geofences():
 @app.route('/api/geofences/optimization-history', methods=['GET'])
 def get_optimization_history():
     return jsonify({
-        'history': optimization_history, 'total_optimizations': len(optimization_history),
-        'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
+        'history': optimization_history,
+        'total_optimizations': len(optimization_history),
+        'optimization_success_count': optimization_success_count,
+        'total_optimization_attempts': total_optimization_attempts
     })
 
 if __name__ == '__main__':

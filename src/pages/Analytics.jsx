@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Lightbulb } from 'lucide-react';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import ProgressBar from 'react-animated-progress-bar';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -14,40 +18,123 @@ export function prefetchAnalytics() {
   return analyticsPromise;
 }
 
-const mirrorPlaceholders = Array(8).fill(0);
+const Card = ({ children, className = "" }) => (
+  <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
+);
+const CardHeader = ({ children }) => (
+  <div className="flex flex-col space-y-1.5 p-6">{children}</div>
+);
+const CardTitle = ({ children, className = "" }) => (
+  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
+);
+const CardContent = ({ children, className = "" }) => (
+  <div className={`p-6 pt-0 ${className}`}>{children}</div>
+);
+
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
+  <button
+    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+const useDeviceSync = () => {
+  const [deviceStates, setDeviceStates] = useState({});
+  const [totalDevicePower, setTotalDevicePower] = useState(0);
+  const DEVICE_POWER_MAP = {
+    'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
+    'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
+    'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
+  };
+  const calculateDevicePower = (deviceName, isOn, value, property) => {
+    if (!isOn || !DEVICE_POWER_MAP[deviceName]) return 0;
+    const { base, max } = DEVICE_POWER_MAP[deviceName];
+    let ratio = 0.5;
+    if (property === 'brightness' || property === 'speed' || property === 'volume' || property === 'pressure' || property === 'power') {
+      ratio = value / 100;
+    } else if (property === 'temp' || property === 'temperature') {
+      if (deviceName === 'AC') {
+        const tempDiff = Math.abs(value - 72) / 25;
+        ratio = 0.5 + (tempDiff * 0.5);
+      } else if (deviceName === 'Water Heater') {
+        ratio = (value - 40) / 80;
+      } else {
+        ratio = value / 100;
+      }
+    }
+    return base + (max - base) * ratio;
+  };
+  useEffect(() => {
+    const handleDeviceChange = () => {
+      const storedDevices = localStorage.getItem('deviceStates');
+      if (storedDevices) {
+        const devices = JSON.parse(storedDevices);
+        setDeviceStates(devices);
+        let total = 0;
+        Object.values(devices).forEach((roomDevices) => {
+          roomDevices.forEach((device) => {
+            total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
+          });
+        });
+        setTotalDevicePower(total);
+      }
+    };
+    handleDeviceChange();
+    window.addEventListener('storage', handleDeviceChange);
+    return () => window.removeEventListener('storage', handleDeviceChange);
+  }, []);
+  return { deviceStates, totalDevicePower };
+};
 
 const doYouKnowFacts = [
-  "Our ML models detect energy anomalies early to save you money.",
-  "Smart anomaly detection can reduce your bills by up to 20%.",
-  "AI analyzes your energy spikes and suggests tariff optimizations.",
-  "Machine learning optimizes your home energy usage in real-time.",
-  "Stay informed with live energy insights powered by AI."
+  "Did you know? Our ML models detect energy anomalies early to save you money.",
+  "Did you know? Smart anomaly detection can reduce your bills by up to 20%.",
+  "Did you know? AI analyzes your energy spikes and suggests tariff optimizations.",
+  "Did you know? Machine learning optimizes your home energy usage in real-time.",
+  "Did you know? Stay informed with live energy insights powered by AI."
 ];
 
-const pollOptions = [
-  "Energy Saving", "Security", "Automation"
+const backgrounds = [
+  "from-[#232526] to-[#414345]",
+  "from-[#283E51] to-[#485563]",
+  "from-[#232526] to-[#1a2980]",
+  "from-[#0f2027] to-[#2c5364]",
+  "from-[#1e3c72] to-[#2a5298]"
 ];
 
-function AnimatedBar({ percent, color }) {
-  return (
-    <div className="w-full h-6 bg-gray-800 rounded-full overflow-hidden">
-      <div
-        className="h-full rounded-full transition-all duration-700"
-        style={{ width: percent + '%', background: color }}
-      />
-    </div>
-  );
-}
+const mirrorPlaceholders = Array(8).fill(0);
 
-const analyticsBackgrounds = [
-  "from-[#1e3c72] to-[#2a5298]",
-  "from-[#0f2027] to-[#203a43]",
-  "from-[#283e51] to-[#485563]",
-  "from-[#1c92d2] to-[#f2fcfe]",
-  "from-[#2c3e50] to-[#4ca1af]"
-];
+const ProgressBarSkeleton = () => (
+  <div className="w-full flex flex-col items-center justify-center py-6">
+    <ProgressBar
+      width="90%"
+      height="14px"
+      rect
+      fontColor="gray"
+      percentage="55"
+      rectPadding="1px"
+      rectBorderRadius="20px"
+      trackPathColor="#222"
+      bgColor="#444"
+      trackBorderColor="grey"
+      duration="2"
+      defColor={{
+        fair: "#22d3ee",
+        good: "#6366f1",
+        excellent: "#22c55e",
+        poor: "#f59e42",
+      }}
+    />
+    <div className="mt-2 text-blue-300 text-lg font-semibold animate-pulse">Fetching your data...</div>
+  </div>
+);
 
 export default function Analytics() {
+  const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [isLoading, setIsLoading] = useState(!analyticsCache);
   const [error, setError] = useState(null);
@@ -55,11 +142,6 @@ export default function Analytics() {
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
-  const [votes, setVotes] = useState([8, 1]);
-  const [voted, setVoted] = useState(null);
-  const [pollVotes, setPollVotes] = useState([9, 5, 14]);
-  const [userPoll, setUserPoll] = useState(null);
-  const [counter, setCounter] = useState(2345678);
 
   useEffect(() => {
     if (!analyticsCache) {
@@ -80,35 +162,13 @@ export default function Analytics() {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
     const bgInterval = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % analyticsBackgrounds.length);
+      setBgIndex((prev) => (prev + 1) % backgrounds.length);
     }, 6000);
-    const counterInterval = setInterval(() => {
-      setCounter((c) => c + Math.floor(Math.random() * 7));
-    }, 800);
     return () => {
       clearInterval(factInterval);
       clearInterval(bgInterval);
-      clearInterval(counterInterval);
     };
   }, []);
-
-  const handleVote = (idx) => {
-    if (voted === null) {
-      const nv = [...votes];
-      nv[idx]++;
-      setVotes(nv);
-      setVoted(idx);
-    }
-  };
-
-  const handlePoll = (idx) => {
-    if (userPoll === null) {
-      const nv = [...pollVotes];
-      nv[idx]++;
-      setPollVotes(nv);
-      setUserPoll(idx);
-    }
-  };
 
   const handleDummyButtonClick = () => {
     setProcessingMessage(true);
@@ -119,67 +179,41 @@ export default function Analytics() {
   };
 
   if ((isLoading && !processingMessage) || showDummyButton) {
-    const totalPoll = pollVotes.reduce((a, b) => a + b, 0);
     return (
-      <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${analyticsBackgrounds[bgIndex]} text-white`}>
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2 text-2xl font-bold mb-2 animate-pulse">
-            <Lightbulb className="text-blue-300 w-7 h-7" /> <span className="text-blue-300">Did you know?</span>
-          </div>
-          <div className="text-xl mb-3 text-center max-w-xl text-blue-200">{doYouKnowFacts[factIndex]}</div>
-          <div className="flex gap-4 mt-2">
-            <button
-              onClick={() => handleVote(0)}
-              className={`rounded-full px-4 py-2 text-lg font-bold transition ${voted === 0 ? 'bg-blue-500 text-white scale-110' : 'bg-gray-700 text-blue-200 hover:bg-blue-600'}`}
-              tabIndex={0}
-            >👍 {votes[0]}</button>
-            <button
-              onClick={() => handleVote(1)}
-              className={`rounded-full px-4 py-2 text-lg font-bold transition ${voted === 1 ? 'bg-red-500 text-white scale-110' : 'bg-gray-700 text-red-200 hover:bg-red-600'}`}
-              tabIndex={0}
-            >👎 {votes[1]}</button>
-          </div>
-        </div>
-        <div className="flex flex-col items-center mb-8">
-          <div className="text-lg font-semibold mb-2 text-blue-100">Which feature do you use most?</div>
-          <div className="flex gap-4 mb-2">
-            {pollOptions.map((opt, i) => (
-              <button
-                key={opt}
-                onClick={() => handlePoll(i)}
-                className={`rounded-full px-5 py-2 text-md font-bold transition ${userPoll === i ? 'bg-blue-600 text-white scale-105' : 'bg-gray-800 text-blue-200 hover:bg-blue-500'}`}
-                tabIndex={0}
-              >{opt}</button>
-            ))}
-          </div>
-          <div className="w-full max-w-md space-y-2">
-            {pollOptions.map((opt, i) => (
-              <div key={opt} className="flex items-center gap-2">
-                <div className="w-24">{opt}</div>
-                <AnimatedBar percent={Math.round((pollVotes[i] / totalPoll) * 100)} color={["#38bdf8", "#6366f1", "#3b82f6"][i]} />
-                <div className="ml-2 w-8">{Math.round((pollVotes[i] / totalPoll) * 100)}%</div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${backgrounds[bgIndex]} text-white`}>
         <div className="mb-6">
+          <div className="flex flex-col items-center mb-8">
+            <div className="text-2xl font-bold mb-3 animate-pulse">{doYouKnowFacts[factIndex]}</div>
+          </div>
+          <div className="w-full max-w-2xl mx-auto">
+            <ProgressBarSkeleton />
+          </div>
           {mirrorPlaceholders.map((_, idx) => (
-            <div key={idx} className="h-7 bg-blue-900 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
+            <div key={idx} className="h-7 rounded mb-4">
+              <Skeleton height={28} baseColor="#222" highlightColor="#444" />
+            </div>
           ))}
         </div>
-        <div className="flex flex-col items-center mb-10">
-          <div className="text-lg font-semibold mb-2 animate-pulse text-blue-100">Fetching your data...</div>
-          <div className="text-base text-blue-200 mb-4">Smart homes optimized: <span className="font-mono text-blue-300 text-xl">{counter.toLocaleString()}</span></div>
+        <div className="flex-1 flex flex-col justify-end">
           {processingMessage ? (
             <div className="text-center text-lg font-semibold mb-10">Processing request...</div>
           ) : (
-            <button
-              onClick={handleDummyButtonClick}
-              className="inline-flex items-center justify-center rounded-full text-2xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-14 py-7 bg-gradient-to-br from-blue-400 to-blue-700 hover:from-blue-500 hover:to-blue-800 text-white shadow-lg shadow-blue-500/50"
-            >
-              Initiate Anomaly/Tariff Analysis
-            </button>
+            <div className="w-full flex justify-center mb-10">
+              <Button onClick={handleDummyButtonClick}>
+                Initiate Anomaly/Tariff Analysis
+              </Button>
+            </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-red-400 text-lg">
+          Failed to load analytics data: {error}
         </div>
       </div>
     );

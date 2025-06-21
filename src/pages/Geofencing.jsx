@@ -136,28 +136,7 @@ const useMutation = (mutationFn, options = {}) => {
   return { mutate, isPending, error };
 };
 
-const informativeFacts = [
-  {
-    fact: "Geofencing can save up to 30% on your home energy bills by automating device control.",
-    img: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "AI-powered geofencing adapts to your lifestyle for smarter automation.",
-    img: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "Location-based triggers can enhance your home's security and convenience.",
-    img: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "Optimized zones reduce unnecessary device usage and energy waste.",
-    img: "https://images.unsplash.com/photo-1503389152951-9c3d8b6e6caa?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "Machine learning models continuously improve your smart home efficiency.",
-    img: "https://images.unsplash.com/photo-1465101178521-c1a9136a3fd9?auto=format&fit=crop&w=800&q=80"
-  }
-];
+const mirrorPlaceholders = Array(8).fill(0);
 
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -170,7 +149,7 @@ export default function Geofencing() {
     radius: 200
   });
   const [showDummyButton, setShowDummyButton] = useState(true);
-  const [factIndex, setFactIndex] = useState(0);
+  const [processingMessage, setProcessingMessage] = useState(false);
 
   const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
@@ -208,38 +187,33 @@ export default function Geofencing() {
   };
 
   const handleDummyButtonClick = () => {
-    setShowDummyButton(false);
+    setProcessingMessage(true);
+    setTimeout(() => {
+      setShowDummyButton(false);
+      setProcessingMessage(false);
+    }, 3000);
   };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % informativeFacts.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
 
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
-  if (isLoading || showDummyButton) {
+  if ((isLoading && !processingMessage) || showDummyButton) {
     return (
       <div className="p-6 flex flex-col min-h-screen bg-black text-white">
-        <div className="flex flex-col items-center">
-          <img src={informativeFacts[factIndex].img} alt="Smart Home Fact" className="rounded-lg shadow-lg mb-6 max-w-full h-64 object-cover animate-fade-in" />
-          <div className="text-2xl font-semibold mb-4 animate-pulse text-center max-w-2xl">
-            {informativeFacts[factIndex].fact}
-          </div>
-          <div className="text-lg mb-6 text-center max-w-xl">
-            While your geofencing data loads, discover how AI is shaping the future of smart homes.
-          </div>
+        <div className="mb-6">
+          {mirrorPlaceholders.map((_, idx) => (
+            <div key={idx} className="h-7 bg-gray-700 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
+          ))}
         </div>
         <div className="flex-1 flex flex-col justify-end">
-          <div className="w-full flex justify-center">
-            <Button
-              onClick={handleDummyButtonClick}
-            >
-              Initiate Geofencing Analysis
-            </Button>
-          </div>
+          {processingMessage ? (
+            <div className="text-center text-lg font-semibold mb-4">Processing request...</div>
+          ) : (
+            <div className="w-full flex justify-center">
+              <Button onClick={handleDummyButtonClick}>
+                Initiate Geofencing Analysis
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );

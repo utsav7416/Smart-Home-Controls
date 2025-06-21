@@ -4,29 +4,6 @@ import { useState, useEffect } from 'react';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
-const loadingFacts = [
-  {
-    fact: "Our ML models detect energy anomalies early to save you money.",
-    img: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "Smart anomaly detection can reduce your bills by up to 20%.",
-    img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "AI analyzes your energy spikes and suggests tariff optimizations.",
-    img: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "Machine learning optimizes your home energy usage in real-time.",
-    img: "https://images.unsplash.com/photo-1503389152951-9c3d8b6e6caa?auto=format&fit=crop&w=800&q=80"
-  },
-  {
-    fact: "Stay informed with live energy insights powered by AI.",
-    img: "https://images.unsplash.com/photo-1465101178521-c1a9136a3fd9?auto=format&fit=crop&w=800&q=80"
-  }
-];
-
 const Card = ({ children, className = "" }) => (
   <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
 );
@@ -40,16 +17,18 @@ const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 pt-0 ${className}`}>{children}</div>
 );
 
-const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
-  <button
-    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
-    onClick={onClick}
-    disabled={disabled}
-    {...props}
-  >
-    {children}
-  </button>
-);
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
+  return (
+    <button
+      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
+      onClick={onClick}
+      disabled={disabled}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
 
 const useDeviceSync = () => {
   const [deviceStates, setDeviceStates] = useState({});
@@ -104,6 +83,8 @@ const fetchAnalyticsData = async () => {
   if (!response.ok) throw new Error('Failed to fetch analytics data');
   return await response.json();
 };
+
+const mirrorPlaceholders = Array(8).fill(0);
 
 const AlgorithmCard = ({ algorithm, icon: Icon }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -238,65 +219,53 @@ export default function Analytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDummyButton, setShowDummyButton] = useState(true);
-  const [factIndex, setFactIndex] = useState(0);
+  const [processingMessage, setProcessingMessage] = useState(false);
+
+  const loadData = async () => {
+    try {
+      const data = await fetchAnalyticsData();
+      setAnalyticsData(data);
+      setIsLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchAnalyticsData();
-        setAnalyticsData(data);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setIsLoading(false);
-      }
-    };
     loadData();
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % loadingFacts.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleDummyButtonClick = () => {
-    setShowDummyButton(false);
+    setProcessingMessage(true);
+    setTimeout(() => {
+      setShowDummyButton(false);
+      setProcessingMessage(false);
+    }, 3000);
   };
 
-  if (isLoading || showDummyButton) {
+  const overallError = error;
+
+  if ((isLoading && !processingMessage) || showDummyButton) {
     return (
       <div className="p-6 flex flex-col min-h-screen bg-black text-white">
-        <div className="flex flex-col items-center">
-          <img src={loadingFacts[factIndex].img} alt="Analytics Fact" className="rounded-lg shadow-lg mb-6 max-w-full h-64 object-cover animate-fade-in" />
-          <div className="text-2xl font-semibold mb-4 animate-pulse text-center max-w-2xl">
-            {loadingFacts[factIndex].fact}
-          </div>
-          <div className="text-lg mb-6 text-center max-w-xl">
-            While your analytics load, discover how AI is revolutionizing energy management.
-          </div>
+        <div className="mb-6">
+          {mirrorPlaceholders.map((_, idx) => (
+            <div key={idx} className="h-7 bg-gray-700 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
+          ))}
         </div>
         <div className="flex-1 flex flex-col justify-end">
-          <div className="w-full flex justify-center">
-            <Button
-              onClick={handleDummyButtonClick}
-            >
-              Initiate Anomaly/Tariff Analysis
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to connect to Flask backend. Make sure your Flask server is running on {FLASK_API_URL}
+          {processingMessage ? (
+            <div className="text-center text-lg font-semibold mb-4">Processing request...</div>
+          ) : (
+            <div className="w-full flex justify-center">
+              <Button onClick={handleDummyButtonClick}>
+                Initiate Anomaly/Tariff Analysis
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -335,6 +304,12 @@ export default function Analytics() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
+      {overallError && (
+        <div className="bg-red-900/30 text-red-300 p-4 rounded-lg flex items-center gap-2 mb-4 border border-red-500">
+          <AlertTriangle className="w-5 h-5" />
+          <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
+        </div>
+      )}
       <div className="relative text-center py-8">
         <img
           src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg"

@@ -1,8 +1,22 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
-import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import ProgressBar from 'react-animated-progress-bar';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
+
+let analyticsCache = null;
+let analyticsPromise = null;
+export function prefetchAnalytics() {
+  if (!analyticsCache && !analyticsPromise) {
+    analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
+      .then(res => res.json())
+      .then(data => { analyticsCache = data; return data; });
+  }
+  return analyticsPromise;
+}
 
 const Card = ({ children, className = "" }) => (
   <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
@@ -17,18 +31,16 @@ const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 pt-0 ${className}`}>{children}</div>
 );
 
-const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
-  return (
-    <button
-      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
+  <button
+    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
+    {children}
+  </button>
+);
 
 const useDeviceSync = () => {
   const [deviceStates, setDeviceStates] = useState({});
@@ -78,164 +90,84 @@ const useDeviceSync = () => {
   return { deviceStates, totalDevicePower };
 };
 
-const fetchAnalyticsData = async () => {
-  const response = await fetch(`${FLASK_API_URL}/api/analytics`);
-  if (!response.ok) throw new Error('Failed to fetch analytics data');
-  return await response.json();
-};
+const doYouKnowFacts = [
+  "Did you know? Our ML models detect energy anomalies early to save you money.",
+  "Did you know? Smart anomaly detection can reduce your bills by up to 20%.",
+  "Did you know? AI analyzes your energy spikes and suggests tariff optimizations.",
+  "Did you know? Machine learning optimizes your home energy usage in real-time.",
+  "Did you know? Stay informed with live energy insights powered by AI."
+];
+
+const backgrounds = [
+  "from-[#232526] to-[#414345]",
+  "from-[#283E51] to-[#485563]",
+  "from-[#232526] to-[#1a2980]",
+  "from-[#0f2027] to-[#2c5364]",
+  "from-[#1e3c72] to-[#2a5298]"
+];
 
 const mirrorPlaceholders = Array(8).fill(0);
 
-const AlgorithmCard = ({ algorithm, icon: Icon }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  return (
-    <div className="w-full">
-      <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
-        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
-                <Icon className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-white text-lg font-medium">{algorithm.name}</h3>
-                <p className="text-green-400 text-sm">{algorithm.purpose}</p>
-              </div>
-            </div>
-            <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
-          </div>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            {algorithm?.name === "Random Forest Regressor" && (
-              <>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.accuracy}%</div>
-                  <div className="text-xs text-gray-400">Accuracy</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.parameters.n_estimators}</div>
-                  <div className="text-xs text-gray-400">Trees</div>
-                </div>
-              </>
-            )}
-            {algorithm?.name === "Isolation Forest" && (
-            <>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
-                <div className="text-xs text-gray-400">Anomalies Found</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">
-                  {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
-                </div>
-                <div className="text-xs text-gray-400">Contamination Rate</div>
-              </div>
-            </>
-          )}
-            {algorithm?.name === "MLP Regressor" && (
-              <>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.parameters.hidden_layer_sizes?.length || 0}</div>
-                  <div className="text-xs text-gray-400">Hidden Layers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
-                  <div className="text-xs text-gray-400">Ensemble Weight</div>
-                </div>
-              </>
-            )}
-            {algorithm?.name === "Ridge Regression" && (
-              <>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                  <div className="text-xs text-gray-400">Alpha (α)</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
-                  <div className="text-xs text-gray-400">Ensemble Weight</div>
-                </div>
-              </>
-            )}
-          </div>
-          <p className="text-gray-300 text-sm mb-6 leading-relaxed">{algorithm.description}</p>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
-          >
-            <Settings className="w-4 h-4" />
-            {isExpanded ? 'Hide Parameters' : 'View Parameters'}
-          </button>
-          {isExpanded && (
-            <div className="mt-6 space-y-4">
-              <div className="bg-gray-800 rounded-md p-4 border border-gray-700">
-                <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                  <Code className="w-4 h-4" />
-                  Parameters
-                </h4>
-                <div className="space-y-2">
-                  {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
-                    <div key={key} className="flex justify-between items-center">
-                      <span className="text-green-400 text-xs font-mono">{key}:</span>
-                      <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
-                        {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Activity className="w-4 h-4 text-blue-400" />
-                    <span className="text-white text-sm font-medium">Performance</span>
-                  </div>
-                  <div className="text-blue-400 font-mono text-sm">
-                    {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
-                      algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                      algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
-                      `α = ${algorithm?.parameters?.alpha}`}
-                  </div>
-                </div>
-                <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Cpu className="w-4 h-4 text-purple-400" />
-                    <span className="text-white text-sm font-medium">Status</span>
-                  </div>
-                  <div className="text-purple-400 font-mono text-sm">Processing</div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+const ProgressBarSkeleton = () => (
+  <div className="w-full flex flex-col items-center justify-center py-6">
+    <ProgressBar
+      width="90%"
+      height="14px"
+      rect
+      fontColor="gray"
+      percentage="55"
+      rectPadding="1px"
+      rectBorderRadius="20px"
+      trackPathColor="#222"
+      bgColor="#444"
+      trackBorderColor="grey"
+      duration="2"
+      defColor={{
+        fair: "#22d3ee",
+        good: "#6366f1",
+        excellent: "#22c55e",
+        poor: "#f59e42",
+      }}
+    />
+    <div className="mt-2 text-blue-300 text-lg font-semibold animate-pulse">Fetching your data...</div>
+  </div>
+);
 
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
-  const [analyticsData, setAnalyticsData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState(analyticsCache);
+  const [isLoading, setIsLoading] = useState(!analyticsCache);
   const [error, setError] = useState(null);
   const [showDummyButton, setShowDummyButton] = useState(true);
   const [processingMessage, setProcessingMessage] = useState(false);
-
-  const loadData = async () => {
-    try {
-      const data = await fetchAnalyticsData();
-      setAnalyticsData(data);
-      setIsLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setIsLoading(false);
-    }
-  };
+  const [factIndex, setFactIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 30000);
-    return () => clearInterval(interval);
+    if (!analyticsCache) {
+      prefetchAnalytics()
+        .then(data => {
+          setAnalyticsData(data);
+          setIsLoading(false);
+        })
+        .catch(e => {
+          setError(e.message);
+          setIsLoading(false);
+        });
+    }
+  }, []);
+
+  useEffect(() => {
+    const factInterval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
+    }, 4000);
+    const bgInterval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % backgrounds.length);
+    }, 6000);
+    return () => {
+      clearInterval(factInterval);
+      clearInterval(bgInterval);
+    };
   }, []);
 
   const handleDummyButtonClick = () => {
@@ -246,26 +178,42 @@ export default function Analytics() {
     }, 3000);
   };
 
-  const overallError = error;
-
   if ((isLoading && !processingMessage) || showDummyButton) {
     return (
-      <div className="p-6 flex flex-col min-h-screen bg-black text-white">
+      <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${backgrounds[bgIndex]} text-white`}>
         <div className="mb-6">
+          <div className="flex flex-col items-center mb-8">
+            <div className="text-2xl font-bold mb-3 animate-pulse">{doYouKnowFacts[factIndex]}</div>
+          </div>
+          <div className="w-full max-w-2xl mx-auto">
+            <ProgressBarSkeleton />
+          </div>
           {mirrorPlaceholders.map((_, idx) => (
-            <div key={idx} className="h-7 bg-gray-700 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
+            <div key={idx} className="h-7 rounded mb-4">
+              <Skeleton height={28} baseColor="#222" highlightColor="#444" />
+            </div>
           ))}
         </div>
         <div className="flex-1 flex flex-col justify-end">
           {processingMessage ? (
-            <div className="text-center text-lg font-semibold mb-4">Processing request...</div>
+            <div className="text-center text-lg font-semibold mb-10">Processing request...</div>
           ) : (
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center mb-10">
               <Button onClick={handleDummyButtonClick}>
                 Initiate Anomaly/Tariff Analysis
               </Button>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-red-400 text-lg">
+          Failed to load analytics data: {error}
         </div>
       </div>
     );
@@ -302,14 +250,135 @@ export default function Analytics() {
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
 
+  const AlgorithmCard = ({ algorithm, icon: Icon }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    return (
+      <div className="w-full">
+        <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
+          <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-white text-lg font-medium">{algorithm.name}</h3>
+                  <p className="text-green-400 text-sm">{algorithm.purpose}</p>
+                </div>
+              </div>
+              <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {algorithm?.name === "Random Forest Regressor" && (
+                <>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.accuracy}%</div>
+                    <div className="text-xs text-gray-400">Accuracy</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.parameters.n_estimators}</div>
+                    <div className="text-xs text-gray-400">Trees</div>
+                  </div>
+                </>
+              )}
+              {algorithm?.name === "Isolation Forest" && (
+              <>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
+                  <div className="text-xs text-gray-400">Anomalies Found</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">
+                    {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-xs text-gray-400">Contamination Rate</div>
+                </div>
+              </>
+            )}
+              {algorithm?.name === "MLP Regressor" && (
+                <>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.parameters.hidden_layer_sizes?.length || 0}</div>
+                    <div className="text-xs text-gray-400">Hidden Layers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
+                    <div className="text-xs text-gray-400">Ensemble Weight</div>
+                  </div>
+                </>
+              )}
+              {algorithm?.name === "Ridge Regression" && (
+                <>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
+                    <div className="text-xs text-gray-400">Alpha (α)</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
+                    <div className="text-xs text-gray-400">Ensemble Weight</div>
+                  </div>
+                </>
+              )}
+            </div>
+            <p className="text-gray-300 text-sm mb-6 leading-relaxed">{algorithm.description}</p>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
+            >
+              <Settings className="w-4 h-4" />
+              {isExpanded ? 'Hide Parameters' : 'View Parameters'}
+            </button>
+            {isExpanded && (
+              <div className="mt-6 space-y-4">
+                <div className="bg-gray-800 rounded-md p-4 border border-gray-700">
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <Code className="w-4 h-4" />
+                    Parameters
+                  </h4>
+                  <div className="space-y-2">
+                    {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="text-green-400 text-xs font-mono">{key}:</span>
+                        <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
+                          {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Activity className="w-4 h-4 text-blue-400" />
+                      <span className="text-white text-sm font-medium">Performance</span>
+                    </div>
+                    <div className="text-blue-400 font-mono text-sm">
+                      {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
+                        algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
+                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
+                        `α = ${algorithm?.parameters?.alpha}`}
+                    </div>
+                  </div>
+                  <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Cpu className="w-4 h-4 text-purple-400" />
+                      <span className="text-white text-sm font-medium">Status</span>
+                    </div>
+                    <div className="text-purple-400 font-mono text-sm">Processing</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
-      {overallError && (
-        <div className="bg-red-900/30 text-red-300 p-4 rounded-lg flex items-center gap-2 mb-4 border border-red-500">
-          <AlertTriangle className="w-5 h-5" />
-          <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
-        </div>
-      )}
       <div className="relative text-center py-8">
         <img
           src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg"

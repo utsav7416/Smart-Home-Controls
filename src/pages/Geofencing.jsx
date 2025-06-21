@@ -4,6 +4,17 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
+let geofencesCache = null;
+let geofencesPromise = null;
+export function prefetchGeofences() {
+  if (!geofencesCache && !geofencesPromise) {
+    geofencesPromise = fetch(`${FLASK_API_URL}/api/geofences`)
+      .then(res => res.json())
+      .then(data => { geofencesCache = data; return data; });
+  }
+  return geofencesPromise;
+}
+
 const Card = ({ children, className = '' }) => (
   <div className={`rounded-lg shadow-lg ${className}`}>{children}</div>
 );
@@ -34,12 +45,15 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
 };
 
 const fetchGeofences = async () => {
+  if (geofencesCache) return geofencesCache;
   const response = await fetch(`${FLASK_API_URL}/api/geofences`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(`Failed to fetch geofences: ${errorData.error || response.statusText}`);
   }
-  return await response.json();
+  const data = await response.json();
+  geofencesCache = data;
+  return data;
 };
 
 const fetchGeofenceStats = async () => {
@@ -138,6 +152,14 @@ const useMutation = (mutationFn, options = {}) => {
 
 const mirrorPlaceholders = Array(8).fill(0);
 
+const doYouKnowFacts = [
+  "Did you know? Geofencing can automate your lights and AC based on your location.",
+  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
+  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
+  "Did you know? Location-based automations boost both convenience and security.",
+  "Did you know? Your smart home learns and optimizes your energy usage over time."
+];
+
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -150,6 +172,16 @@ export default function Geofencing() {
   });
   const [showDummyButton, setShowDummyButton] = useState(true);
   const [processingMessage, setProcessingMessage] = useState(false);
+  const [factIndex, setFactIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  const backgrounds = [
+    "from-[#232526] to-[#414345]",
+    "from-[#283E51] to-[#485563]",
+    "from-[#232526] to-[#1a2980]",
+    "from-[#0f2027] to-[#2c5364]",
+    "from-[#1e3c72] to-[#2a5298]"
+  ];
 
   const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
@@ -194,21 +226,37 @@ export default function Geofencing() {
     }, 3000);
   };
 
+  useEffect(() => {
+    const factInterval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
+    }, 4000);
+    const bgInterval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % backgrounds.length);
+    }, 6000);
+    return () => {
+      clearInterval(factInterval);
+      clearInterval(bgInterval);
+    };
+  }, []);
+
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
   if ((isLoading && !processingMessage) || showDummyButton) {
     return (
-      <div className="p-6 flex flex-col min-h-screen bg-black text-white">
+      <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${backgrounds[bgIndex]} text-white`}>
         <div className="mb-6">
+          <div className="flex flex-col items-center mb-8">
+            <div className="text-2xl font-bold mb-3 animate-pulse">{doYouKnowFacts[factIndex]}</div>
+          </div>
           {mirrorPlaceholders.map((_, idx) => (
             <div key={idx} className="h-7 bg-gray-700 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
           ))}
         </div>
         <div className="flex-1 flex flex-col justify-end">
           {processingMessage ? (
-            <div className="text-center text-lg font-semibold mb-4">Processing request...</div>
+            <div className="text-center text-lg font-semibold mb-10">Processing request...</div>
           ) : (
-            <div className="w-full flex justify-center">
+            <div className="w-full flex justify-center mb-10">
               <Button onClick={handleDummyButtonClick}>
                 Initiate Geofencing Analysis
               </Button>

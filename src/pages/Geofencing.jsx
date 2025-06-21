@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, Lightbulb } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -31,30 +31,16 @@ const CardContent = ({ children, className = '' }) => (
   <div className={`px-6 pb-6 ${className}`}>{children}</div>
 );
 
-const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
-  return (
-    <button
-      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
-
-const fetchGeofences = async () => {
-  if (geofencesCache) return geofencesCache;
-  const response = await fetch(`${FLASK_API_URL}/api/geofences`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to fetch geofences: ${errorData.error || response.statusText}`);
-  }
-  const data = await response.json();
-  geofencesCache = data;
-  return data;
-};
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
+  <button
+    className={`inline-flex items-center justify-center rounded-full text-2xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-14 py-7 bg-gradient-to-br from-green-400 to-green-700 hover:from-green-500 hover:to-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
+    {children}
+  </button>
+);
 
 const fetchGeofenceStats = async () => {
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
@@ -153,12 +139,27 @@ const useMutation = (mutationFn, options = {}) => {
 const mirrorPlaceholders = Array(8).fill(0);
 
 const doYouKnowFacts = [
-  "Did you know? Geofencing can automate your lights and AC based on your location.",
-  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
-  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
-  "Did you know? Location-based automations boost both convenience and security.",
-  "Did you know? Your smart home learns and optimizes your energy usage over time."
+  "Geofencing can automate your lights and AC based on your location.",
+  "Smart zones can reduce your home's energy waste by up to 30%.",
+  "AI geofencing adapts to your daily routines for comfort and savings.",
+  "Location-based automations boost both convenience and security.",
+  "Your smart home learns and optimizes your energy usage over time."
 ];
+
+const pollOptions = [
+  "Energy Saving", "Security", "Automation"
+];
+
+function AnimatedBar({ percent, color }) {
+  return (
+    <div className="w-full h-6 bg-gray-800 rounded-full overflow-hidden">
+      <div
+        className="h-full rounded-full transition-all duration-700"
+        style={{ width: percent + '%', background: color }}
+      />
+    </div>
+  );
+}
 
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -174,6 +175,11 @@ export default function Geofencing() {
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
+  const [votes, setVotes] = useState([12, 2]);
+  const [voted, setVoted] = useState(null);
+  const [pollVotes, setPollVotes] = useState([10, 7, 13]);
+  const [userPoll, setUserPoll] = useState(null);
+  const [counter, setCounter] = useState(1234567);
 
   const backgrounds = [
     "from-[#232526] to-[#414345]",
@@ -233,34 +239,94 @@ export default function Geofencing() {
     const bgInterval = setInterval(() => {
       setBgIndex((prev) => (prev + 1) % backgrounds.length);
     }, 6000);
+    const counterInterval = setInterval(() => {
+      setCounter((c) => c + Math.floor(Math.random() * 4));
+    }, 800);
     return () => {
       clearInterval(factInterval);
       clearInterval(bgInterval);
+      clearInterval(counterInterval);
     };
   }, []);
+
+  const handleVote = (idx) => {
+    if (voted === null) {
+      const nv = [...votes];
+      nv[idx]++;
+      setVotes(nv);
+      setVoted(idx);
+    }
+  };
+
+  const handlePoll = (idx) => {
+    if (userPoll === null) {
+      const nv = [...pollVotes];
+      nv[idx]++;
+      setPollVotes(nv);
+      setUserPoll(idx);
+    }
+  };
 
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
   if ((isLoading && !processingMessage) || showDummyButton) {
+    const totalPoll = pollVotes.reduce((a, b) => a + b, 0);
     return (
       <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${backgrounds[bgIndex]} text-white`}>
-        <div className="mb-6">
-          <div className="flex flex-col items-center mb-8">
-            <div className="text-2xl font-bold mb-3 animate-pulse">{doYouKnowFacts[factIndex]}</div>
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center gap-2 text-2xl font-bold mb-2 animate-pulse">
+            <Lightbulb className="text-yellow-300 w-7 h-7" /> Did you know?
           </div>
+          <div className="text-xl mb-3 text-center max-w-xl">{doYouKnowFacts[factIndex]}</div>
+          <div className="flex gap-4 mt-2">
+            <button
+              onClick={() => handleVote(0)}
+              className={`rounded-full px-4 py-2 text-lg font-bold transition ${voted === 0 ? 'bg-green-500 text-white scale-110' : 'bg-gray-700 text-green-200 hover:bg-green-600'}`}
+              tabIndex={0}
+            >👍 {votes[0]}</button>
+            <button
+              onClick={() => handleVote(1)}
+              className={`rounded-full px-4 py-2 text-lg font-bold transition ${voted === 1 ? 'bg-red-500 text-white scale-110' : 'bg-gray-700 text-red-200 hover:bg-red-600'}`}
+              tabIndex={0}
+            >👎 {votes[1]}</button>
+          </div>
+        </div>
+        <div className="flex flex-col items-center mb-8">
+          <div className="text-lg font-semibold mb-2">Which feature do you use most?</div>
+          <div className="flex gap-4 mb-2">
+            {pollOptions.map((opt, i) => (
+              <button
+                key={opt}
+                onClick={() => handlePoll(i)}
+                className={`rounded-full px-5 py-2 text-md font-bold transition ${userPoll === i ? 'bg-blue-600 text-white scale-105' : 'bg-gray-800 text-blue-200 hover:bg-blue-500'}`}
+                tabIndex={0}
+              >{opt}</button>
+            ))}
+          </div>
+          <div className="w-full max-w-md space-y-2">
+            {pollOptions.map((opt, i) => (
+              <div key={opt} className="flex items-center gap-2">
+                <div className="w-24">{opt}</div>
+                <AnimatedBar percent={Math.round((pollVotes[i] / totalPoll) * 100)} color={["#22d3ee", "#6366f1", "#22c55e"][i]} />
+                <div className="ml-2 w-8">{Math.round((pollVotes[i] / totalPoll) * 100)}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mb-6">
           {mirrorPlaceholders.map((_, idx) => (
             <div key={idx} className="h-7 bg-gray-700 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
           ))}
         </div>
-        <div className="flex-1 flex flex-col justify-end">
+        <div className="flex flex-col items-center mb-10">
+          <div className="text-lg font-semibold mb-2 animate-pulse">Fetching your data...</div>
+          <div className="text-base text-green-200 mb-4">Smart homes optimized: <span className="font-mono text-green-300 text-xl">{counter.toLocaleString()}</span></div>
           {processingMessage ? (
             <div className="text-center text-lg font-semibold mb-10">Processing request...</div>
           ) : (
-            <div className="w-full flex justify-center mb-10">
-              <Button onClick={handleDummyButtonClick}>
-                Initiate Geofencing Analysis
-              </Button>
-            </div>
+            <Button onClick={handleDummyButtonClick}>
+              Initiate Geofencing Analysis
+            </Button>
           )}
         </div>
       </div>

@@ -20,21 +20,10 @@ const CardContent = ({ children, className = '' }) => (
   <div className={`px-6 pb-6 ${className}`}>{children}</div>
 );
 
-const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
-  const variants = {
-    default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-    ghost: 'hover:bg-accent hover:text-accent-foreground'
-  };
-  const sizes = {
-    default: 'h-10 px-4 py-2',
-    sm: 'h-9 rounded-md px-3',
-    lg: 'h-11 rounded-md px-8'
-  };
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
   return (
     <button
-      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
@@ -147,73 +136,28 @@ const useMutation = (mutationFn, options = {}) => {
   return { mutate, isPending, error };
 };
 
-const loadingQuotes = [
-  "Did you know? Geofencing can cut your home energy use by up to 30%.",
-  "Fun fact: AI geofencing helps automate your smart home based on your location.",
-  "Did you know? Geofencing can trigger routines when you arrive or leave home.",
-  "Smart geofencing keeps your devices efficient and secure.",
-  "AI is analyzing your zones for optimal energy savings."
+const informativeFacts = [
+  {
+    fact: "Geofencing can save up to 30% on your home energy bills by automating device control.",
+    img: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "AI-powered geofencing adapts to your lifestyle for smarter automation.",
+    img: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "Location-based triggers can enhance your home's security and convenience.",
+    img: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "Optimized zones reduce unnecessary device usage and energy waste.",
+    img: "https://images.unsplash.com/photo-1503389152951-9c3d8b6e6caa?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "Machine learning models continuously improve your smart home efficiency.",
+    img: "https://images.unsplash.com/photo-1465101178521-c1a9136a3fd9?auto=format&fit=crop&w=800&q=80"
+  }
 ];
-
-const BubblePopper = () => {
-  const [bubbles, setBubbles] = useState([]);
-  useEffect(() => {
-    const newBubbles = Array.from({ length: 10 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 300,
-      y: Math.random() * 300,
-      size: Math.random() * 20 + 10,
-    }));
-    setBubbles(newBubbles);
-  }, []);
-  const popBubble = (id) => {
-    setBubbles(bubbles.filter(b => b.id !== id));
-    setTimeout(() => {
-      setBubbles([...bubbles, { id, x: Math.random() * 300, y: Math.random() * 300, size: Math.random() * 20 + 10 }]);
-    }, 500);
-  };
-  return (
-    <div className="relative w-80 h-80 mx-auto">
-      {bubbles.map(bubble => (
-        <div
-          key={bubble.id}
-          className="absolute bg-blue-400 rounded-full cursor-pointer animate-bounce"
-          style={{ left: bubble.x, top: bubble.y, width: bubble.size, height: bubble.size }}
-          onClick={() => popBubble(bubble.id)}
-        />
-      ))}
-    </div>
-  );
-};
-
-const DraggableMascot = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const handleMouseDown = () => setDragging(true);
-  const handleMouseUp = () => setDragging(false);
-  const handleMouseMove = (e) => {
-    if (dragging) {
-      setPosition({ x: e.clientX - 25, y: e.clientY - 25 });
-    }
-  };
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [dragging]);
-  return (
-    <div
-      className="absolute cursor-move"
-      style={{ left: position.x, top: position.y }}
-      onMouseDown={handleMouseDown}
-    >
-      <Brain className="w-12 h-12 text-green-400" />
-    </div>
-  );
-};
 
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -226,6 +170,7 @@ export default function Geofencing() {
     radius: 200
   });
   const [showDummyButton, setShowDummyButton] = useState(true);
+  const [factIndex, setFactIndex] = useState(0);
 
   const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
@@ -266,40 +211,36 @@ export default function Geofencing() {
     setShowDummyButton(false);
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % informativeFacts.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
   if (isLoading || showDummyButton) {
     return (
       <div className="p-6 flex flex-col min-h-screen bg-black text-white">
-        <div>
-          <div className="text-lg mb-4">Ready to analyze your geofencing data?</div>
-          <div className="text-green-300 text-md italic animate-pulse mb-6">
-            {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
+        <div className="flex flex-col items-center">
+          <img src={informativeFacts[factIndex].img} alt="Smart Home Fact" className="rounded-lg shadow-lg mb-6 max-w-full h-64 object-cover animate-fade-in" />
+          <div className="text-2xl font-semibold mb-4 animate-pulse text-center max-w-2xl">
+            {informativeFacts[factIndex].fact}
           </div>
-          <div className="text-green-200 text-sm mb-4">While data loads, have fun with these:</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="text-center">
-              <div className="text-green-300 mb-2">Pop these bubbles!</div>
-              <BubblePopper />
-            </div>
-            <div className="text-center">
-              <div className="text-green-300 mb-2">Drag our mascot around!</div>
-              <DraggableMascot />
-            </div>
+          <div className="text-lg mb-6 text-center max-w-xl">
+            While your geofencing data loads, discover how AI is shaping the future of smart homes.
           </div>
         </div>
-        {showDummyButton && (
-          <div className="flex-1 flex flex-col justify-end">
-            <div className="w-full flex justify-center mt-8 mb-4">
-              <Button
-                onClick={handleDummyButtonClick}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                Initiate Geofencing Analysis
-              </Button>
-            </div>
+        <div className="flex-1 flex flex-col justify-end">
+          <div className="w-full flex justify-center">
+            <Button
+              onClick={handleDummyButtonClick}
+            >
+              Initiate Geofencing Analysis
+            </Button>
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -314,7 +255,6 @@ export default function Geofencing() {
           <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
         </div>
       )}
-
       <div
         className="text-center py-16 rounded-2xl relative overflow-hidden"
         style={{
@@ -333,7 +273,6 @@ export default function Geofencing() {
           </p>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
           <CardContent className="p-6">
@@ -391,20 +330,17 @@ export default function Geofencing() {
           </CardContent>
         </Card>
       </div>
-
       <div className="flex space-x-4 mb-6">
         {['overview', 'analytics'].map((tab) => (
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            variant={activeTab === tab ? 'default' : 'outline'}
-            className={activeTab === tab ? 'bg-green-600 text-white' : 'border-green-400/30 text-green-400'}
+            className={activeTab === tab ? 'bg-green-600 text-white' : 'border-green-400/30 text-green-400 bg-transparent'}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </Button>
         ))}
       </div>
-
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
@@ -417,7 +353,6 @@ export default function Geofencing() {
                 <Button
                   onClick={() => optimizeMutation.mutate()}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
-                  size="sm"
                   disabled={optimizeMutation.isPending}
                 >
                   <Brain className="w-4 h-4 mr-2" />
@@ -426,7 +361,6 @@ export default function Geofencing() {
                 <Button
                   onClick={() => setShowCreateForm(true)}
                   className="bg-green-600 hover:bg-green-700 text-white"
-                  size="sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Zone
@@ -472,7 +406,6 @@ export default function Geofencing() {
           </div>
         </div>
       )}
-
       {activeTab === 'analytics' && analytics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
@@ -497,7 +430,6 @@ export default function Geofencing() {
               )}
             </CardContent>
           </Card>
-
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
             <CardHeader>
               <CardTitle className="text-white">Zone Efficiency</CardTitle>
@@ -520,7 +452,6 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">
@@ -582,14 +513,13 @@ export default function Geofencing() {
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button
-                  variant="outline"
-                  className="px-6 py-2 border-green-400 text-green-400 hover:bg-green-900/20"
+                  className="border-green-400 text-green-400 hover:bg-green-900/20 bg-transparent"
                   onClick={() => setShowCreateForm(false)}
                 >
                   Cancel
                 </Button>
                 <Button
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
                   onClick={handleCreateSubmit}
                   disabled={
                     createMutation.isPending || !formData.name.trim() || !formData.address.trim() ||

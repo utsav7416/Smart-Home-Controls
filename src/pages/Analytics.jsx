@@ -4,73 +4,28 @@ import { useState, useEffect } from 'react';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
-const loadingQuotes = [
-  "Did you know? Our ML models can spot energy anomalies before you notice them.",
-  "Fun fact: Smart anomaly detection can help save up to 20% on your bills.",
-  "Did you know? AI can detect unusual spikes and suggest tariff adjustments.",
-  "Our models are crunching numbers to optimize your energy usage.",
-  "AI anomaly detection protects your home from waste and inefficiency."
+const loadingFacts = [
+  {
+    fact: "Our ML models detect energy anomalies early to save you money.",
+    img: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "Smart anomaly detection can reduce your bills by up to 20%.",
+    img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "AI analyzes your energy spikes and suggests tariff optimizations.",
+    img: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "Machine learning optimizes your home energy usage in real-time.",
+    img: "https://images.unsplash.com/photo-1503389152951-9c3d8b6e6caa?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    fact: "Stay informed with live energy insights powered by AI.",
+    img: "https://images.unsplash.com/photo-1465101178521-c1a9136a3fd9?auto=format&fit=crop&w=800&q=80"
+  }
 ];
-
-const BubblePopper = () => {
-  const [bubbles, setBubbles] = useState([]);
-  useEffect(() => {
-    const newBubbles = Array.from({ length: 10 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 300,
-      y: Math.random() * 300,
-      size: Math.random() * 20 + 10,
-    }));
-    setBubbles(newBubbles);
-  }, []);
-  const popBubble = (id) => {
-    setBubbles(bubbles.filter(b => b.id !== id));
-    setTimeout(() => {
-      setBubbles([...bubbles, { id, x: Math.random() * 300, y: Math.random() * 300, size: Math.random() * 20 + 10 }]);
-    }, 500);
-  };
-  return (
-    <div className="relative w-80 h-80 mx-auto">
-      {bubbles.map(bubble => (
-        <div
-          key={bubble.id}
-          className="absolute bg-blue-400 rounded-full cursor-pointer animate-bounce"
-          style={{ left: bubble.x, top: bubble.y, width: bubble.size, height: bubble.size }}
-          onClick={() => popBubble(bubble.id)}
-        />
-      ))}
-    </div>
-  );
-};
-
-const DraggableMascot = () => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dragging, setDragging] = useState(false);
-  const handleMouseDown = () => setDragging(true);
-  const handleMouseUp = () => setDragging(false);
-  const handleMouseMove = (e) => {
-    if (dragging) {
-      setPosition({ x: e.clientX - 25, y: e.clientY - 25 });
-    }
-  };
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [dragging]);
-  return (
-    <div
-      className="absolute cursor-move"
-      style={{ left: position.x, top: position.y }}
-      onMouseDown={handleMouseDown}
-    >
-      <Brain className="w-12 h-12 text-green-400" />
-    </div>
-  );
-};
 
 const Card = ({ children, className = "" }) => (
   <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
@@ -83,6 +38,17 @@ const CardTitle = ({ children, className = "" }) => (
 );
 const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 pt-0 ${className}`}>{children}</div>
+);
+
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
+  <button
+    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
+    {children}
+  </button>
 );
 
 const useDeviceSync = () => {
@@ -272,6 +238,7 @@ export default function Analytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDummyButton, setShowDummyButton] = useState(true);
+  const [factIndex, setFactIndex] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -289,6 +256,13 @@ export default function Analytics() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % loadingFacts.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleDummyButtonClick = () => {
     setShowDummyButton(false);
   };
@@ -296,35 +270,24 @@ export default function Analytics() {
   if (isLoading || showDummyButton) {
     return (
       <div className="p-6 flex flex-col min-h-screen bg-black text-white">
-        <div>
-          <div className="text-lg mb-4">Ready to analyze your energy data?</div>
-          <div className="text-green-300 text-md italic animate-pulse mb-6">
-            {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
+        <div className="flex flex-col items-center">
+          <img src={loadingFacts[factIndex].img} alt="Analytics Fact" className="rounded-lg shadow-lg mb-6 max-w-full h-64 object-cover animate-fade-in" />
+          <div className="text-2xl font-semibold mb-4 animate-pulse text-center max-w-2xl">
+            {loadingFacts[factIndex].fact}
           </div>
-          <div className="text-green-200 text-sm mb-4">While data loads, have fun with these:</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="text-center">
-              <div className="text-green-300 mb-2">Pop these bubbles!</div>
-              <BubblePopper />
-            </div>
-            <div className="text-center">
-              <div className="text-green-300 mb-2">Drag our mascot around!</div>
-              <DraggableMascot />
-            </div>
+          <div className="text-lg mb-6 text-center max-w-xl">
+            While your analytics load, discover how AI is revolutionizing energy management.
           </div>
         </div>
-        {showDummyButton && (
-          <div className="flex-1 flex flex-col justify-end">
-            <div className="w-full flex justify-center mt-8 mb-4">
-              <button
-                onClick={handleDummyButtonClick}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
-              >
-                Initiate Anomaly/Tariff Analysis
-              </button>
-            </div>
+        <div className="flex-1 flex flex-col justify-end">
+          <div className="w-full flex justify-center">
+            <Button
+              onClick={handleDummyButtonClick}
+            >
+              Initiate Anomaly/Tariff Analysis
+            </Button>
           </div>
-        )}
+        </div>
       </div>
     );
   }

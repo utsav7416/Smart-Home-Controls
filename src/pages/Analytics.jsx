@@ -4,43 +4,99 @@ import { useState, useEffect } from 'react';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
+const loadingQuotes = [
+  "Did you know? Our ML models can spot energy anomalies before you notice them.",
+  "Fun fact: Smart anomaly detection can help save up to 20% on your bills.",
+  "Did you know? AI can detect unusual spikes and suggest tariff adjustments.",
+  "Our models are crunching numbers to optimize your energy usage.",
+  "AI anomaly detection protects your home from waste and inefficiency."
+];
+
+const BubblePopper = () => {
+  const [bubbles, setBubbles] = useState([]);
+  useEffect(() => {
+    const newBubbles = Array.from({ length: 10 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 300,
+      y: Math.random() * 300,
+      size: Math.random() * 20 + 10,
+    }));
+    setBubbles(newBubbles);
+  }, []);
+  const popBubble = (id) => {
+    setBubbles(bubbles.filter(b => b.id !== id));
+    setTimeout(() => {
+      setBubbles([...bubbles, { id, x: Math.random() * 300, y: Math.random() * 300, size: Math.random() * 20 + 10 }]);
+    }, 500);
+  };
+  return (
+    <div className="relative w-80 h-80 mx-auto">
+      {bubbles.map(bubble => (
+        <div
+          key={bubble.id}
+          className="absolute bg-blue-400 rounded-full cursor-pointer animate-bounce"
+          style={{ left: bubble.x, top: bubble.y, width: bubble.size, height: bubble.size }}
+          onClick={() => popBubble(bubble.id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+const DraggableMascot = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const handleMouseDown = () => setDragging(true);
+  const handleMouseUp = () => setDragging(false);
+  const handleMouseMove = (e) => {
+    if (dragging) {
+      setPosition({ x: e.clientX - 25, y: e.clientY - 25 });
+    }
+  };
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging]);
+  return (
+    <div
+      className="absolute cursor-move"
+      style={{ left: position.x, top: position.y }}
+      onMouseDown={handleMouseDown}
+    >
+      <Brain className="w-12 h-12 text-green-400" />
+    </div>
+  );
+};
+
 const Card = ({ children, className = "" }) => (
-  <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>
-    {children}
-  </div>
+  <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
 );
 const CardHeader = ({ children }) => (
-  <div className="flex flex-col space-y-1.5 p-6">
-    {children}
-  </div>
+  <div className="flex flex-col space-y-1.5 p-6">{children}</div>
 );
 const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>
-    {children}
-  </h3>
+  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
 );
 const CardContent = ({ children, className = "" }) => (
-  <div className={`p-6 pt-0 ${className}`}>
-    {children}
-  </div>
+  <div className={`p-6 pt-0 ${className}`}>{children}</div>
 );
 
 const useDeviceSync = () => {
   const [deviceStates, setDeviceStates] = useState({});
   const [totalDevicePower, setTotalDevicePower] = useState(0);
-
   const DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
     'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
     'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
-  }
-
+  };
   const calculateDevicePower = (deviceName, isOn, value, property) => {
     if (!isOn || !DEVICE_POWER_MAP[deviceName]) return 0;
-
     const { base, max } = DEVICE_POWER_MAP[deviceName];
     let ratio = 0.5;
-
     if (property === 'brightness' || property === 'speed' || property === 'volume' || property === 'pressure' || property === 'power') {
       ratio = value / 100;
     } else if (property === 'temp' || property === 'temperature') {
@@ -53,17 +109,14 @@ const useDeviceSync = () => {
         ratio = value / 100;
       }
     }
-
     return base + (max - base) * ratio;
   };
-
   useEffect(() => {
     const handleDeviceChange = () => {
       const storedDevices = localStorage.getItem('deviceStates');
       if (storedDevices) {
         const devices = JSON.parse(storedDevices);
         setDeviceStates(devices);
-
         let total = 0;
         Object.values(devices).forEach((roomDevices) => {
           roomDevices.forEach((device) => {
@@ -73,13 +126,10 @@ const useDeviceSync = () => {
         setTotalDevicePower(total);
       }
     };
-
     handleDeviceChange();
     window.addEventListener('storage', handleDeviceChange);
-
     return () => window.removeEventListener('storage', handleDeviceChange);
   }, []);
-
   return { deviceStates, totalDevicePower };
 };
 
@@ -91,7 +141,6 @@ const fetchAnalyticsData = async () => {
 
 const AlgorithmCard = ({ algorithm, icon: Icon }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-
   return (
     <div className="w-full">
       <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
@@ -106,12 +155,9 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                 <p className="text-green-400 text-sm">{algorithm.purpose}</p>
               </div>
             </div>
-            <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">
-              ACTIVE
-            </div>
+            <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
           </div>
         </div>
-
         <div className="p-6">
           <div className="grid grid-cols-2 gap-4 mb-6">
             {algorithm?.name === "Random Forest Regressor" && (
@@ -165,11 +211,7 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
               </>
             )}
           </div>
-
-          <p className="text-gray-300 text-sm mb-6 leading-relaxed">
-            {algorithm.description}
-          </p>
-
+          <p className="text-gray-300 text-sm mb-6 leading-relaxed">{algorithm.description}</p>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
@@ -177,7 +219,6 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
             <Settings className="w-4 h-4" />
             {isExpanded ? 'Hide Parameters' : 'View Parameters'}
           </button>
-
           {isExpanded && (
             <div className="mt-6 space-y-4">
               <div className="bg-gray-800 rounded-md p-4 border border-gray-700">
@@ -196,7 +237,6 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                   ))}
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                   <div className="flex items-center gap-2 mb-1">
@@ -210,15 +250,12 @@ const AlgorithmCard = ({ algorithm, icon: Icon }) => {
                       `α = ${algorithm?.parameters?.alpha}`}
                   </div>
                 </div>
-
                 <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                   <div className="flex items-center gap-2 mb-1">
                     <Cpu className="w-4 h-4 text-purple-400" />
                     <span className="text-white text-sm font-medium">Status</span>
                   </div>
-                  <div className="text-purple-400 font-mono text-sm">
-                    Processing
-                  </div>
+                  <div className="text-purple-400 font-mono text-sm">Processing</div>
                 </div>
               </div>
             </div>
@@ -234,6 +271,7 @@ export default function Analytics() {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDummyButton, setShowDummyButton] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
@@ -246,19 +284,47 @@ export default function Analytics() {
         setIsLoading(false);
       }
     };
-
     loadData();
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  if (isLoading) {
+  const handleDummyButtonClick = () => {
+    setShowDummyButton(false);
+  };
+
+  if (isLoading || showDummyButton) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-white text-lg flex items-center gap-3">
-          <Brain className="w-6 h-6 animate-pulse" />
-          Loading ML analytics... This may take some time... Your patience is appreciated
+      <div className="p-6 flex flex-col min-h-screen bg-black text-white">
+        <div>
+          <div className="text-lg mb-4">Ready to analyze your energy data?</div>
+          <div className="text-green-300 text-md italic animate-pulse mb-6">
+            {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
+          </div>
+          <div className="text-green-200 text-sm mb-4">While data loads, have fun with these:</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="text-center">
+              <div className="text-green-300 mb-2">Pop these bubbles!</div>
+              <BubblePopper />
+            </div>
+            <div className="text-center">
+              <div className="text-green-300 mb-2">Drag our mascot around!</div>
+              <DraggableMascot />
+            </div>
+          </div>
         </div>
+        {showDummyButton && (
+          <div className="flex-1 flex flex-col justify-end">
+            <div className="w-full flex justify-center mt-8 mb-4">
+              <button
+                onClick={handleDummyButtonClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
+              >
+                Initiate Anomaly/Tariff Analysis
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -326,7 +392,6 @@ export default function Analytics() {
           </div>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
           <CardContent className="p-6 pt-8">
@@ -340,7 +405,6 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -353,7 +417,6 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -366,7 +429,6 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -380,7 +442,6 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
-
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -425,7 +486,6 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -436,113 +496,99 @@ export default function Analytics() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AlgorithmCard
-              algorithm={mlAlgorithms.random_forest}
-              icon={GitBranch}
-            />
-            <AlgorithmCard
-              algorithm={mlAlgorithms.isolation_forest}
-              icon={Shield}
-            />
-            <AlgorithmCard
-              algorithm={mlAlgorithms.mlp_regressor}
-              icon={Layers}
-            />
-            <AlgorithmCard
-              algorithm={mlAlgorithms.ridge_regression}
-              icon={TrendingUp}
-            />
+            <AlgorithmCard algorithm={mlAlgorithms.random_forest} icon={GitBranch} />
+            <AlgorithmCard algorithm={mlAlgorithms.isolation_forest} icon={Shield} />
+            <AlgorithmCard algorithm={mlAlgorithms.mlp_regressor} icon={Layers} />
+            <AlgorithmCard algorithm={mlAlgorithms.ridge_regression} icon={TrendingUp} />
           </div>
         </CardContent>
       </Card>
-
       <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
-       <CardHeader>
-         <CardTitle className="text-white flex items-center gap-2">
-           <BarChart3 className="w-5 h-5" />
-           Weekly Consumption vs ML Predictions (Device-Adjusted)
-         </CardTitle>
-         <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
-       </CardHeader>
-       <CardContent>
-         <div className="flex gap-4">
-           <div className="w-[70%]">
-             <ResponsiveContainer width="100%" height={400}>
-               <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
-                 <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                 <XAxis dataKey="day" stroke="#9ca3af" />
-                 <YAxis stroke="#9ca3af" />
-                 <Tooltip
-                   contentStyle={{
-                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                     borderRadius: '8px',
-                     color: 'white'
-                   }}
-                 />
-                 <Bar dataKey="consumption" fill="#60a5fa" name="Actual Consumption (kWh)" radius={[4, 4, 0, 0]} />
-                 <Bar dataKey="prediction" fill="#22c55e" name="ML Prediction (kWh)" radius={[4, 4, 0, 0]} />
-               </BarChart>
-             </ResponsiveContainer>
-           </div>
-           <div className="w-[30%]">
-             <img 
-               src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
-               alt="Smart Home Analytics"
-               className="w-full h-[400px] object-cover rounded-lg"
-             />
-           </div>
-         </div>
-       </CardContent>
-     </Card>
-
-     <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
-       <CardHeader>
-         <CardTitle className="text-white flex items-center gap-2">
-           <Activity className="w-5 h-5" />
-           24-Hour Energy Consumption Patterns (Live Device Impact)
-         </CardTitle>
-         <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
-       </CardHeader>
-       <CardContent>
-         <div className="flex gap-4">
-           <div className="w-[70%]">
-             <ResponsiveContainer width="100%" height={350}>
-               <AreaChart data={adjustedHourlyPatterns}>
-                 <defs>
-                   <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
-                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                   </linearGradient>
-                 </defs>
-                 <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                 <XAxis dataKey="hour" stroke="#9ca3af" />
-                 <YAxis stroke="#9ca3af" />
-                 <Tooltip
-                   contentStyle={{
-                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                     border: '1px solid rgba(255, 255, 255, 0.1)',
-                     borderRadius: '8px',
-                     color: 'white'
-                   }}
-                 />
-                 <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
-                   fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
-                 <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
-                   fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
-               </AreaChart>
-             </ResponsiveContainer>
-           </div>
-           <div className="w-[30%]">
-             <img 
-               src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
-               alt="Smart Home Interior" 
-               className="w-full h-[350px] object-cover rounded-lg"
-             />
-           </div>
-         </div>
-       </CardContent>
-     </Card>
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Weekly Consumption vs ML Predictions (Device-Adjusted)
+          </CardTitle>
+          <p className="text-gray-400 text-sm">Comparing actual energy consumption with machine learning predictions, adjusted for current device usage</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <div className="w-[70%]">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <XAxis dataKey="day" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
+                  <Bar dataKey="consumption" fill="#60a5fa" name="Actual Consumption (kWh)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="prediction" fill="#22c55e" name="ML Prediction (kWh)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-[30%]">
+              <img 
+                src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
+                alt="Smart Home Analytics"
+                className="w-full h-[400px] object-cover rounded-lg"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            24-Hour Energy Consumption Patterns (Live Device Impact)
+          </CardTitle>
+          <p className="text-gray-400 text-sm">Detailed hourly analysis showing peak, average, and minimum consumption patterns with real-time device contribution</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <div className="w-[70%]">
+              <ResponsiveContainer width="100%" height={350}>
+                <AreaChart data={adjustedHourlyPatterns}>
+                  <defs>
+                    <linearGradient id="hourlyGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <XAxis dataKey="hour" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
+                  <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
+                    fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
+                  <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
+                    fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-[30%]">
+              <img 
+                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
+                alt="Smart Home Interior" 
+                className="w-full h-[350px] object-cover rounded-lg"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

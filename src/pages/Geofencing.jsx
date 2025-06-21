@@ -1,48 +1,37 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, CheckCircle, Activity } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 const Card = ({ children, className = '' }) => (
-  <div className={`rounded-lg shadow-lg ${className}`}>
-    {children}
-  </div>
+  <div className={`rounded-lg shadow-lg ${className}`}>{children}</div>
 );
 
 const CardHeader = ({ children, className = '' }) => (
-  <div className={`px-6 py-4 ${className}`}>
-    {children}
-  </div>
+  <div className={`px-6 py-4 ${className}`}>{children}</div>
 );
 
 const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold ${className}`}>
-    {children}
-  </h3>
+  <h3 className={`text-lg font-semibold ${className}`}>{children}</h3>
 );
 
 const CardContent = ({ children, className = '' }) => (
-  <div className={`px-6 pb-6 ${className}`}>
-    {children}
-  </div>
+  <div className={`px-6 pb-6 ${className}`}>{children}</div>
 );
 
 const Button = ({ children, onClick, variant = 'default', size = 'default', className = '', disabled = false, ...props }) => {
   const baseClasses = 'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
-
   const variants = {
     default: 'bg-primary text-primary-foreground hover:bg-primary/90',
     outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
     ghost: 'hover:bg-accent hover:text-accent-foreground'
   };
-
   const sizes = {
     default: 'h-10 px-4 py-2',
     sm: 'h-9 rounded-md px-3',
     lg: 'h-11 rounded-md px-8'
   };
-
   return (
     <button
       className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
@@ -56,7 +45,6 @@ const Button = ({ children, onClick, variant = 'default', size = 'default', clas
 };
 
 const fetchGeofences = async () => {
-  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -66,7 +54,6 @@ const fetchGeofences = async () => {
 };
 
 const fetchGeofenceStats = async () => {
-  console.log('Fetching from:', `${FLASK_API_URL}/api/geofences/stats`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -87,7 +74,6 @@ const createGeofence = async (geofenceData) => {
 };
 
 const fetchAnalytics = async () => {
-  console.log('Fetching analytics from:', `${FLASK_API_URL}/api/geofences/analytics`);
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -119,7 +105,6 @@ const useApiData = (key, fetchFn, refetchInterval = 30000) => {
       setData(result);
       setError(null);
     } catch (err) {
-      console.error(`Error fetching ${key}:`, err.message);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -128,7 +113,6 @@ const useApiData = (key, fetchFn, refetchInterval = 30000) => {
 
   useEffect(() => {
     fetchData();
-
     if (refetchInterval) {
       const interval = setInterval(fetchData, refetchInterval);
       return () => clearInterval(interval);
@@ -152,7 +136,6 @@ const useMutation = (mutationFn, options = {}) => {
       }
       return result;
     } catch (err) {
-      console.error("Mutation error:", err.message);
       setError(err.message);
       if (options.onError) {
         options.onError(err);
@@ -165,9 +148,72 @@ const useMutation = (mutationFn, options = {}) => {
 };
 
 const loadingQuotes = [
-  "Our geofencing elves are busy at work, Brewing up some geofencing magic! Hold on...",
-  "Don't wander off! We're busy setting up invisible boundaries to keep your smart devices in line.",
+  "Did you know? Geofencing can cut your home energy use by up to 30%.",
+  "Fun fact: AI geofencing helps automate your smart home based on your location.",
+  "Did you know? Geofencing can trigger routines when you arrive or leave home.",
+  "Smart geofencing keeps your devices efficient and secure.",
+  "AI is analyzing your zones for optimal energy savings."
 ];
+
+const BubblePopper = () => {
+  const [bubbles, setBubbles] = useState([]);
+  useEffect(() => {
+    const newBubbles = Array.from({ length: 10 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 300,
+      y: Math.random() * 300,
+      size: Math.random() * 20 + 10,
+    }));
+    setBubbles(newBubbles);
+  }, []);
+  const popBubble = (id) => {
+    setBubbles(bubbles.filter(b => b.id !== id));
+    setTimeout(() => {
+      setBubbles([...bubbles, { id, x: Math.random() * 300, y: Math.random() * 300, size: Math.random() * 20 + 10 }]);
+    }, 500);
+  };
+  return (
+    <div className="relative w-80 h-80 mx-auto">
+      {bubbles.map(bubble => (
+        <div
+          key={bubble.id}
+          className="absolute bg-blue-400 rounded-full cursor-pointer animate-bounce"
+          style={{ left: bubble.x, top: bubble.y, width: bubble.size, height: bubble.size }}
+          onClick={() => popBubble(bubble.id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+const DraggableMascot = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const handleMouseDown = () => setDragging(true);
+  const handleMouseUp = () => setDragging(false);
+  const handleMouseMove = (e) => {
+    if (dragging) {
+      setPosition({ x: e.clientX - 25, y: e.clientY - 25 });
+    }
+  };
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [dragging]);
+  return (
+    <div
+      className="absolute cursor-move"
+      style={{ left: position.x, top: position.y }}
+      onMouseDown={handleMouseDown}
+    >
+      <Brain className="w-12 h-12 text-green-400" />
+    </div>
+  );
+};
 
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -179,6 +225,7 @@ export default function Geofencing() {
     lng: -122.4194,
     radius: 200
   });
+  const [showDummyButton, setShowDummyButton] = useState(true);
 
   const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
@@ -215,15 +262,44 @@ export default function Geofencing() {
     }
   };
 
+  const handleDummyButtonClick = () => {
+    setShowDummyButton(false);
+  };
+
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
-  if (isLoading) {
+  if (isLoading || showDummyButton) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-screen flex-col">
-        <div className="text-white text-lg mb-4">Loading ML-powered geofencing data...This may take some time... Your patience is appreciated</div>
-        <p className="text-green-300 text-md italic animate-pulse">
-          {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
-        </p>
+      <div className="p-6 flex flex-col min-h-screen bg-black text-white">
+        <div>
+          <div className="text-lg mb-4">Ready to analyze your geofencing data?</div>
+          <div className="text-green-300 text-md italic animate-pulse mb-6">
+            {loadingQuotes[Math.floor(Math.random() * loadingQuotes.length)]}
+          </div>
+          <div className="text-green-200 text-sm mb-4">While data loads, have fun with these:</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="text-center">
+              <div className="text-green-300 mb-2">Pop these bubbles!</div>
+              <BubblePopper />
+            </div>
+            <div className="text-center">
+              <div className="text-green-300 mb-2">Drag our mascot around!</div>
+              <DraggableMascot />
+            </div>
+          </div>
+        </div>
+        {showDummyButton && (
+          <div className="flex-1 flex flex-col justify-end">
+            <div className="w-full flex justify-center mt-8 mb-4">
+              <Button
+                onClick={handleDummyButtonClick}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Initiate Geofencing Analysis
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -270,7 +346,6 @@ export default function Geofencing() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 backdrop-blur-md border border-emerald-400/30">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -282,7 +357,6 @@ export default function Geofencing() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-teal-600/20 to-teal-800/20 backdrop-blur-md border border-teal-400/30">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -294,7 +368,6 @@ export default function Geofencing() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-md border border-purple-400/30">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -306,7 +379,6 @@ export default function Geofencing() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-lime-600/20 to-lime-800/20 backdrop-blur-md border border-lime-400/30">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -386,7 +458,6 @@ export default function Geofencing() {
               )}
             </CardContent>
           </Card>
-
           <div className="flex flex-col gap-4">
             <img
               src="https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg"

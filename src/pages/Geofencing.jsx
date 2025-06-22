@@ -300,33 +300,7 @@ export default function Geofencing() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
-                <div 
-                  className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
-                >
-                  <item.icon className="w-8 h-8 text-green-400" />
-                </div>
-                <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
-                    style={{ 
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center space-y-6" style={{ marginBottom: '90px' }}>
+          <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
             {processingMessage ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
@@ -353,6 +327,32 @@ export default function Geofencing() {
                 </Button>
               </div>
             )}
+          </div>
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
+              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
+              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div 
+                  className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-green-400" />
+                </div>
+                <span className="text-sm text-green-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                    style={{ 
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
           <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center space-x-2 text-green-400/60">

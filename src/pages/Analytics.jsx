@@ -194,33 +194,7 @@ export default function Analytics() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-indigo-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: BarChart3, label: "Processing Data", delay: "0s" },
-              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
-              { icon: TrendingUp, label: "Training Models", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
-                <div 
-                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
-                >
-                  <item.icon className="w-8 h-8 text-blue-400" />
-                </div>
-                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
-                    style={{ 
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex flex-col items-center space-y-6" style={{ marginBottom: '90px' }}>
+          <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
             {processingMessage ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
@@ -247,6 +221,32 @@ export default function Analytics() {
                 </Button>
               </div>
             )}
+          </div>
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: BarChart3, label: "Processing Data", delay: "0s" },
+              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
+              { icon: TrendingUp, label: "Training Models", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div 
+                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-blue-400" />
+                </div>
+                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
+                    style={{ 
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
           <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center space-x-2 text-blue-400/60">
@@ -525,37 +525,55 @@ export default function Analytics() {
           <p className="text-gray-400 text-sm">Live anomaly detection using Isolation Forest algorithm</p>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <ScatterChart data={anomalyData}>
-              <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-              <XAxis dataKey="time" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Scatter dataKey="consumption" name="Consumption">
-                {anomalyData?.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'}
+          <div className="flex gap-4">
+            <div className="w-[60%]">
+              <ResponsiveContainer width="100%" height={300}>
+                <ScatterChart data={anomalyData}>
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <XAxis dataKey="time" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
                   />
-                ))}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-              <span>High severity: {anomalyData.filter((a) => a.severity === 'high').length}</span>
+                  <Scatter dataKey="consumption" name="Consumption">
+                    {anomalyData?.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'}
+                      />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                  <span>High severity: {anomalyData.filter((a) => a.severity === 'high').length}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <span>Medium severity: {anomalyData.filter((a) => a.severity === 'medium').length}</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-              <span>Medium severity: {anomalyData.filter((a) => a.severity === 'medium').length}</span>
+            <div className="w-[40%] flex flex-col gap-4">
+              <img
+                src="https://images.stockcake.com/public/b/5/6/b567a060-1fdb-4dde-bec6-210d14656836_large/smart-home-control-stockcake.jpg"
+                alt="Smart Home Control"
+                className="w-full h-[140px] object-cover rounded-lg"
+                style={{ maxWidth: '100%', maxHeight: '140px' }}
+              />
+              <img
+                src="https://img.freepik.com/premium-photo/realistic-3d-illustration-modern-bedroom-night-city-view-interior-design-apartment-luxury-home-architecture-bed-decor-urban_1088041-51665.jpg"
+                alt="Modern Bedroom"
+                className="w-full h-[140px] object-cover rounded-lg"
+                style={{ maxWidth: '100%', maxHeight: '140px' }}
+              />
             </div>
           </div>
         </CardContent>

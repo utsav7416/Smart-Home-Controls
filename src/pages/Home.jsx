@@ -234,36 +234,66 @@ function Home() {
         </div>
 
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSWgpqhO9T1j7eU_CqQooRWnxrFiqKfL_LMw&s"
-            alt="1"
-            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
-          />
-          <img
-            src="https://i.pinimg.com/736x/19/98/e2/1998e2348d8feede91e9094a2f81a402.jpg"
-            alt="2"
-            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
-          />
-          <img
-            src="https://thumbs.dreamstime.com/b/modern-smart-home-apartment-night-view-stylish-showcasing-comfortable-living-space-large-windows-offering-stunning-368499538.jpg"
-            alt="3"
-            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
-          />
-          <img
-            src="https://thumbs.dreamstime.com/b/living-room-boasts-modern-aesthetic-stunning-city-sunset-view-pink-led-lighting-accents-372979994.jpg"
-            alt="4"
-            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
-          />
-          <img
-            src="https://img.freepik.com/premium-photo/futuristic-smart-home-diverse-connected-devices-digital-icons-seamless-integration_951586-139549.jpg?ga=GA1.1.355402728.1750275417&semt=ais_hybrid&w=740"
-            alt="5"
-            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
-          />
-          <img
-            src="https://thumbs.dreamstime.com/b/futuristic-smart-kitchens-innovative-appliances-collection-high-tech-featuring-modern-automated-systems-sustainable-353602406.jpg?w=992"
-            alt="6"
-            className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
-          />
+          <div className="relative group">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSWgpqhO9T1j7eU_CqQooRWnxrFiqKfL_LMw&s"
+              alt="1"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Smart Lighting</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://i.pinimg.com/736x/19/98/e2/1998e2348d8feede91e9094a2f81a402.jpg"
+              alt="2"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Aesthetic Dark Shades</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://thumbs.dreamstime.com/b/modern-smart-home-apartment-night-view-stylish-showcasing-comfortable-living-space-large-windows-offering-stunning-368499538.jpg"
+              alt="3"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Intelligent Control</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://thumbs.dreamstime.com/b/living-room-boasts-modern-aesthetic-stunning-city-sunset-view-pink-led-lighting-accents-372979994.jpg"
+              alt="4"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">LED Ambiance</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://img.freepik.com/premium-photo/futuristic-smart-home-diverse-connected-devices-digital-icons-seamless-integration_951586-139549.jpg?ga=GA1.1.355402728.1750275417&semt=ais_hybrid&w=740"
+              alt="5"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">IoT Integration</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://thumbs.dreamstime.com/b/futuristic-smart-kitchens-innovative-appliances-collection-high-tech-featuring-modern-automated-systems-sustainable-353602406.jpg?w=992"
+              alt="6"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 md:col-span-2 lg:col-span-1"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Usage Trends</span>
+            </div>
+          </div>
         </div>
 
         {emergencyActive && (

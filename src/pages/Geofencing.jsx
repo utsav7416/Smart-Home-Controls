@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -35,7 +34,7 @@ const CardContent = ({ children, className = '' }) => (
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
+      className={`inline-flex items-center justify-center rounded-md text-base font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-6 py-3 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
@@ -155,8 +154,11 @@ const doYouKnowFacts = [
   "Did you know? Geofencing can automate your lights and AC based on your location.",
   "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
   "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
+  "Did you know? Location-based automations boost both convenience and security.",
   "Did you know? Your smart home learns and optimizes your energy usage over time."
 ];
+
+const INITIATE_KEY = 'geofencing_initiate_clicked';
 
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -168,11 +170,11 @@ export default function Geofencing() {
     lng: -122.4194,
     radius: 200
   });
-  const [showDummyButton, setShowDummyButton] = useState(true);
+  const [showDummyButton, setShowDummyButton] = useState(!localStorage.getItem(INITIATE_KEY));
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
-  const [initiateClicked, setInitiateClicked] = useState(false);
+  const [initiateClicked, setInitiateClicked] = useState(!!localStorage.getItem(INITIATE_KEY));
 
   const backgrounds = [
     "from-[#232526] to-[#414345]",
@@ -220,6 +222,7 @@ export default function Geofencing() {
   const handleDummyButtonClick = () => {
     setProcessingMessage(true);
     setInitiateClicked(true);
+    localStorage.setItem(INITIATE_KEY, '1');
     setTimeout(() => {
       setShowDummyButton(false);
       setProcessingMessage(false);
@@ -238,6 +241,12 @@ export default function Geofencing() {
       clearInterval(bgInterval);
     };
   }, []);
+
+  useEffect(() => {
+    if (initiateClicked) {
+      localStorage.setItem(INITIATE_KEY, '1');
+    }
+  }, [initiateClicked]);
 
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
@@ -299,6 +308,35 @@ export default function Geofencing() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
+          <div className="flex flex-col items-center mt-20 mb-8">
+            {processingMessage || initiateClicked ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-lg font-semibold text-green-300">Processing request... Hold on...</span>
+              </div>
+            ) : (
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button
+                  onClick={handleDummyButtonClick}
+                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
+                  disabled={initiateClicked}
+                >
+                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                  Initiate Geofencing
+                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
               { icon: MapPin, label: "Mapping Zones", delay: "0s" },
@@ -324,40 +362,6 @@ export default function Geofencing() {
                 </div>
               </div>
             ))}
-          </div>
-          <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            {processingMessage || initiateClicked ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex space-x-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-semibold text-green-300">Processing request... Hold on...</span>
-              </div>
-            ) : (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button
-                  onClick={handleDummyButtonClick}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
-                >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Geofencing
-                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-green-400/60">
-              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to smart home network...</span>
-            </div>
           </div>
         </div>
         <style jsx>{`
@@ -409,69 +413,13 @@ export default function Geofencing() {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-        <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-200 text-sm">Model Accuracy</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.model_accuracy?.toFixed(1) || 0}%</p>
-              </div>
-              <Brain className="w-8 h-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 backdrop-blur-md border border-emerald-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-200 text-sm">Prediction Confidence</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.prediction_confidence?.toFixed(1) || 0}%</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-teal-600/20 to-teal-800/20 backdrop-blur-md border border-teal-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-teal-200 text-sm">Zones Created</p>
-                <p className="text-3xl font-bold text-white">{stats?.total_zones || 0}</p>
-              </div>
-              <MapIcon className="w-8 h-8 text-teal-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-md border border-purple-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-200 text-sm">Total Triggers</p>
-                <p className="text-3xl font-bold text-white">{stats?.total_triggers || 0}</p>
-              </div>
-              <Target className="w-8 h-8 text-purple-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-gradient-to-br from-lime-600/20 to-lime-800/20 backdrop-blur-md border border-lime-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-lime-200 text-sm">Optimization Success</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.optimization_success_count?.toFixed(1) || 0}%</p>
-              </div>
-              <Brain className="w-8 h-8 text-lime-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="flex space-x-4 mb-6">
+      <div className="flex space-x-4 mb-6 w-full max-w-lg">
         {['overview', 'analytics'].map((tab) => (
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={activeTab === tab ? 'bg-green-600 text-white' : 'border-green-400/30 text-green-400 bg-transparent'}
+            className={`w-1/2 text-base px-2 py-2 ${activeTab === tab ? 'bg-green-600 text-white' : 'border-green-400/30 text-green-400 bg-transparent'}`}
+            style={{ minWidth: 120, maxWidth: 220 }}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </Button>

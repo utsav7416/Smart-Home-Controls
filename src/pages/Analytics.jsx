@@ -16,7 +16,7 @@ export function prefetchAnalytics() {
 }
 
 const Card = ({ children, className = "" }) => (
-  <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
+  <div className={`rounded-lg border border-gray-800 bg-gradient-to-br from-[#0a1124] to-[#131b2c] ${className}`}>{children}</div>
 );
 const CardHeader = ({ children }) => (
   <div className="flex flex-col space-y-1.5 p-6">{children}</div>
@@ -30,7 +30,7 @@ const CardContent = ({ children, className = "" }) => (
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
-    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
+    className={`inline-flex items-center justify-center rounded-md text-base font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
     onClick={onClick}
     disabled={disabled}
     {...props}
@@ -95,16 +95,20 @@ const doYouKnowFacts = [
 
 const carouselImages = [
   {
+    url: "https://images.stockcake.com/public/b/5/6/b567a060-1fdb-4dde-bec6-210d14656836_large/smart-home-control-stockcake.jpg",
+    alt: "Smart Home Control"
+  },
+  {
     url: "https://img.freepik.com/premium-photo/realistic-3d-illustration-modern-bedroom-night-city-view-interior-design-apartment-luxury-home-architecture-bed-decor-urban_1088041-51665.jpg",
-    alt: "1"
+    alt: "Modern Bedroom"
   },
   {
     url: "https://img.freepik.com/free-photo/indoor-design-luxury-resort_23-2150497286.jpg?semt=ais_hybrid&w=740",
-    alt: "2"
+    alt: "Luxury Resort"
   },
   {
     url: "https://img.freepik.com/premium-photo/modern-bedroom-interior-design-with-forest-view-3d-illustration_1233553-83781.jpg?w=360",
-    alt: "3"
+    alt: "Bedroom Forest View"
   }
 ];
 
@@ -155,15 +159,17 @@ function Carousel({ images }) {
   );
 }
 
+const INITIATE_KEY = 'analytics_initiate_clicked';
+
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [isLoading, setIsLoading] = useState(!analyticsCache);
   const [error, setError] = useState(null);
-  const [showDummyButton, setShowDummyButton] = useState(true);
+  const [showDummyButton, setShowDummyButton] = useState(!localStorage.getItem(INITIATE_KEY));
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
-  const [initiateClicked, setInitiateClicked] = useState(false);
+  const [initiateClicked, setInitiateClicked] = useState(!!localStorage.getItem(INITIATE_KEY));
 
   useEffect(() => {
     if (!analyticsCache) {
@@ -188,9 +194,16 @@ export default function Analytics() {
     };
   }, []);
 
+  useEffect(() => {
+    if (initiateClicked) {
+      localStorage.setItem(INITIATE_KEY, '1');
+    }
+  }, [initiateClicked]);
+
   const handleDummyButtonClick = () => {
     setProcessingMessage(true);
     setInitiateClicked(true);
+    localStorage.setItem(INITIATE_KEY, '1');
     setTimeout(() => {
       setShowDummyButton(false);
       setProcessingMessage(false);
@@ -199,7 +212,7 @@ export default function Analytics() {
 
   if ((isLoading && !processingMessage) || showDummyButton) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1124] to-[#131b2c] text-white overflow-hidden relative">
         <div className="absolute inset-0">
           {[...Array(25)].map((_, i) => (
             <div
@@ -255,6 +268,35 @@ export default function Analytics() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-indigo-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
+          <div className="flex flex-col items-center mt-20 mb-8">
+            {processingMessage || initiateClicked ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-lg font-semibold text-blue-300">Processing request... Hold on...</span>
+              </div>
+            ) : (
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button
+                  onClick={handleDummyButtonClick}
+                  className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
+                  disabled={initiateClicked}
+                >
+                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                  Initiate Anomaly/Tariff Analysis
+                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
               { icon: BarChart3, label: "Processing Data", delay: "0s" },
@@ -281,40 +323,6 @@ export default function Analytics() {
               </div>
             ))}
           </div>
-          <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            {processingMessage || initiateClicked ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex space-x-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-semibold text-blue-300">Processing request... Hold on...</span>
-              </div>
-            ) : (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button
-                  onClick={handleDummyButtonClick}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
-                >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Anomaly/Tariff Analysis
-                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-blue-400/60">
-              <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to analytics servers...</span>
-            </div>
-          </div>
         </div>
         <style jsx>{`
           @keyframes fade-in {
@@ -333,16 +341,6 @@ export default function Analytics() {
             animation: tilt 10s infinite linear;
           }
         `}</style>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to load analytics data: {error}
-        </div>
       </div>
     );
   }
@@ -382,8 +380,8 @@ export default function Analytics() {
     const [isExpanded, setIsExpanded] = useState(false);
     return (
       <div className="w-full">
-        <div className="bg-gradient-to-br from-black to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
-          <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
+        <div className="bg-gradient-to-br from-[#0a1124] to-[#131b2c] border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
+          <div className="bg-gradient-to-br from-[#0a1124] to-[#131b2c] px-6 py-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
@@ -506,7 +504,7 @@ export default function Analytics() {
   };
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
+    <div className="p-6 space-y-6 animate-fade-in bg-gradient-to-br from-[#0a1124] to-[#131b2c] text-white">
       <div className="relative text-center py-8">
         <img
           src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg"
@@ -528,7 +526,7 @@ export default function Analytics() {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
+        <Card>
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -540,7 +538,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
+        <Card>
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -552,7 +550,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
+        <Card>
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -564,7 +562,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
+        <Card>
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
@@ -577,7 +575,7 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
@@ -628,7 +626,7 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5" />
@@ -645,7 +643,7 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
@@ -684,7 +682,7 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+      <Card>
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Activity className="w-5 h-5" />

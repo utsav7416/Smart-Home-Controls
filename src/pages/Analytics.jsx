@@ -328,7 +328,8 @@ export default function Analytics() {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[... { icon: BarChart3, label: "Processing Data", delay: "0s" },
+            {[
+              { icon: BarChart3, label: "Processing Data", delay: "0s" },
               { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
               { icon: TrendingUp, label: "Training Models", delay: "1s" }
             ].map((item, idx) => (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -158,6 +158,104 @@ const doYouKnowFacts = [
   "Did you know? Your smart home learns and optimizes your energy usage over time."
 ];
 
+const carouselImages = [
+  {
+    url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg",
+    alt: "Modern living room with smart home controls"
+  },
+  {
+    url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp",
+    alt: "Smart lighting and climate control"
+  },
+  {
+    url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a",
+    alt: "Smart home dashboard interface"
+  },
+  {
+    url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg",
+    alt: "Connected devices in a smart home"
+  },
+  {
+    url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg",
+    alt: "Smart lighting setup in a cozy room"
+  }
+];
+
+function ImageCarousel() {
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    setFade(false);
+    const fadeTimeout = setTimeout(() => setFade(true), 50);
+    const timer = setTimeout(() => {
+      setIndex((prev) => (prev + 1) % carouselImages.length);
+    }, 5000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fadeTimeout);
+    };
+  }, [index]);
+
+  const goPrev = () => {
+    setFade(false);
+    setTimeout(() => {
+      setIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+      setFade(true);
+    }, 100);
+  };
+
+  const goNext = () => {
+    setFade(false);
+    setTimeout(() => {
+      setIndex((prev) => (prev + 1) % carouselImages.length);
+      setFade(true);
+    }, 100);
+  };
+
+  return (
+    <div className="relative w-full h-64 flex items-center justify-center group overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30">
+      <button
+        onClick={goPrev}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all"
+        aria-label="Previous"
+        tabIndex={0}
+      >
+        <ChevronLeft className="w-7 h-7 text-green-200" />
+      </button>
+      <div className={`transition-all duration-700 ease-in-out w-full h-full ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        <img
+          src={carouselImages[index].url}
+          alt={carouselImages[index].alt}
+          className="w-full h-64 object-cover rounded-lg shadow-xl"
+          style={{
+            boxShadow: '0 6px 32px 0 rgba(34,197,94,0.15), 0 1.5px 7px 0 rgba(16,185,129,0.09)'
+          }}
+        />
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full text-green-100 text-sm shadow-lg backdrop-blur">
+          {carouselImages[index].alt}
+        </div>
+      </div>
+      <button
+        onClick={goNext}
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all"
+        aria-label="Next"
+        tabIndex={0}
+      >
+        <ChevronRight className="w-7 h-7 text-green-200" />
+      </button>
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
+        {carouselImages.map((_, i) => (
+          <span
+            key={i}
+            className={`block w-3 h-3 rounded-full transition-all duration-300 ${i === index ? 'bg-green-400' : 'bg-green-900/40'}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Geofencing() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -299,7 +397,6 @@ export default function Geofencing() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
-          {/* BUTTON MOVED HERE: just below the Brain and circle icons */}
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
             {processingMessage || initiateClicked ? (
               <div className="flex items-center space-x-4">
@@ -328,7 +425,6 @@ export default function Geofencing() {
               </div>
             )}
           </div>
-          {/* END BUTTON SECTION */}
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
               { icon: MapPin, label: "Mapping Zones", delay: "0s" },
@@ -530,17 +626,22 @@ export default function Geofencing() {
               )}
             </CardContent>
           </Card>
-          <div className="flex flex-col gap-4">
-            <img
-              src="https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg"
-              alt="Img"
-              className="w-full h-64 object-cover rounded-lg"
-            />
-            <img
-              src="https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp"
-              alt="Img"
-              className="w-full h-64 object-cover rounded-lg"
-            />
+          <div className="flex flex-col gap-6">
+            <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
+              <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
+              <p className="text-green-100 mb-4 text-base leading-relaxed">
+                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. Whether you're optimizing your climate, streamlining your routines, or simply enjoying the peace of mind that comes with automation, every zone you create brings your home closer to effortless living.
+              </p>
+              <ul className="text-green-200 text-sm space-y-1 mb-4">
+                <li>• Instantly adjust lighting and temperature as you move from room to room.</li>
+                <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
+                <li>• Save energy without sacrificing convenience or style.</li>
+                <li>• Every image below represents a real scenario powered by smart geofencing.</li>
+              </ul>
+            </div>
+            <div className="mt-2">
+              <ImageCarousel />
+            </div>
           </div>
         </div>
       )}
@@ -671,6 +772,15 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
+      <style jsx>{`
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -151,13 +151,10 @@ const useMutation = (mutationFn, options = {}) => {
   return { mutate, isPending, error };
 };
 
-const mirrorPlaceholders = Array(8).fill(0);
-
 const doYouKnowFacts = [
   "Did you know? Geofencing can automate your lights and AC based on your location.",
   "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
   "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
-  "Did you know? Location-based automations boost both convenience and security.",
   "Did you know? Your smart home learns and optimizes your energy usage over time."
 ];
 
@@ -175,6 +172,7 @@ export default function Geofencing() {
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
+  const [initiateClicked, setInitiateClicked] = useState(false);
 
   const backgrounds = [
     "from-[#232526] to-[#414345]",
@@ -221,6 +219,7 @@ export default function Geofencing() {
 
   const handleDummyButtonClick = () => {
     setProcessingMessage(true);
+    setInitiateClicked(true);
     setTimeout(() => {
       setShowDummyButton(false);
       setProcessingMessage(false);
@@ -300,8 +299,34 @@ export default function Geofencing() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
+              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
+              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div
+                  className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-green-400" />
+                </div>
+                <span className="text-sm text-green-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                    style={{
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            {processingMessage ? (
+            {processingMessage || initiateClicked ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
                   {[...Array(3)].map((_, i) => (
@@ -312,12 +337,12 @@ export default function Geofencing() {
                     />
                   ))}
                 </div>
-                <span className="text-lg font-semibold text-green-300">Processing request...</span>
+                <span className="text-lg font-semibold text-green-300">Processing request... Hold on...</span>
               </div>
             ) : (
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button 
+                <Button
                   onClick={handleDummyButtonClick}
                   className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
                 >
@@ -327,32 +352,6 @@ export default function Geofencing() {
                 </Button>
               </div>
             )}
-          </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
-                <div 
-                  className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
-                >
-                  <item.icon className="w-8 h-8 text-green-400" />
-                </div>
-                <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
-                    style={{ 
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
           </div>
           <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center space-x-2 text-green-400/60">

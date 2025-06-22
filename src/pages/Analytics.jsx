@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
@@ -90,11 +89,71 @@ const useDeviceSync = () => {
 
 const doYouKnowFacts = [
   "Did you know? Our ML models detect energy anomalies early to save you money.",
-  "Did you know? Smart anomaly detection can reduce your bills by up to 20%.",
-  "Did you know? AI analyzes your energy spikes and suggests tariff optimizations.",
+  "Did you know? AI analyzes your energy spikes and makes tariff optimizations.",
   "Did you know? Machine learning optimizes your home energy usage in real-time.",
-  "Did you know? Stay informed with live energy insights powered by AI."
 ];
+
+const carouselImages = [
+  {
+    url: "https://img.freepik.com/premium-photo/realistic-3d-illustration-modern-bedroom-night-city-view-interior-design-apartment-luxury-home-architecture-bed-decor-urban_1088041-51665.jpg",
+    alt: "1"
+  },
+  {
+    url: "https://img.freepik.com/free-photo/indoor-design-luxury-resort_23-2150497286.jpg?semt=ais_hybrid&w=740",
+    alt: "2"
+  },
+  {
+    url: "https://img.freepik.com/premium-photo/modern-bedroom-interior-design-with-forest-view-3d-illustration_1233553-83781.jpg?w=360",
+    alt: "3"
+  }
+];
+
+function Carousel({ images }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [images.length]);
+  const prev = () => setIndex((index - 1 + images.length) % images.length);
+  const next = () => setIndex((index + 1) % images.length);
+  return (
+    <div className="relative w-full h-[280px] flex items-center justify-center">
+      <img
+        src={images[index].url}
+        alt={images[index].alt}
+        className="w-full h-[280px] object-cover rounded-lg transition-all duration-700"
+        style={{ maxWidth: '100%', maxHeight: '280px' }}
+      />
+      <button
+        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 hover:bg-black/80"
+        onClick={prev}
+        aria-label="Previous"
+        style={{ zIndex: 2 }}
+      >
+        &#8592;
+      </button>
+      <button
+        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 hover:bg-black/80"
+        onClick={next}
+        aria-label="Next"
+        style={{ zIndex: 2 }}
+      >
+        &#8594;
+      </button>
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+        {images.map((img, i) => (
+          <span
+            key={i}
+            className={`w-2 h-2 rounded-full ${i === index ? 'bg-blue-400' : 'bg-gray-500'}`}
+            style={{ display: 'inline-block' }}
+          ></span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
@@ -104,6 +163,7 @@ export default function Analytics() {
   const [showDummyButton, setShowDummyButton] = useState(true);
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
+  const [initiateClicked, setInitiateClicked] = useState(false);
 
   useEffect(() => {
     if (!analyticsCache) {
@@ -130,6 +190,7 @@ export default function Analytics() {
 
   const handleDummyButtonClick = () => {
     setProcessingMessage(true);
+    setInitiateClicked(true);
     setTimeout(() => {
       setShowDummyButton(false);
       setProcessingMessage(false);
@@ -194,8 +255,34 @@ export default function Analytics() {
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-indigo-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: BarChart3, label: "Processing Data", delay: "0s" },
+              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
+              { icon: TrendingUp, label: "Training Models", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div
+                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-blue-400" />
+                </div>
+                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
+                    style={{
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            {processingMessage ? (
+            {processingMessage || initiateClicked ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
                   {[...Array(3)].map((_, i) => (
@@ -206,12 +293,12 @@ export default function Analytics() {
                     />
                   ))}
                 </div>
-                <span className="text-lg font-semibold text-blue-300">Processing request...</span>
+                <span className="text-lg font-semibold text-blue-300">Processing request... Hold on...</span>
               </div>
             ) : (
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button 
+                <Button
                   onClick={handleDummyButtonClick}
                   className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
                 >
@@ -221,32 +308,6 @@ export default function Analytics() {
                 </Button>
               </div>
             )}
-          </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: BarChart3, label: "Processing Data", delay: "0s" },
-              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
-              { icon: TrendingUp, label: "Training Models", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
-                <div 
-                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
-                >
-                  <item.icon className="w-8 h-8 text-blue-400" />
-                </div>
-                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
-                    style={{ 
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
           </div>
           <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center space-x-2 text-blue-400/60">
@@ -321,7 +382,7 @@ export default function Analytics() {
     const [isExpanded, setIsExpanded] = useState(false);
     return (
       <div className="w-full">
-        <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
+        <div className="bg-gradient-to-br from-black to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
           <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -460,9 +521,9 @@ export default function Analytics() {
             Real-time machine learning algorithms analyzing your energy consumption patterns
           </p>
           <div className="flex flex-wrap justify-center gap-8 text-base text-gray-400">
-            <span>â€¢ Anomaly Detection Active</span>
-            <span>â€¢ Predictive Modeling Enabled</span>
-            <span>â€¢ Cost Optimization Running</span>
+            <span>• Anomaly Detection Active</span>
+            <span>• Predictive Modeling Enabled</span>
+            <span>• Cost Optimization Running</span>
           </div>
         </div>
       </div>
@@ -561,19 +622,8 @@ export default function Analytics() {
                 </div>
               </div>
             </div>
-            <div className="w-[40%] flex flex-col gap-4">
-              <img
-                src="https://images.stockcake.com/public/b/5/6/b567a060-1fdb-4dde-bec6-210d14656836_large/smart-home-control-stockcake.jpg"
-                alt="Smart Home Control"
-                className="w-full h-[140px] object-cover rounded-lg"
-                style={{ maxWidth: '100%', maxHeight: '140px' }}
-              />
-              <img
-                src="https://img.freepik.com/premium-photo/realistic-3d-illustration-modern-bedroom-night-city-view-interior-design-apartment-luxury-home-architecture-bed-decor-urban_1088041-51665.jpg"
-                alt="Modern Bedroom"
-                className="w-full h-[140px] object-cover rounded-lg"
-                style={{ maxWidth: '100%', maxHeight: '140px' }}
-              />
+            <div className="w-[40%] flex items-center justify-center">
+              <Carousel images={carouselImages} />
             </div>
           </div>
         </CardContent>
@@ -625,7 +675,7 @@ export default function Analytics() {
               </ResponsiveContainer>
             </div>
             <div className="w-[30%]">
-              <img 
+              <img
                 src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
                 alt="Smart Home Analytics"
                 className="w-full h-[400px] object-cover rounded-lg"
@@ -672,9 +722,9 @@ export default function Analytics() {
               </ResponsiveContainer>
             </div>
             <div className="w-[30%]">
-              <img 
-                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
-                alt="Smart Home Interior" 
+              <img
+                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg"
+                alt="Smart Home Interior"
                 className="w-full h-[350px] object-cover rounded-lg"
               />
             </div>

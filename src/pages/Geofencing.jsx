@@ -259,41 +259,47 @@ export default function Geofencing() {
             />
           ))}
         </div>
-
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+          <div className="flex flex-row items-center justify-center w-full mb-8">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
+              alt="Geofencing Icon"
+              className="w-10 h-10 mr-6"
+              style={{ objectFit: 'contain' }}
+            />
+            <div className="text-center max-w-2xl flex-1">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                Initializing Geofencing Engine
+              </h1>
+              <div className="h-16 flex items-center justify-center">
+                <p className="text-xl text-green-200 animate-fade-in">
+                  {doYouKnowFacts[factIndex]}
+                </p>
+              </div>
+              <p className="text-green-300 mt-2">Location-based automations incoming!</p>
+            </div>
+            <div style={{ width: 40 }} />
+          </div>
           <div className="w-80 h-80 relative mb-12">
             <div className="absolute inset-0 rounded-full border-4 border-green-500/30 animate-spin" style={{ animationDuration: '8s' }}>
               <div className="absolute w-6 h-6 bg-green-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-green-400/50" />
             </div>
-            
             <div className="absolute inset-4 rounded-full border-2 border-emerald-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
               <div className="absolute w-4 h-4 bg-emerald-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
             </div>
-
             <div className="absolute inset-8 rounded-full border border-teal-300/50 animate-spin" style={{ animationDuration: '4s' }}>
               <div className="absolute w-3 h-3 bg-teal-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
             </div>
-
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-32 h-32 bg-gradient-to-br from-green-500/30 to-emerald-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
                 <Brain className="w-16 h-16 text-green-400 animate-pulse" />
               </div>
             </div>
-
             <div className="absolute top-0 left-0 w-8 h-8 bg-green-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
             <div className="absolute top-0 right-0 w-6 h-6 bg-emerald-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
-
-          <div className="text-center mb-8 max-w-2xl">
-            <div className="h-16 flex items-center justify-center">
-              <p className="text-xl text-green-200 animate-fade-in">
-                {doYouKnowFacts[factIndex]}
-              </p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
               { icon: MapPin, label: "Mapping Zones", delay: "0s" },
@@ -320,8 +326,7 @@ export default function Geofencing() {
               </div>
             ))}
           </div>
-
-          <div className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-6" style={{ marginBottom: '90px' }}>
             {processingMessage ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
@@ -343,36 +348,32 @@ export default function Geofencing() {
                   className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
                 >
                   <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Geofencing Analysis
+                  Initiate Geofencing
+                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
                 </Button>
               </div>
             )}
           </div>
-
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center space-x-2 text-green-400/60">
               <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
               <span className="text-sm">Connecting to smart home network...</span>
             </div>
           </div>
         </div>
-
         <style jsx>{`
           @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          
           @keyframes tilt {
             0%, 50%, 100% { transform: rotate(0deg); }
             25% { transform: rotate(1deg); }
             75% { transform: rotate(-1deg); }
           }
-          
           .animate-fade-in {
             animation: fade-in 0.8s ease-out;
           }
-          
           .animate-tilt {
             animation: tilt 10s infinite linear;
           }

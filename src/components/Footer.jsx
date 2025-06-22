@@ -2,108 +2,197 @@ import { Zap, Mail, Phone, MapPin, Github, Twitter, Linkedin } from 'lucide-reac
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-green-400 border-t border-green-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-lime-600 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
+    <footer className="relative bg-gradient-to-br from-gray-900 via-black to-gray-900 text-green-400 overflow-hidden">
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-lime-500 rounded-full blur-3xl"></div>
+      </div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-5 space-y-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="relative">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-400 via-green-500 to-lime-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/25">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-lime-400 rounded-full animate-pulse"></div>
               </div>
-              <span className="text-xl font-bold text-white">SmartHome</span>
-            </div>
-            <p className="text-green-300 text-sm mb-2 leading-relaxed">
-              "Revolutionizing home automation with AI-powered energy management and intelligent device control."
-            </p>
-            <p className="text-green-300 text-sm mb-3 leading-relaxed">
-              "Experience the future of living, where your home adapts to you."
-            </p>
-            
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <img
-                src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=120&h=80&fit=crop&crop=center"
-                alt="Modern smart home exterior"
-                className="w-full h-16 object-cover rounded-lg shadow-md"
-                onError={(e) => { e.target.onerror = null; e.target.src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=120&h=80&fit=crop&crop=center"; }}
-              />
-              <img
-                src="https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=120&h=80&fit=crop&crop=center"
-                alt="Smart lighting system"
-                className="w-full h-16 object-cover rounded-lg shadow-md"
-                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/120x80/10B981/FFFFFF?text=Light"; }}
-              />
-              <img
-                src="https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=120&h=80&fit=crop&crop=center"
-                alt="Smart device control"
-                className="w-full h-16 object-cover rounded-lg shadow-md"
-                onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/120x80/059669/FFFFFF?text=Tech"; }}
-              />
+              <div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
+                  SmartHome
+                </span>
+                <div className="w-16 h-0.5 bg-gradient-to-r from-green-400 to-lime-400 mt-1"></div>
+              </div>
             </div>
             
-            <div className="flex space-x-3">
-              <a href="#" className="text-green-400 hover:text-green-200 transition-colors">
-                <Github className="w-5 h-5" />
+            <div className="space-y-4">
+              <div className="relative pl-4 border-l-2 border-green-500/30">
+                <p className="text-green-200 text-base leading-relaxed font-medium">
+                  "Revolutionizing home automation with AI-powered energy management and intelligent device control."
+                </p>
+              </div>
+              <div className="relative pl-4 border-l-2 border-lime-500/30">
+                <p className="text-green-200 text-base leading-relaxed font-medium">
+                  "Experience the future of living, where your home adapts to you."
+                </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3">
+              <div className="relative group overflow-hidden rounded-xl">
+                <img
+                  src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=120&h=80&fit=crop&crop=center"
+                  alt="Modern smart home exterior"
+                  className="w-full h-20 object-cover transition-transform duration-300 group-hover:scale-110"
+                  onError={(e) => { e.target.onerror = null; e.target.src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=120&h=80&fit=crop&crop=center"; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+              <div className="relative group overflow-hidden rounded-xl">
+                <img
+                  src="https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=120&h=80&fit=crop&crop=center"
+                  alt="Smart lighting system"
+                  className="w-full h-20 object-cover transition-transform duration-300 group-hover:scale-110"
+                  onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/120x80/10B981/FFFFFF?text=Light"; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+              <div className="relative group overflow-hidden rounded-xl">
+                <img
+                  src="https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=120&h=80&fit=crop&crop=center"
+                  alt="Smart device control"
+                  className="w-full h-20 object-cover transition-transform duration-300 group-hover:scale-110"
+                  onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/120x80/059669/FFFFFF?text=Tech"; }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-4 pt-2">
+              <a href="#" className="group p-2 bg-green-900/30 rounded-lg border border-green-800/50 hover:border-green-500/50 hover:bg-green-800/30 transition-all duration-300">
+                <Github className="w-5 h-5 text-green-400 group-hover:text-green-200 transition-colors" />
               </a>
-              <a href="#" className="text-green-400 hover:text-green-200 transition-colors">
-                <Twitter className="w-5 h-5" />
+              <a href="#" className="group p-2 bg-green-900/30 rounded-lg border border-green-800/50 hover:border-green-500/50 hover:bg-green-800/30 transition-all duration-300">
+                <Twitter className="w-5 h-5 text-green-400 group-hover:text-green-200 transition-colors" />
               </a>
-              <a href="#" className="text-green-400 hover:text-green-200 transition-colors">
-                <Linkedin className="w-5 h-5" />
+              <a href="#" className="group p-2 bg-green-900/30 rounded-lg border border-green-800/50 hover:border-green-500/50 hover:bg-green-800/30 transition-all duration-300">
+                <Linkedin className="w-5 h-5 text-green-400 group-hover:text-green-200 transition-colors" />
               </a>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-white font-semibold mb-3 text-base">Navigation</h3>
-            <ul className="space-y-2">
-              <li><a href="/" className="text-green-400 hover:text-white transition-colors text-base">Dashboard</a></li>
-              <li><a href="/smart-routines" className="text-green-400 hover:text-white transition-colors text-base">Smart Routines</a></li>
-              <li><a href="/analytics" className="text-green-400 hover:text-white transition-colors text-base">Analytics</a></li>
-              <li><a href="/geofencing" className="text-green-400 hover:text-white transition-colors text-base">Geofencing</a></li>
-            </ul>
+          <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-white font-bold text-lg relative inline-block">
+                Navigation
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-green-400 to-transparent"></div>
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="/" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a href="/smart-routines" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    Smart Routines
+                  </a>
+                </li>
+                <li>
+                  <a href="/analytics" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    Analytics
+                  </a>
+                </li>
+                <li>
+                  <a href="/geofencing" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    Geofencing
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-white font-bold text-lg relative inline-block">
+                Company
+                <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-green-400 to-transparent"></div>
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <a href="/about" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="/contact" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    Contact
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms" className="group flex items-center text-green-300 hover:text-white transition-all duration-300">
+                    <div className="w-1 h-1 bg-green-400 rounded-full mr-3 group-hover:w-2 transition-all duration-300"></div>
+                    Terms & Conditions
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <div>
-            <h3 className="text-white font-semibold mb-3 text-base">Company</h3>
-            <ul className="space-y-2">
-              <li><a href="/about" className="text-green-400 hover:text-white transition-colors text-base">About Us</a></li>
-              <li><a href="/contact" className="text-green-400 hover:text-white transition-colors text-base">Contact</a></li>
-              <li><a href="/terms" className="text-green-400 hover:text-white transition-colors text-base">Terms & Conditions</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-white font-semibold mb-3 text-base">Contact Info</h3>
-            <ul className="space-y-2.5">
-              <li className="flex items-center space-x-2 text-green-400 text-sm">
-                <Mail className="w-4 h-4" />
-                <span>hello@smarthome.ai</span>
-              </li>
-              <li className="flex items-center space-x-2 text-green-400 text-sm">
-                <Phone className="w-4 h-4" />
-                <span>+91 88268 34155</span>
-              </li>
-              <li className="flex items-center space-x-2 text-green-400 text-sm">
-                <MapPin className="w-4 h-4" />
-                <span>New Delhi, India</span>
-              </li>
-            </ul>
+          <div className="lg:col-span-3 space-y-6">
+            <h3 className="text-white font-bold text-lg relative inline-block">
+              Contact Info
+              <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-green-400 to-transparent"></div>
+            </h3>
             
-            <div className="mt-4">
+            <div className="space-y-4">
+              <div className="group flex items-center space-x-3 p-3 rounded-lg bg-green-900/20 border border-green-800/30 hover:border-green-500/50 transition-all duration-300">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <Mail className="w-4 h-4 text-green-400" />
+                </div>
+                <span className="text-green-200 group-hover:text-white transition-colors">hello@smarthome.ai</span>
+              </div>
+              
+              <div className="group flex items-center space-x-3 p-3 rounded-lg bg-green-900/20 border border-green-800/30 hover:border-green-500/50 transition-all duration-300">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <Phone className="w-4 h-4 text-green-400" />
+                </div>
+                <span className="text-green-200 group-hover:text-white transition-colors">+91 88268 34155</span>
+              </div>
+              
+              <div className="group flex items-center space-x-3 p-3 rounded-lg bg-green-900/20 border border-green-800/30 hover:border-green-500/50 transition-all duration-300">
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <MapPin className="w-4 h-4 text-green-400" />
+                </div>
+                <span className="text-green-200 group-hover:text-white transition-colors">New Delhi, India</span>
+              </div>
+            </div>
+            
+            <div className="relative group overflow-hidden rounded-xl">
               <img
                 src="https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=200&h=100&fit=crop&crop=center"
                 alt="Modern smart home"
-                className="w-full h-20 object-cover rounded-lg shadow-md"
+                className="w-full h-24 object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/200x100/16A34A/FFFFFF?text=Smart+Home"; }}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+              <div className="absolute bottom-2 left-2 text-xs text-white font-medium">Smart Living</div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-green-700 mt-6 pt-4 text-center">
-          <p className="text-green-400 text-sm">
-            © 2025 SmartHome AI. All rights reserved. Built with ❤️ for the future of home automation.
-          </p>
+        <div className="relative mt-12 pt-8">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-green-500/50 to-transparent"></div>
+          <div className="text-center">
+            <p className="text-green-300 text-sm bg-gradient-to-r from-green-400 to-lime-400 bg-clip-text text-transparent font-medium">
+              © 2025 SmartHome AI. All rights reserved. Built with ❤️ for the future of home automation.
+            </p>
+          </div>
         </div>
       </div>
     </footer>

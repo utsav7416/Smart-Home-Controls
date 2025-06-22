@@ -153,44 +153,47 @@ export default function Analytics() {
             />
           ))}
         </div>
-
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+          <div className="flex flex-row items-center justify-center w-full mb-8">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4Iw-ps9v75UC9kcr-NLTe3aL-PwT2bsX6ZA&s"
+              alt="Analytics Icon"
+              className="w-10 h-10 mr-6"
+              style={{ objectFit: 'contain' }}
+            />
+            <div className="text-center max-w-2xl flex-1">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                Initializing ML Analytics Engine
+              </h1>
+              <div className="h-16 flex items-center justify-center">
+                <p className="text-xl text-blue-200 animate-fade-in">
+                  {doYouKnowFacts[factIndex]}
+                </p>
+              </div>
+              <p className="text-blue-300 mt-2">Get ready for actionable insights!</p>
+            </div>
+            <div style={{ width: 40 }} />
+          </div>
           <div className="w-80 h-80 relative mb-12">
             <div className="absolute inset-0 rounded-full border-4 border-blue-500/30 animate-spin" style={{ animationDuration: '8s' }}>
               <div className="absolute w-6 h-6 bg-blue-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-blue-400/50" />
             </div>
-            
             <div className="absolute inset-4 rounded-full border-2 border-cyan-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
               <div className="absolute w-4 h-4 bg-cyan-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
             </div>
-
             <div className="absolute inset-8 rounded-full border border-indigo-300/50 animate-spin" style={{ animationDuration: '4s' }}>
               <div className="absolute w-3 h-3 bg-indigo-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
             </div>
-
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-32 h-32 bg-gradient-to-br from-blue-500/30 to-cyan-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
                 <Brain className="w-16 h-16 text-blue-400 animate-pulse" />
               </div>
             </div>
-
             <div className="absolute top-0 left-0 w-8 h-8 bg-blue-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
             <div className="absolute top-0 right-0 w-6 h-6 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
             <div className="absolute bottom-0 left-0 w-7 h-7 bg-indigo-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
-
-          <div className="text-center mb-8 max-w-2xl">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              Initializing ML Analytics Engine
-            </h1>
-            <div className="h-16 flex items-center justify-center">
-              <p className="text-xl text-blue-200 animate-fade-in">
-                {doYouKnowFacts[factIndex]}
-              </p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
               { icon: BarChart3, label: "Processing Data", delay: "0s" },
@@ -217,8 +220,7 @@ export default function Analytics() {
               </div>
             ))}
           </div>
-
-          <div className="flex flex-col items-center space-y-6">
+          <div className="flex flex-col items-center space-y-6" style={{ marginBottom: '90px' }}>
             {processingMessage ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
@@ -241,35 +243,31 @@ export default function Analytics() {
                 >
                   <Brain className="w-6 h-6 mr-3 animate-pulse" />
                   Initiate Anomaly/Tariff Analysis
+                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
                 </Button>
               </div>
             )}
           </div>
-
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
             <div className="flex items-center space-x-2 text-blue-400/60">
               <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
               <span className="text-sm">Connecting to analytics servers...</span>
             </div>
           </div>
         </div>
-
         <style jsx>{`
           @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          
           @keyframes tilt {
             0%, 50%, 100% { transform: rotate(0deg); }
             25% { transform: rotate(1deg); }
             75% { transform: rotate(-1deg); }
           }
-          
           .animate-fade-in {
             animation: fade-in 0.8s ease-out;
           }
-          
           .animate-tilt {
             animation: tilt 10s infinite linear;
           }
@@ -382,7 +380,7 @@ export default function Analytics() {
                 <>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                    <div className="text-xs text-gray-400">Alpha (α)</div>
+                    <div className="text-xs text-gray-400">Alpha (Î±)</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
@@ -426,8 +424,8 @@ export default function Analytics() {
                     <div className="text-blue-400 font-mono text-sm">
                       {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
                         algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
-                        `α = ${algorithm?.parameters?.alpha}`}
+                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, Î± = ${algorithm?.parameters?.alpha}` :
+                        `Î± = ${algorithm?.parameters?.alpha}`}
                     </div>
                   </div>
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
@@ -462,9 +460,9 @@ export default function Analytics() {
             Real-time machine learning algorithms analyzing your energy consumption patterns
           </p>
           <div className="flex flex-wrap justify-center gap-8 text-base text-gray-400">
-            <span>• Anomaly Detection Active</span>
-            <span>• Predictive Modeling Enabled</span>
-            <span>• Cost Optimization Running</span>
+            <span>â€¢ Anomaly Detection Active</span>
+            <span>â€¢ Predictive Modeling Enabled</span>
+            <span>â€¢ Cost Optimization Running</span>
           </div>
         </div>
       </div>

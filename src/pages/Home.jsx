@@ -323,11 +323,14 @@ function Home() {
         <div className={`${selectedRoom === 'All Rooms' ? 'lg:col-span-2' : 'lg:col-span-1'} flex-shrink-0`}>
           {selectedRoom === 'All Rooms' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div className="w-full h-64 md:h-72 lg:h-80 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-900 to-teal-700 p-6 text-white text-2xl font-semibold text-center leading-relaxed shadow-lg">
-                <p>
-                  Navigate to different rooms and their controls via the upper room navbar (Kitchen, Bathroom, Living Room, Office). Adjust power and lights accordingly (microwave, AC, heater, etc.) and view usage details, energy saved, active devices, and cost at the bottom by scrolling down.
-                </p>
+              <div className="w-full h-64 md:h-72 lg:h-80 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-900 to-blue-700 p-6 text-white text-2xl font-semibold text-center leading-relaxed shadow-lg">
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Navigate to different rooms and their controls via the upper room navbar (Kitchen, Bathroom, Living Room, Office).</li>
+                  <li>Adjust power and lights accordingly (microwave, AC, heater, etc.).</li>
+                  <li>View usage details, energy saved, active devices, and cost at the bottom by scrolling down.</li>
+                </ul>
               </div>
+
               {currentRoom.images.map((img, idx) => (
                 <img
                   key={idx}

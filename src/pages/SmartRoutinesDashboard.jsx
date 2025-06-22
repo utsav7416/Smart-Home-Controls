@@ -1,693 +1,599 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Sun, Moon, Edit3, Trash2, Plus, Calendar, CheckCircle2, StickyNote, Mic, MicOff, Play, Square } from 'lucide-react';
+import { Sun, Moon, Calendar, CheckCircle2, StickyNote, Mic, MicOff, Play, Square, Edit3, Trash2, Plus } from "lucide-react";
+import React, { useState, useRef } from "react";
 
-const defaultStorage = {
-  routines: [
-    {
-      id: 1,
-      name: 'Morning Routine',
-      time: '07:00',
-      days: 'Weekdays',
-      icon: 'Sun',
-      color: 'amber'
-    },
-    {
-      id: 2,
-      name: 'Bedtime Mode',
-      time: '22:30',
-      days: 'Every day',
-      icon: 'Moon',
-      color: 'indigo'
-    },
-  ],
-  notes: [
-    { id: 1, text: 'Complete workout by 6 AM', completed: false, type: 'text' },
-    { id: 2, text: 'Meditate for 10 minutes', completed: true, type: 'text' },
-  ],
-  voiceNotes: [],
-};
+const icons = [Sun, Moon, Calendar];
+const iconColors = [
+  "text-yellow-400",
+  "text-indigo-400",
+  "text-green-400",
+  "text-rose-400",
+  "text-purple-400",
+  "text-amber-400",
+];
+const bgColors = [
+  "bg-yellow-100",
+  "bg-indigo-100",
+  "bg-green-100",
+  "bg-rose-100",
+  "bg-purple-100",
+  "bg-amber-100",
+];
 
-function SmartRoutinesDashboard() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [routines, setRoutines] = useState([]);
-  const [notes, setNotes] = useState([]);
+export default function SmartRoutinesDashboard() {
+  const [routines, setRoutines] = useState([
+    { id: 1, name: "Morning Routine", time: "07:00", days: "Weekdays", icon: 0, color: 0 },
+    { id: 2, name: "Bedtime Mode", time: "22:30", days: "Every day", icon: 1, color: 1 },
+  ]);
+  const [notes, setNotes] = useState([
+    { id: 1, text: "Complete workout by 6 AM", completed: false },
+    { id: 2, text: "Meditate for 10 minutes", completed: true },
+  ]);
   const [voiceNotes, setVoiceNotes] = useState([]);
-  const [newNote, setNewNote] = useState('');
+  const [newNote, setNewNote] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
+  const [editingRoutine, setEditingRoutine] = useState(null);
+  const [routineForm, setRoutineForm] = useState({ name: "", time: "", days: "", icon: 0, color: 0 });
+  const [showRoutineForm, setShowRoutineForm] = useState(false);
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
   const mediaRecorderRef = useRef(null);
   const audioRef = useRef(null);
   const chunksRef = useRef([]);
 
-  const icons = ['Sun', 'Moon', 'Calendar'];
-  const colors = ['indigo', 'amber', 'green', 'rose', 'purple'];
+  function formatTime(time) {
+    if (!time) return "";
+    const [h, m] = time.split(":");
+    const hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${m} ${ampm}`;
+  }
 
-  const getRandomIcon = () => icons[Math.floor(Math.random() * icons.length)];
-  const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+  function handleAddNote() {
+    if (!newNote.trim()) return;
+    setNotes([...notes, { id: Date.now(), text: newNote.trim(), completed: false }]);
+    setNewNote("");
+  }
 
-  const [newRoutine, setNewRoutine] = useState({
-    name: '',
-    time: '',
-    days: '',
-    icon: getRandomIcon(),
-    color: getRandomColor()
-  });
+  function handleToggleNote(id) {
+    setNotes(notes.map((n) => (n.id === id ? { ...n, completed: !n.completed } : n)));
+  }
 
-  const saveToStorage = (key, data) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (error) {
-      console.error('Error saving to local storage:', error);
-    }
-  };
+  function handleDeleteNote(id) {
+    setNotes(notes.filter((n) => n.id !== id));
+  }
 
-  const loadFromStorage = (key, defaultValue) => {
-    try {
-      const storedData = localStorage.getItem(key);
-      return storedData ? JSON.parse(storedData) : defaultValue;
-    } catch (error) {
-      console.error('Error loading from local storage:', error);
-      return defaultValue;
-    }
-  };
+  function handleEditRoutine(r) {
+    setEditingRoutine(r.id);
+    setRoutineForm({ name: r.name, time: r.time, days: r.days, icon: r.icon, color: r.color });
+    setShowRoutineForm(true);
+  }
 
-  useEffect(() => {
-    const loadedRoutines = loadFromStorage('routines', defaultStorage.routines);
-    const loadedNotes = loadFromStorage('notes', defaultStorage.notes);
-    const loadedVoiceNotes = loadFromStorage('voiceNotes', defaultStorage.voiceNotes);
+  function handleDeleteRoutine(id) {
+    setRoutines(routines.filter((r) => r.id !== id));
+  }
 
-    setRoutines(loadedRoutines);
-    setNotes(loadedNotes);
-    setVoiceNotes(loadedVoiceNotes);
-    setIsDataLoaded(true);
-  }, []);
+  function handleRoutineFormChange(e) {
+    const { name, value } = e.target;
+    setRoutineForm((f) => ({ ...f, [name]: value }));
+  }
 
-  useEffect(() => {
-    if (isDataLoaded) {
-      saveToStorage('routines', routines);
-    }
-  }, [routines, isDataLoaded]);
-
-  useEffect(() => {
-    if (isDataLoaded) {
-      saveToStorage('notes', notes);
-    }
-  }, [notes, isDataLoaded]);
-
-  useEffect(() => {
-    if (isDataLoaded) {
-      saveToStorage('voiceNotes', voiceNotes);
-    }
-  }, [voiceNotes, isDataLoaded]);
-
-  const iconMap = {
-    Sun: Sun,
-    Moon: Moon,
-    Calendar: Calendar
-  };
-
-  const colorMap = {
-    indigo: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-    amber: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    green: 'bg-green-500/20 text-green-400 border-green-500/30',
-    rose: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-    purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-  };
-
-  const handleEdit = (index) => {
-    setEditingIndex(index);
-    setNewRoutine(routines[index]);
-  };
-
-  const handleDelete = (index) => {
-    setRoutines(routines.filter((_, i) => i !== index));
-  };
-
-  const handleSave = () => {
-    if (editingIndex !== null && editingIndex < routines.length) {
+  function handleRoutineFormSave() {
+    if (!routineForm.name || !routineForm.time || !routineForm.days) return;
+    if (editingRoutine) {
       setRoutines(
-        routines.map((routine, index) =>
-          index === editingIndex ? { ...newRoutine, id: routine.id } : routine
+        routines.map((r) =>
+          r.id === editingRoutine
+            ? { ...r, ...routineForm, icon: Number(routineForm.icon), color: Number(routineForm.color) }
+            : r
         )
       );
     } else {
-      const newId = Math.max(...routines.map(r => r.id), 0) + 1;
-      setRoutines([...routines, { ...newRoutine, id: newId, icon: getRandomIcon(), color: getRandomColor() }]);
+      setRoutines([...routines, { id: Date.now(), ...routineForm, icon: Number(routineForm.icon), color: Number(routineForm.color) }]);
     }
-    setEditingIndex(null);
-    setNewRoutine({ name: '', time: '', days: '', icon: getRandomIcon(), color: getRandomColor() });
-  };
+    setEditingRoutine(null);
+    setRoutineForm({ name: "", time: "", days: "", icon: 0, color: 0 });
+    setShowRoutineForm(false);
+  }
 
-  const addNote = () => {
-    if (newNote.trim()) {
-      const newId = Math.max(...notes.map(n => n.id), 0) + 1;
-      setNotes([...notes, { id: newId, text: newNote.trim(), completed: false, type: 'text' }]);
-      setNewNote('');
-    }
-  };
-
-  const addVoiceNote = () => {
-    if (audioBlob) {
-      const newId = Math.max(...voiceNotes.map(n => n.id), 0) + 1;
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setVoiceNotes([...voiceNotes, { id: newId, text: 'Voice Note', audioUrl, timestamp: new Date().toLocaleString(), playbackSpeed: 1 }]);
-      setAudioBlob(null);
-    }
-  };
-
-  const startRecording = async () => {
+  async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new window.MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
         }
       };
-
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         setAudioBlob(blob);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       };
-
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (error) {
-      console.error('Error accessing microphone:', error);
-    }
-  };
+    } catch (e) {}
+  }
 
-  const stopRecording = () => {
+  function stopRecording() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
-  };
+  }
 
-  const playVoiceNote = (id, audioUrl, speed) => {
-    if (audioRef.current) {
-      if (currentPlayingId === id) {
-        audioRef.current.pause();
-        setCurrentPlayingId(null);
-        setIsPlaying(false);
-      } else {
-        audioRef.current.src = audioUrl;
-        audioRef.current.playbackRate = speed;
-        audioRef.current.play();
-        setCurrentPlayingId(id);
-        setIsPlaying(true);
-        audioRef.current.onended = () => {
-          setCurrentPlayingId(null);
-          setIsPlaying(false);
-        };
-      }
+  function saveVoiceNote() {
+    if (audioBlob) {
+      setVoiceNotes([...voiceNotes, { id: Date.now(), url: URL.createObjectURL(audioBlob), timestamp: new Date().toLocaleString() }]);
+      setAudioBlob(null);
     }
-  };
+  }
 
-  const handleSpeedChange = (id, newSpeed) => {
-    setVoiceNotes(voiceNotes.map(note =>
-      note.id === id ? { ...note, playbackSpeed: newSpeed } : note
-    ));
-    if (currentPlayingId === id && audioRef.current) {
-      audioRef.current.playbackRate = newSpeed;
-    }
-  };
-
-  const toggleNote = (id) => {
-    setNotes(notes.map(note =>
-      note.id === id ? { ...note, completed: !note.completed } : note
-    ));
-  };
-
-  const deleteNote = (id) => {
-    setNotes(notes.filter(note => note.id !== id));
-  };
-
-  const deleteVoiceNote = (id) => {
-    setVoiceNotes(voiceNotes.filter(note => note.id !== id));
+  function playVoiceNote(id, url) {
     if (currentPlayingId === id) {
       audioRef.current.pause();
       setCurrentPlayingId(null);
-      setIsPlaying(false);
+    } else {
+      audioRef.current.src = url;
+      audioRef.current.playbackRate = playbackSpeed;
+      audioRef.current.play();
+      setCurrentPlayingId(id);
+      audioRef.current.onended = () => setCurrentPlayingId(null);
     }
-  };
-
-  const formatTime = (time) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
-
-  if (!isDataLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Onest', sans-serif" }}>
-        <div className="text-white text-xl">Loading your routines...</div>
-      </div>
-    );
   }
 
+  function deleteVoiceNote(id) {
+    setVoiceNotes(voiceNotes.filter((v) => v.id !== id));
+    if (currentPlayingId === id && audioRef.current) {
+      audioRef.current.pause();
+      setCurrentPlayingId(null);
+    }
+  }
+
+  function handleSpeedChange(s) {
+    setPlaybackSpeed(s);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = s;
+    }
+  }
+
+  const progress = notes.length > 0 ? Math.round((notes.filter((n) => n.completed).length / notes.length) * 100) : 0;
+
   return (
-    <div className="min-h-screen relative p-4 text-white overflow-hidden" style={{ backgroundColor: '#1A4D2E', fontFamily: "'Onest', sans-serif" }}>
-      <style>
-        {`
-          @import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;700&display=swap');
-          body {
-            font-family: 'Onest', sans-serif;
-          }
-        `}
-      </style>
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: 'url(https://thumbs.dreamstime.com/b/exploring-future-smart-homes-iot-revolutionizing-your-lawn-care-automation-image-showcases-lush-being-357455920.jpg?w=992)'
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/70 to-lime-950/70"></div>
-      </div>
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-64 h-64 bg-green-500/8 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-teal-500/8 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-green-500/5 rounded-full blur-3xl"></div>
-      </div>
-
-      <audio ref={audioRef} style={{ display: 'none' }} />
-
-      <div className={`max-w-7xl mx-auto relative z-10`}>
-        <div className="flex flex-col items-center mb-16 pt-12">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-white bg-clip-text drop-shadow-lg mb-8 tracking-tight">
-            Smart Routines
-          </h1>
-
-          <div className="flex flex-col md:flex-row items-center gap-8 w-full max-w-4xl justify-center">
-            <div className="flex flex-col items-center">
-              <div className="bg-green-700 p-4 rounded-full shadow-lg animate-bounce">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <span className="mt-3 text-lg font-bold text-black">Plan</span>
-              <span className="text-md text-gray-300 font-semibold">Craft your day</span>
-            </div>
-            <div className="hidden md:block w-16 h-1 bg-gradient-to-r from-blue-500 via-teal-300 to-lime-300 rounded-full"></div>
-            <div className="flex flex-col items-center">
-              <div className="bg-blue-800 p-4 rounded-full shadow-lg animate-pulse">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-              </div>
-              <span className="mt-3 text-lg font-bold text-black">Act</span>
-              <span className="text-md text-gray-300 font-semibold">Build habits</span>
-            </div>
-            <div className="hidden md:block w-16 h-1 bg-gradient-to-r from-teal-900 via-green-300 to-lime-300 rounded-full"></div>
-            <div className="flex flex-col items-center">
-              <div className="bg-red-600 p-4 rounded-full shadow-lg animate-bounce">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M3 17v-2a4 4 0 014-4h10a4 4 0 014 4v2M16 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-              </div>
-              <span className="mt-3 text-lg font-bold text-black">Track</span>
-              <span className="text-md text-gray-300 font-semibold">See progress</span>
-            </div>
-          </div>
-
-          <div className="mt-10 px-6 py-3 bg-gradient-to-r from-green-500/20 via-teal-400/20 to-lime-400/20 border border-green-400/30 rounded-xl flex items-center gap-2 shadow-md">
-            <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M5 13l4 4L19 7"/>
-            </svg>
-            <span className="text-black text-lg font-extrabold">
-              Data auto-saved — your progress is always safe!
-            </span>
-          </div>
+    <div className="min-h-screen relative font-sans overflow-x-hidden" style={{
+      backgroundImage: "url(https://wallpapers.com/images/featured/green-nature-background-e1kbkjzwa2ehmmmz.jpg)",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+      backgroundAttachment: "fixed"
+    }}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+      <audio ref={audioRef} style={{ display: "none" }} />
+      <div className="relative z-10 max-w-5xl mx-auto py-12 px-4">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-center bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent mb-2 drop-shadow-lg">
+          Smart Routines
+        </h1>
+        <div className="text-center text-lg text-white mb-1 drop-shadow-md">
+          Plan, automate, and track your daily life with ease.
         </div>
-
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 auto-rows-[1fr]"> 
-
-          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
+        <div className="text-center text-base text-green-100 mb-8 drop-shadow-md">
+          Fresh, colorful, and productive—your smart routine assistant.
+        </div>
+        <div className="flex justify-center gap-4 mb-10">
+          {[
+            { text: "PLAN", icon: Sun, color: "bg-yellow-200/90", ic: "text-yellow-600" },
+            { text: "EXECUTE", icon: Calendar, color: "bg-green-200/90", ic: "text-green-600" },
+            { text: "TRACK", icon: CheckCircle2, color: "bg-lime-200/90", ic: "text-lime-600" },
+            { text: "OPTIMIZE", icon: Moon, color: "bg-indigo-200/90", ic: "text-indigo-600" },
+            { text: "ACHIEVE", icon: StickyNote, color: "bg-amber-200/90", ic: "text-amber-600" },
+          ].map((b, i) => (
+            <div
+              key={b.text}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold shadow-xl ${b.color} text-black text-lg animate-bounce${i + 1} backdrop-blur-sm`}
+              style={{
+                animationDelay: `${i * 0.2}s`,
+                animationDuration: "2.2s",
+                animationIterationCount: "infinite",
+              }}
+            >
+              <b.icon size={20} className={b.ic} />
+              {b.text}
+            </div>
+          ))}
+        </div>
+        <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-emerald-400/30 shadow-2xl relative overflow-hidden mb-12">
+          <div className="p-7 md:p-10">
+            <div className="flex items-center mb-4">
+              <Sun className="text-amber-400 mr-3" size={32} />
               <div>
-                <h2 className="text-3xl font-bold text-white mb-2 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Your Routines</h2>
-                <p className="text-gray-300 text-base">Manage your daily habits and schedules with ease.</p>
+                <h2 className="text-2xl font-bold text-white mb-1">
+                  Your Daily Routines
+                </h2>
+                <div className="text-green-200 text-base">
+                  Smart scheduling for consistent habits.
+                </div>
+                <div className="text-green-100 text-sm mt-1">
+                  Automate your day with routines tailored to your lifestyle.<br />
+                  Set times, pick icons, and let your day flow naturally.
+                </div>
               </div>
+            </div>
+            <div className="flex flex-col gap-4 mb-4">
+              {routines.map((r) => {
+                const Icon = icons[r.icon];
+                return (
+                  <div
+                    key={r.id}
+                    className={`flex items-center px-6 py-6 rounded-xl shadow-md border border-emerald-400/20 bg-black/30 hover:bg-emerald-900/20 transition-all duration-200 backdrop-blur-md`}
+                  >
+                    <div
+                      className={`mr-4 p-2 rounded-lg ${bgColors[r.color]} ${iconColors[r.color]} border border-emerald-100`}
+                    >
+                      <Icon size={28} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-white mb-1">
+                        {r.name}
+                      </div>
+                      <div className="text-green-200 text-xs mb-2">
+                        {formatTime(r.time)} &bull; {r.days}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-emerald-300 hover:text-emerald-100"
+                        onClick={() => handleEditRoutine(r)}
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        className="text-red-400 hover:text-red-600"
+                        onClick={() => handleDeleteRoutine(r.id)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
               <button
+                className="flex items-center px-6 py-6 rounded-xl border-2 border-dashed border-emerald-400/40 text-white hover:bg-emerald-900/20 font-medium backdrop-blur-md"
                 onClick={() => {
-                  setIsEditing(!isEditing);
-                  setEditingIndex(null);
-                  setNewRoutine({ name: '', time: '', days: '', icon: getRandomIcon(), color: getRandomColor() });
+                  setEditingRoutine(null);
+                  setRoutineForm({ name: "", time: "", days: "", icon: 0, color: 0 });
+                  setShowRoutineForm(true);
                 }}
-                className="px-5 py-2.5 bg-black/30 text-green-300 rounded-xl hover:bg-black/40 transition-all duration-200 border border-green-500/20 backdrop-blur-xl font-medium"
               >
-                {isEditing ? 'Done' : 'Edit Routines'}
+                <Plus size={24} className="mr-3" />
+                Add Routine
               </button>
             </div>
-
-            {isEditing && editingIndex !== null && (
-              <div className="mb-6 p-6 bg-black/30 rounded-xl border border-white/20 backdrop-blur-xl">
-                <h3 className="text-white font-semibold mb-4 text-xl">
-                  {editingIndex < routines.length ? 'Edit Routine' : 'Add New Routine'}
-                </h3>
-                <div className="space-y-4">
+            {showRoutineForm && (
+              <div className="bg-emerald-900/30 border border-emerald-400/40 rounded-xl p-4 mb-2 backdrop-blur-md">
+                <div className="flex flex-col md:flex-row gap-3 mb-2">
                   <input
-                    type="text"
-                    placeholder="Enter routine name"
-                    value={newRoutine.name}
-                    onChange={(e) => setNewRoutine({ ...newRoutine, name: e.target.value })}
-                    className="w-full bg-black/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500/50 backdrop-blur-xl"
+                    className="flex-1 px-3 py-2 rounded border border-emerald-400/40 bg-black/40 text-white placeholder-gray-300 backdrop-blur-sm"
+                    placeholder="Routine Name"
+                    name="name"
+                    value={routineForm.name}
+                    onChange={handleRoutineFormChange}
                   />
                   <input
+                    className="flex-1 px-3 py-2 rounded border border-emerald-400/40 bg-black/40 text-white backdrop-blur-sm"
                     type="time"
-                    value={newRoutine.time}
-                    onChange={(e) => setNewRoutine({ ...newRoutine, time: e.target.value })}
-                    className="w-full bg-black/50 border border-gray-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-green-500/50 backdrop-blur-xl"
+                    name="time"
+                    value={routineForm.time}
+                    onChange={handleRoutineFormChange}
                   />
                   <input
-                    type="text"
-                    placeholder="Enter days (e.g., Weekdays, Every day, Mon-Fri)"
-                    value={newRoutine.days}
-                    onChange={(e) => setNewRoutine({ ...newRoutine, days: e.target.value })}
-                    className="w-full bg-black/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-green-500/50 backdrop-blur-xl"
+                    className="flex-1 px-3 py-2 rounded border border-emerald-400/40 bg-black/40 text-white placeholder-gray-300 backdrop-blur-sm"
+                    placeholder="Days (e.g. Weekdays)"
+                    name="days"
+                    value={routineForm.days}
+                    onChange={handleRoutineFormChange}
                   />
+                </div>
+                <div className="flex gap-2 mb-2">
+                  {icons.map((Icon, i) => (
+                    <button
+                      key={i}
+                      className={`p-2 rounded ${routineForm.icon == i ? "bg-emerald-300/80" : "bg-black/40"} border backdrop-blur-sm`}
+                      onClick={() =>
+                        setRoutineForm((f) => ({ ...f, icon: i }))
+                      }
+                      type="button"
+                    >
+                      <Icon size={20} />
+                    </button>
+                  ))}
+                  {bgColors.map((bg, i) => (
+                    <button
+                      key={i}
+                      className={`w-6 h-6 rounded-full border-2 ml-1 ${bg} ${
+                        routineForm.color == i
+                          ? "border-emerald-400"
+                          : "border-emerald-400/40"
+                      }`}
+                      onClick={() =>
+                        setRoutineForm((f) => ({ ...f, color: i }))
+                      }
+                      type="button"
+                    />
+                  ))}
+                </div>
+                <div className="flex gap-2">
                   <button
-                    onClick={handleSave}
-                    className="w-full bg-black/50 text-green-300 py-3 rounded-lg hover:bg-black/60 transition-all duration-200 font-medium border border-green-500/20"
+                    className="px-4 py-2 rounded bg-emerald-400 text-white font-semibold"
+                    onClick={handleRoutineFormSave}
                   >
-                    Save Routine
+                    Save
+                  </button>
+                  <button
+                    className="px-4 py-2 rounded bg-gray-200/90 text-emerald-800 font-semibold"
+                    onClick={() => setShowRoutineForm(false)}
+                  >
+                    Cancel
                   </button>
                 </div>
               </div>
             )}
-
-            <div className="space-y-4 overflow-y-auto pr-2 flex-grow">
-              {routines.map((routine, index) => {
-                const IconComponent = iconMap[routine.icon];
-                return (
-                  <div key={routine.id} className="flex items-center justify-between p-4 bg-black/25 rounded-xl border border-green-500/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
-                    <div className="flex items-center">
-                      <div className={`p-3 rounded-xl border ${colorMap[routine.color]} mr-4`}>
-                        <IconComponent size={24} />
-                      </div>
-                      <div>
-                        <h3 className="text-white font-medium text-xl mb-1">{routine.name}</h3>
-                        <p className="text-gray-300 text-md">
-                          {formatTime(routine.time)} • {routine.days}
-                        </p>
-                      </div>
-                    </div>
-                    {isEditing && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(index)}
-                          className="p-2 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all duration-200"
-                        >
-                          <Edit3 size={20} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(index)}
-                          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      </div>
-                    )}
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-amber-400/30 shadow-2xl relative overflow-hidden mb-8">
+            <div className="p-7 md:p-10">
+              <div className="flex items-center mb-4">
+                <StickyNote className="text-amber-400 mr-3" size={28} />
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-1">
+                    Quick Notes
+                  </h2>
+                  <div className="text-amber-200 text-base">
+                    Capture thoughts instantly
                   </div>
-                );
-              })}
-
-              {isEditing && editingIndex === null && (
-                <button
-                  onClick={() => setEditingIndex(routines.length)}
-                  className="w-full flex items-center justify-center space-x-2 p-4 bg-black/25 rounded-xl border border-dashed border-green-500/30 text-green-400 hover:text-green-300 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl"
-                >
-                  <Plus size={24} />
-                  <span>Add New Routine</span>
-                </button>
-              )}
-            </div>
-          </section>
-
-          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
-            <div className="flex items-center mb-6">
-              <div className="p-3 bg-amber-500/15 rounded-xl border border-amber-500/20 mr-4">
-                <StickyNote className="text-amber-400" size={24} />
+                </div>
               </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-1 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">Quick Notes</h2>
-                <p className="text-gray-300 text-base">Jot down your tasks and reminders.</p>
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <div className="flex space-x-3 mb-3">
+              <div className="flex gap-2 mb-4">
                 <input
-                  type="text"
-                  placeholder="Add your task or note here..."
+                  className="flex-1 px-3 py-2 rounded border border-amber-400/40 bg-black/40 text-white placeholder-gray-300 backdrop-blur-sm"
+                  placeholder="What's on your mind?"
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && addNote()}
-                  className="flex-1 bg-black/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-amber-500/50 backdrop-blur-xl"
+                  onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
                 />
                 <button
-                  onClick={addNote}
-                  className="p-3 bg-black/50 text-amber-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-amber-500/20"
+                  className="px-3 py-2 rounded bg-amber-400 text-white font-semibold"
+                  onClick={handleAddNote}
                 >
-                  <Plus size={20} />
+                  <Plus size={18} />
                 </button>
               </div>
-            </div>
-
-            <div className="space-y-3 overflow-y-auto pr-2 flex-grow">
-              {notes.map((note) => (
-                <div key={note.id} className="flex items-start space-x-4 p-4 bg-black/25 rounded-lg border border-white/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
-                  <button
-                    onClick={() => toggleNote(note.id)}
-                    className={`mt-0.5 transition-all duration-200 ${
-                      note.completed
-                        ? 'text-green-400 hover:text-green-300'
-                        : 'text-gray-400 hover:text-gray-300'
-                    }`}
-                  >
-                    <CheckCircle2 size={20} />
-                  </button>
-                  <div className="flex-1">
-                    <span className={`text-lg ${
-                      note.completed
-                        ? 'text-gray-400 line-through'
-                        : 'text-white'
-                    }`}>
-                      {note.text}
-                    </span>
+              <div className="space-y-2 max-h-56 overflow-y-auto">
+                {notes.length === 0 && (
+                  <div className="text-amber-300 text-center py-8">
+                    <StickyNote className="mx-auto mb-2" size={32} />
+                    No notes yet.
                   </div>
-                  <button
-                    onClick={() => deleteNote(note.id)}
-                    className="text-red-400 hover:text-red-300 transition-all duration-200"
+                )}
+                {notes.map((n) => (
+                  <div
+                    key={n.id}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-400/30 bg-black/30 backdrop-blur-sm"
                   >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ))}
-              {notes.length === 0 && (
-                <div className="text-center py-10 text-gray-400">
-                  <StickyNote size={40} className="mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">No notes yet. Add your first task!</p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
-            <div className="flex items-center mb-6">
-              <div className="p-3 bg-green-500/15 rounded-xl border border-green-500/20 mr-4">
-                <Mic className="text-green-400" size={24} />
+                    <button
+                      className={`${
+                        n.completed
+                          ? "text-emerald-400"
+                          : "text-amber-400"
+                      }`}
+                      onClick={() => handleToggleNote(n.id)}
+                    >
+                      <CheckCircle2 size={18} />
+                    </button>
+                    <span
+                      className={`flex-1 ${
+                        n.completed
+                          ? "line-through text-gray-300"
+                          : "text-white"
+                      }`}
+                    >
+                      {n.text}
+                    </span>
+                    <button
+                      className="text-red-400 hover:text-red-600"
+                      onClick={() => handleDeleteNote(n.id)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-1 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Voice Notes</h2>
-                <p className="text-gray-300 text-base">Capture your thoughts on the go.</p>
-              </div>
             </div>
-
-            <div className="flex space-x-3 mb-6">
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-                  isRecording
-                    ? 'bg-black/50 text-red-400 border border-red-500/20'
-                    : 'bg-black/50 text-green-400 border border-green-500/20'
-                }`}
-              >
-                {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
-                <span className="text-base">{isRecording ? 'Stop Recording' : 'Start Recording'}</span>
-              </button>
-              {audioBlob && (
+          </div>
+          <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-green-400/30 shadow-2xl relative overflow-hidden mb-8">
+            <div className="p-7 md:p-10">
+              <div className="flex items-center mb-4">
+                <Mic className="text-green-400 mr-3" size={32} />
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    Voice Notes
+                  </h2>
+                  <div className="text-green-200 text-base">
+                    Record your ideas and reminders hands-free
+                  </div>
+                </div>
+              </div>
+              <div className="text-green-100 text-lg mb-3">
+                Easily capture voice memos for your routines, tasks, or anything on your mind.<br />
+                Playback at your chosen speed and stay organized.
+              </div>
+              <div className="flex gap-2 mb-4">
                 <button
-                  onClick={addVoiceNote}
-                  className="px-4 py-2.5 bg-black/50 text-blue-400 rounded-lg hover:bg-black/60 transition-all duration-200 border border-blue-500/20 text-base font-medium"
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded bg-green-400 text-white font-semibold ${
+                    isRecording ? "bg-green-600" : ""
+                  }`}
+                  onClick={isRecording ? stopRecording : startRecording}
                 >
-                  Save Note
+                  {isRecording ? <MicOff size={22} /> : <Mic size={22} />}
+                  {isRecording ? "Stop Recording" : "Start Recording"}
                 </button>
-              )}
-            </div>
-
-            <div className="space-y-3 overflow-y-auto pr-2 flex-grow">
-              {voiceNotes.length === 0 && (
-                <div className="text-center py-8 text-gray-400">
-                  <Mic size={32} className="mx-auto mb-3 opacity-50" />
-                  <p className="text-base">No voice notes yet. Record one!</p>
-                </div>
-              )}
-              {voiceNotes.map((note) => (
-                <div key={note.id} className="flex items-center justify-between p-3 bg-black/25 rounded-lg border border-white/20 hover:bg-black/35 transition-all duration-200 backdrop-blur-xl">
-                  <div className="flex flex-col items-start space-y-1">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => playVoiceNote(note.id, note.audioUrl, note.playbackSpeed)}
-                        className="p-1.5 bg-black/50 text-green-400 rounded-full hover:bg-black/60 transition-all duration-200"
-                      >
-                        {currentPlayingId === note.id ? <Square size={14} /> : <Play size={14} />}
-                      </button>
-                      <span className="text-white text-base">{note.text}</span>
+                {audioBlob && (
+                  <button
+                    className="px-4 py-2 rounded bg-green-600 text-white font-semibold"
+                    onClick={saveVoiceNote}
+                  >
+                    Save
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2 max-h-56 overflow-y-auto">
+                {voiceNotes.length === 0 && (
+                  <div className="text-green-300 text-center py-8">
+                    <Mic className="mx-auto mb-2" size={32} />
+                    No voice notes yet.
+                  </div>
+                )}
+                {voiceNotes.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex items-center gap-2 px-3 py-3 rounded-lg border border-green-400/30 bg-black/30 backdrop-blur-sm"
+                  >
+                    <button
+                      className="text-green-400"
+                      onClick={() => playVoiceNote(v.id, v.url)}
+                    >
+                      {currentPlayingId === v.id ? (
+                        <Square size={20} />
+                      ) : (
+                        <Play size={20} />
+                      )}
+                    </button>
+                    <div className="flex-1">
+                      <div className="font-semibold text-white">
+                        Voice Note
+                      </div>
+                      <div className="text-green-300 text-xs">
+                        {v.timestamp}
+                      </div>
                     </div>
-                    <span className="text-gray-400 text-xs pl-8">{note.timestamp}</span>
-                    <div className="flex items-center mt-2 pl-8">
-                      <span className="text-gray-400 text-md mr-2">Speed:</span>
-                      {[0.5, 1, 1.5, 2].map(speed => (
+                    <div className="flex gap-1 items-center">
+                      {[0.5, 1, 1.5, 2].map((s) => (
                         <button
-                          key={speed}
-                          onClick={() => handleSpeedChange(note.id, speed)}
-                          className={`px-2.5 py-1 rounded-md text-md transition-all duration-200 mr-1 ${
-                            note.playbackSpeed === speed
-                              ? 'bg-green-600 text-white'
-                              : 'bg-black/50 text-gray-300 hover:bg-black/60'
+                          key={s}
+                          className={`px-2 py-1 rounded text-xs ${
+                            playbackSpeed === s
+                              ? "bg-green-400 text-white"
+                              : "bg-green-200/80 text-green-700"
                           }`}
+                          onClick={() => handleSpeedChange(s)}
                         >
-                          {speed}x
+                          {s}x
                         </button>
                       ))}
                     </div>
+                    <button
+                      className="text-red-400 hover:text-red-600"
+                      onClick={() => deleteVoiceNote(v.id)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => deleteVoiceNote(note.id)}
-                    className="text-red-400 hover:text-red-300 transition-all duration-200"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="bg-black/20 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-lg flex flex-col overflow-hidden">
-            <h3 className="text-3xl font-bold text-white mb-6 bg-gradient-to-r from-green-400 to-teal-400 bg-clip-text text-transparent">Today's Progress</h3>
-            <div className="space-y-6 flex-grow flex flex-col justify-evenly">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex flex-col items-center p-5 bg-black/30 rounded-lg backdrop-blur-xl border border-white/10">
-                  <span className="text-gray-300 text-base mb-2">Active Routines</span>
-                  <span className="text-green-400 font-bold text-4xl">{routines.length}</span>
-                </div>
-                <div className="flex flex-col items-center p-5 bg-black/30 rounded-lg backdrop-blur-xl border border-white/10">
-                  <span className="text-gray-300 text-base mb-2">Completed Tasks</span>
-                  <span className="text-green-400 font-bold text-4xl">
-                    {notes.filter(n => n.completed).length}/{notes.length}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-300 text-base">Overall Daily Progress</span>
-                  <span className="text-green-400 font-medium text-lg">
-                    {notes.length > 0 ? Math.round((notes.filter(n => n.completed).length / notes.length) * 100) : 0}%
-                  </span>
-                </div>
-                <div className="w-full bg-black/50 rounded-full h-5 overflow-hidden">
-                  <div
-                    className="bg-gradient-to-r from-green-500 to-teal-500 h-5 rounded-full transition-all duration-700"
-                    style={{
-                      width: notes.length > 0 ? `${(notes.filter(n => n.completed).length / notes.length) * 100}%` : '0%'
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-4 bg-black/20 rounded-lg border border-white/10">
-                  <div className="text-amber-400 font-semibold text-xl">{voiceNotes.length}</div>
-                  <div className="text-gray-400 text-md">Voice Notes</div>
-                </div>
-                <div className="p-4 bg-black/20 rounded-lg border border-white/10">
-                  <div className="text-blue-400 font-semibold text-xl">{notes.filter(n => !n.completed).length}</div>
-                  <div className="text-gray-400 text-md">Pending</div>
-                </div>
-                <div className="p-4 bg-black/20 rounded-lg border border-white/10">
-                  <div className="text-green-400 font-semibold text-xl">{notes.filter(n => n.completed).length}</div>
-                  <div className="text-gray-400 text-md">Done</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div className="mt-16 text-center">
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-10 bg-gradient-to-r from-lime-300 via-emerald-300 to-green-300 bg-clip-text text-transparent">
-            Smart Home Integration
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
-              <img
-                src="https://img.freepik.com/premium-photo/secluded-cabin-forest-blending-smart-home-technology-with-beauty-nature-this-ecofriendly-retreat-offers-contemporary-design-sustainable-living-peacefulwoodland-setting_924727-44886.jpg"
-                alt="Secluded Cabin"
-                className="w-full h-80 object-cover"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <p className="text-white text-lg font-semibold px-4 text-center">Eco-Friendly Smart Cabin</p>
-              </div>
-            </div>
-            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
-              <img
-                src="https://ml9yftkh0gk2.i.optimole.com/cb:kjVW.6ef/w:322/h:220/q:mauto/ig:avif/https://esyncsecurity.com/wp-content/uploads/smart-surveillance-system-transforming-security-in-chennai-mjy.jpg"
-                alt="Smart Surveillance System"
-                className="w-full h-80 object-cover"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <p className="text-white text-lg font-semibold px-4 text-center">Advanced Security Systems</p>
-              </div>
-            </div>
-            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
-              <img
-                src="https://atsmarthomesg.com/wp-content/uploads/2024/10/smart-light-dimming-and-brightness-control.png"
-                alt="Smart Light Dimming and Brightness Control"
-                className="w-full h-80 object-cover"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <p className="text-white text-lg font-semibold px-4 text-center">Intelligent Lighting Control</p>
-              </div>
-            </div>
-            <div className="relative rounded-xl overflow-hidden shadow-xl group cursor-pointer transform hover:scale-105 transition-transform duration-300 ease-in-out">
-              <img
-                src="https://ueeshop.ly200-cdn.com/u_file/UPAC/UPAC480/2002/photo/441c133573.jpg"
-                alt="Smart Home Technology"
-                className="w-full h-80 object-cover"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <p className="text-white text-lg font-semibold px-4 text-center">Seamless Smart Home Tech</p>
+                ))}
               </div>
             </div>
           </div>
         </div>
+        <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-blue-400/30 shadow-2xl relative overflow-hidden mb-12 mt-8">
+          <div className="p-8">
+            <h2 className="text-3xl font-bold text-white mb-8 text-center">Today's Progress</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-emerald-900/30 rounded-2xl p-6 border border-emerald-400/30 text-center backdrop-blur-lg">
+                <div className="text-emerald-400 font-bold text-3xl mb-2">{routines.length}</div>
+                <div className="text-emerald-200 font-medium">Active Routines</div>
+              </div>
+              <div className="bg-blue-900/30 rounded-2xl p-6 border border-blue-400/30 text-center backdrop-blur-lg">
+                <div className="text-blue-400 font-bold text-3xl mb-2">
+                  {notes.filter(n => n.completed).length}/{notes.length}
+                </div>
+                <div className="text-blue-200 font-medium">Tasks Complete</div>
+              </div>
+              <div className="bg-amber-900/30 rounded-2xl p-6 border border-amber-400/30 text-center backdrop-blur-lg">
+                <div className="text-amber-400 font-bold text-3xl mb-2">{voiceNotes.length}</div>
+                <div className="text-amber-200 font-medium">Voice Notes</div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-white font-semibold text-xl">Daily Progress</span>
+                <span className="text-emerald-400 font-bold text-xl">
+                  {progress}%
+                </span>
+              </div>
+              <div className="w-full bg-black/60 rounded-full h-4 overflow-hidden backdrop-blur-md">
+                <div
+                  className="bg-gradient-to-r from-emerald-500 to-green-400 h-4 rounded-full transition-all duration-1000 ease-out"
+                  style={{
+                    width: `${progress}%`
+                  }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mb-12 mt-8">
+          <h2 className="text-4xl font-bold text-white mb-10 text-center bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent drop-shadow-lg">
+            Smart Home Integration
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                src: "https://img.freepik.com/premium-photo/secluded-cabin-forest-blending-smart-home-technology-with-beauty-nature-this-ecofriendly-retreat-offers-contemporary-design-sustainable-living-peacefulwoodland-setting_924727-44886.jpg",
+                title: "Eco-Smart Cabin",
+              },
+              {
+                src: "https://ml9yftkh0gk2.i.optimole.com/cb:kjVW.6ef/w:322/h:220/q:mauto/ig:avif/https://esyncsecurity.com/wp-content/uploads/smart-surveillance-system-transforming-security-in-chennai-mjy.jpg",
+                title: "Advanced Security",
+              },
+              {
+                src: "https://atsmarthomesg.com/wp-content/uploads/2024/10/smart-light-dimming-and-brightness-control.png",
+                title: "Intelligent Lighting",
+              },
+              {
+                src: "https://ueeshop.ly200-cdn.com/u_file/UPAC/UPAC480/2002/photo/441c133573.jpg",
+                title: "Connected Living",
+              }
+            ].map((item, index) => (
+              <div key={index} className="group relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 hover:scale-105 hover:-translate-y-2">
+                <img
+                  src={item.src}
+                  alt={item.title}
+                  className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h3 className="text-white font-bold text-xl mb-2 drop-shadow-lg">{item.title}</h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+      <style>{`
+        @keyframes bounce1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes bounce2 { 0%,100%{transform:translateY(0)} 60%{transform:translateY(-10px)} }
+        @keyframes bounce3 { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-15px)} }
+        @keyframes bounce4 { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-9px)} }
+        @keyframes bounce5 { 0%,100%{transform:translateY(0)} 70%{transform:translateY(-14px)} }
+        .animate-bounce1 { animation: bounce1 2.2s infinite; }
+        .animate-bounce2 { animation: bounce2 2.2s infinite; }
+        .animate-bounce3 { animation: bounce3 2.2s infinite; }
+        .animate-bounce4 { animation: bounce4 2.2s infinite; }
+        .animate-bounce5 { animation: bounce5 2.2s infinite; }
+      `}</style>
     </div>
   );
 }
-
-export default SmartRoutinesDashboard;

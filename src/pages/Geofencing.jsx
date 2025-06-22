@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -243,26 +244,139 @@ export default function Geofencing() {
 
   if ((isLoading && !processingMessage) || showDummyButton) {
     return (
-      <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${backgrounds[bgIndex]} text-white`}>
-        <div className="mb-6">
-          <div className="flex flex-col items-center mb-8">
-            <div className="text-2xl font-bold mb-3 animate-pulse">{doYouKnowFacts[factIndex]}</div>
-          </div>
-          {mirrorPlaceholders.map((_, idx) => (
-            <div key={idx} className="h-7 bg-gray-700 rounded mb-4 animate-pulse w-full max-w-2xl mx-auto"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-green-400/20 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
           ))}
         </div>
-        <div className="flex-1 flex flex-col justify-end">
-          {processingMessage ? (
-            <div className="text-center text-lg font-semibold mb-10">Processing request...</div>
-          ) : (
-            <div className="w-full flex justify-center mb-10">
-              <Button onClick={handleDummyButtonClick}>
-                Initiate Geofencing Analysis
-              </Button>
+
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+          <div className="w-80 h-80 relative mb-12">
+            <div className="absolute inset-0 rounded-full border-4 border-green-500/30 animate-spin" style={{ animationDuration: '8s' }}>
+              <div className="absolute w-6 h-6 bg-green-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-green-400/50" />
             </div>
-          )}
+            
+            <div className="absolute inset-4 rounded-full border-2 border-emerald-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+              <div className="absolute w-4 h-4 bg-emerald-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
+            </div>
+
+            <div className="absolute inset-8 rounded-full border border-teal-300/50 animate-spin" style={{ animationDuration: '4s' }}>
+              <div className="absolute w-3 h-3 bg-teal-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+            </div>
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 bg-gradient-to-br from-green-500/30 to-emerald-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
+                <Brain className="w-16 h-16 text-green-400 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="absolute top-0 left-0 w-8 h-8 bg-green-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+            <div className="absolute top-0 right-0 w-6 h-6 bg-emerald-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+            <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
+          </div>
+
+          <div className="text-center mb-8 max-w-2xl">
+            <div className="h-16 flex items-center justify-center">
+              <p className="text-xl text-green-200 animate-fade-in">
+                {doYouKnowFacts[factIndex]}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
+              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
+              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div 
+                  className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-green-400" />
+                </div>
+                <span className="text-sm text-green-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                    style={{ 
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col items-center space-y-6">
+            {processingMessage ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-lg font-semibold text-green-300">Processing request...</span>
+              </div>
+            ) : (
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button 
+                  onClick={handleDummyButtonClick}
+                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
+                >
+                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                  Initiate Geofencing Analysis
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-2 text-green-400/60">
+              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
+              <span className="text-sm">Connecting to smart home network...</span>
+            </div>
+          </div>
         </div>
+
+        <style jsx>{`
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          
+          @keyframes tilt {
+            0%, 50%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(1deg); }
+            75% { transform: rotate(-1deg); }
+          }
+          
+          .animate-fade-in {
+            animation: fade-in 0.8s ease-out;
+          }
+          
+          .animate-tilt {
+            animation: tilt 10s infinite linear;
+          }
+        `}</style>
       </div>
     );
   }

@@ -1,7 +1,5 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
-import ProgressBar from 'react-animated-progress-bar';
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
@@ -98,41 +96,6 @@ const doYouKnowFacts = [
   "Did you know? Stay informed with live energy insights powered by AI."
 ];
 
-const backgrounds = [
-  "from-[#232526] to-[#414345]",
-  "from-[#283E51] to-[#485563]",
-  "from-[#232526] to-[#1a2980]",
-  "from-[#0f2027] to-[#2c5364]",
-  "from-[#1e3c72] to-[#2a5298]"
-];
-
-const mirrorPlaceholders = Array(8).fill(0);
-
-const ProgressBarSkeleton = () => (
-  <div className="w-full flex flex-col items-center justify-center py-6">
-    <ProgressBar
-      width="90%"
-      height="14px"
-      rect
-      fontColor="gray"
-      percentage="55"
-      rectPadding="1px"
-      rectBorderRadius="20px"
-      trackPathColor="#222"
-      bgColor="#444"
-      trackBorderColor="grey"
-      duration="2"
-      defColor={{
-        fair: "#22d3ee",
-        good: "#6366f1",
-        excellent: "#22c55e",
-        poor: "#f59e42",
-      }}
-    />
-    <div className="mt-2 text-blue-300 text-lg font-semibold animate-pulse">Fetching your data...</div>
-  </div>
-);
-
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
@@ -141,7 +104,6 @@ export default function Analytics() {
   const [showDummyButton, setShowDummyButton] = useState(true);
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
-  const [bgIndex, setBgIndex] = useState(0);
 
   useEffect(() => {
     if (!analyticsCache) {
@@ -161,12 +123,8 @@ export default function Analytics() {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
-    const bgInterval = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % backgrounds.length);
-    }, 6000);
     return () => {
       clearInterval(factInterval);
-      clearInterval(bgInterval);
     };
   }, []);
 
@@ -180,31 +138,142 @@ export default function Analytics() {
 
   if ((isLoading && !processingMessage) || showDummyButton) {
     return (
-      <div className={`p-6 flex flex-col min-h-screen transition-all duration-1000 bg-gradient-to-br ${backgrounds[bgIndex]} text-white`}>
-        <div className="mb-6">
-          <div className="flex flex-col items-center mb-8">
-            <div className="text-2xl font-bold mb-3 animate-pulse">{doYouKnowFacts[factIndex]}</div>
-          </div>
-          <div className="w-full max-w-2xl mx-auto">
-            <ProgressBarSkeleton />
-          </div>
-          {mirrorPlaceholders.map((_, idx) => (
-            <div key={idx} className="h-7 rounded mb-4">
-              <Skeleton height={28} baseColor="#222" highlightColor="#444" />
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
+        <div className="absolute inset-0">
+          {[...Array(25)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
           ))}
         </div>
-        <div className="flex-1 flex flex-col justify-end">
-          {processingMessage ? (
-            <div className="text-center text-lg font-semibold mb-10">Processing request...</div>
-          ) : (
-            <div className="w-full flex justify-center mb-10">
-              <Button onClick={handleDummyButtonClick}>
-                Initiate Anomaly/Tariff Analysis
-              </Button>
+
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+          <div className="w-80 h-80 relative mb-12">
+            <div className="absolute inset-0 rounded-full border-4 border-blue-500/30 animate-spin" style={{ animationDuration: '8s' }}>
+              <div className="absolute w-6 h-6 bg-blue-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-blue-400/50" />
             </div>
-          )}
+            
+            <div className="absolute inset-4 rounded-full border-2 border-cyan-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+              <div className="absolute w-4 h-4 bg-cyan-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
+            </div>
+
+            <div className="absolute inset-8 rounded-full border border-indigo-300/50 animate-spin" style={{ animationDuration: '4s' }}>
+              <div className="absolute w-3 h-3 bg-indigo-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+            </div>
+
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 bg-gradient-to-br from-blue-500/30 to-cyan-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
+                <Brain className="w-16 h-16 text-blue-400 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="absolute top-0 left-0 w-8 h-8 bg-blue-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+            <div className="absolute top-0 right-0 w-6 h-6 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-0 left-0 w-7 h-7 bg-indigo-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+            <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
+          </div>
+
+          <div className="text-center mb-8 max-w-2xl">
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Initializing ML Analytics Engine
+            </h1>
+            <div className="h-16 flex items-center justify-center">
+              <p className="text-xl text-blue-200 animate-fade-in">
+                {doYouKnowFacts[factIndex]}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: BarChart3, label: "Processing Data", delay: "0s" },
+              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
+              { icon: TrendingUp, label: "Training Models", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div 
+                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-blue-400" />
+                </div>
+                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
+                    style={{ 
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col items-center space-y-6">
+            {processingMessage ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-lg font-semibold text-blue-300">Processing request...</span>
+              </div>
+            ) : (
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button 
+                  onClick={handleDummyButtonClick}
+                  className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
+                >
+                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                  Initiate Anomaly/Tariff Analysis
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-2 text-blue-400/60">
+              <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
+              <span className="text-sm">Connecting to analytics servers...</span>
+            </div>
+          </div>
         </div>
+
+        <style jsx>{`
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          
+          @keyframes tilt {
+            0%, 50%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(1deg); }
+            75% { transform: rotate(-1deg); }
+          }
+          
+          .animate-fade-in {
+            animation: fade-in 0.8s ease-out;
+          }
+          
+          .animate-tilt {
+            animation: tilt 10s infinite linear;
+          }
+        `}</style>
       </div>
     );
   }

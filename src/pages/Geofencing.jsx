@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -35,7 +34,7 @@ const CardContent = ({ children, className = '' }) => (
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
+      className={`inline-flex items-center justify-center rounded-md text-lg font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-6 py-2 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
@@ -271,6 +270,7 @@ export default function Geofencing() {
   const [factIndex, setFactIndex] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
   const [initiateClicked, setInitiateClicked] = useState(false);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   const backgrounds = [
     "from-[#232526] to-[#414345]",
@@ -285,7 +285,8 @@ export default function Geofencing() {
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
 
   const createMutation = useMutation(createGeofence, {
-    onSuccess: () => {
+    onSuccess: (newZone) => {
+      geofencesCache = null;
       refetchGeofences();
       refetchStats();
       setShowCreateForm(false);
@@ -298,6 +299,7 @@ export default function Geofencing() {
 
   const optimizeMutation = useMutation(optimizeGeofences, {
     onSuccess: (result) => {
+      geofencesCache = null;
       refetchGeofences();
       refetchStats();
       alert(result.message);
@@ -321,6 +323,7 @@ export default function Geofencing() {
     setTimeout(() => {
       setShowDummyButton(false);
       setProcessingMessage(false);
+      setHasLoadedOnce(true);
     }, 3000);
   };
 
@@ -337,9 +340,17 @@ export default function Geofencing() {
     };
   }, []);
 
+  useEffect(() => {
+    prefetchGeofences();
+  }, []);
+
+  useEffect(() => {
+    if (!showDummyButton && !processingMessage) setHasLoadedOnce(true);
+  }, [showDummyButton, processingMessage]);
+
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
-  if ((isLoading && !processingMessage) || showDummyButton) {
+  if (((isLoading && !hasLoadedOnce) || showDummyButton) && !hasLoadedOnce) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -569,7 +580,7 @@ export default function Geofencing() {
           <Button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={activeTab === tab ? 'bg-green-600 text-white' : 'border-green-400/30 text-green-400 bg-transparent'}
+            className={activeTab === tab ? 'bg-green-600 text-white px-4 py-1 text-base' : 'border-green-400/30 text-green-400 bg-transparent px-4 py-1 text-base'}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </Button>
@@ -586,7 +597,7 @@ export default function Geofencing() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => optimizeMutation.mutate()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 text-base"
                   disabled={optimizeMutation.isPending}
                 >
                   <Brain className="w-4 h-4 mr-2" />
@@ -594,7 +605,7 @@ export default function Geofencing() {
                 </Button>
                 <Button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-1 text-base"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Zone
@@ -751,13 +762,13 @@ export default function Geofencing() {
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button
-                  className="border-green-400 text-green-400 hover:bg-green-900/20 bg-transparent"
+                  className="border-green-400 text-green-400 hover:bg-green-900/20 bg-transparent px-4 py-1 text-base"
                   onClick={() => setShowCreateForm(false)}
                 >
                   Cancel
                 </Button>
                 <Button
-                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 px-4 py-1 text-base"
                   onClick={handleCreateSubmit}
                   disabled={
                     createMutation.isPending || !formData.name.trim() || !formData.address.trim() ||

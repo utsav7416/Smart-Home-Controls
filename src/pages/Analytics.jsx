@@ -183,9 +183,7 @@ export default function Analytics() {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
-    return () => {
-      clearInterval(factInterval);
-    };
+    return () => clearInterval(factInterval);
   }, []);
 
   const handleDummyButtonClick = () => {
@@ -459,6 +457,7 @@ export default function Analytics() {
 
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    if (!algorithm) return null;
     return (
       <div className="w-full">
         <div className="bg-gradient-to-br from-black to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">

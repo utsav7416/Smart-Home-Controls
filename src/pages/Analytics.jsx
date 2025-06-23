@@ -6,12 +6,28 @@ const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-
 
 let analyticsCache = null;
 let analyticsPromise = null;
+let hasInitiatedAnalytics = false;
+
 export function prefetchAnalytics() {
-  if (!analyticsCache && !analyticsPromise) {
-    analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
-      .then(res => res.json())
-      .then(data => { analyticsCache = data; return data; });
-  }
+  if (analyticsCache) return Promise.resolve(analyticsCache);
+  if (analyticsPromise) return analyticsPromise;
+
+  analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
+    .then(res => {
+      if (!res.ok) throw new Error(`Analytics fetch failed: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      analyticsCache = data;
+      analyticsPromise = null;
+      return data;
+    })
+    .catch(error => {
+      analyticsPromise = null;
+      hasInitiatedAnalytics = false;
+      throw error;
+    });
+
   return analyticsPromise;
 }
 
@@ -158,46 +174,51 @@ function Carousel({ images }) {
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
-  const [isLoading, setIsLoading] = useState(!analyticsCache);
   const [error, setError] = useState(null);
-  const [showDummyButton, setShowDummyButton] = useState(true);
-  const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
-  const [initiateClicked, setInitiateClicked] = useState(false);
+  const [viewState, setViewState] = useState(hasInitiatedAnalytics ? 'loading' : 'initial');
 
-  useEffect(() => {
-    if (!analyticsCache) {
+  const handleInitiate = () => {
+    if (viewState === 'initial') {
+      hasInitiatedAnalytics = true;
+      setViewState('loading');
       prefetchAnalytics()
         .then(data => {
           setAnalyticsData(data);
-          setIsLoading(false);
+          setViewState('dashboard');
         })
         .catch(e => {
           setError(e.message);
-          setIsLoading(false);
+          setViewState('error');
         });
     }
-  }, []);
+  };
+
+  useEffect(() => {
+    if (hasInitiatedAnalytics && !analyticsData) {
+      setViewState('loading');
+      prefetchAnalytics()
+        .then(data => {
+          setAnalyticsData(data);
+          setViewState('dashboard');
+        })
+        .catch(e => {
+          setError(e.message);
+          setViewState('error');
+        });
+    } else if (analyticsData) {
+      setViewState('dashboard');
+    }
+  }, [analyticsData]);
 
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
-    return () => {
-      clearInterval(factInterval);
-    };
+    return () => clearInterval(factInterval);
   }, []);
 
-  const handleDummyButtonClick = () => {
-    setProcessingMessage(true);
-    setInitiateClicked(true);
-    setTimeout(() => {
-      setShowDummyButton(false);
-      setProcessingMessage(false);
-    }, 3000);
-  };
-
-  if ((isLoading && !processingMessage) || showDummyButton) {
+  if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -236,7 +257,7 @@ export default function Analytics() {
             <div style={{ width: 40 }} />
           </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
-            {processingMessage || initiateClicked ? (
+            {viewState === 'loading' ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
                   {[...Array(3)].map((_, i) => (
@@ -253,7 +274,7 @@ export default function Analytics() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
                 <Button
-                  onClick={handleDummyButtonClick}
+                  onClick={handleInitiate}
                   className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
                   style={{ marginBottom: '1.5rem' }}
                 >
@@ -416,7 +437,7 @@ export default function Analytics() {
     );
   }
 
-  if (error) {
+  if (viewState === 'error') {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
         <div className="text-red-400 text-lg">
@@ -426,6 +447,10 @@ export default function Analytics() {
     );
   }
 
+  if (viewState !== 'dashboard' || !analyticsData) {
+    return null;
+  }
+
   const {
     weeklyData = [],
     anomalyData = [],
@@ -433,7 +458,7 @@ export default function Analytics() {
     mlPerformance = {},
     hourlyPatterns = [],
     mlAlgorithms = {}
-  } = analyticsData || {};
+  } = analyticsData;
 
   const adjustedWeeklyData = weeklyData.map((item) => ({
     ...item,
@@ -456,9 +481,10 @@ export default function Analytics() {
 
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
-
+  
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    if (!algorithm) return null;
     return (
       <div className="w-full">
         <div className="bg-gradient-to-br from-black to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
@@ -648,7 +674,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-200 text-sm font-medium">Total Savings</p>
-                <p className="text-3xl font-bold text-white">${totalSavings}</p>
+                <p className="text-3xl font-bold text-white">${totalSavings.toFixed(2)}</p>
                 <p className="text-purple-300 text-xs mt-1">This Month</p>
               </div>
               <Target className="w-8 h-8 text-purple-400" />

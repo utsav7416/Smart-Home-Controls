@@ -7,12 +7,28 @@ const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-
 
 let geofencesCache = null;
 let geofencesPromise = null;
+let hasInitiatedGeofences = false;
+
 export function prefetchGeofences() {
-  if (!geofencesCache && !geofencesPromise) {
-    geofencesPromise = fetch(`${FLASK_API_URL}/api/geofences`)
-      .then(res => res.json())
-      .then(data => { geofencesCache = data; return data; });
-  }
+  if (geofencesCache) return Promise.resolve(geofencesCache);
+  if (geofencesPromise) return geofencesPromise;
+  
+  geofencesPromise = fetch(`${FLASK_API_URL}/api/geofences`)
+    .then(res => {
+        if (!res.ok) throw new Error(`Geofencing fetch failed: ${res.status}`);
+        return res.json();
+    })
+    .then(data => { 
+        geofencesCache = data;
+        geofencesPromise = null;
+        return data; 
+    })
+    .catch(error => {
+        geofencesPromise = null;
+        hasInitiatedGeofences = false;
+        throw error;
+    });
+
   return geofencesPromise;
 }
 
@@ -45,18 +61,6 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
   );
 };
 
-const fetchGeofences = async () => {
-  if (geofencesCache) return geofencesCache;
-  const response = await fetch(`${FLASK_API_URL}/api/geofences`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to fetch geofences: ${errorData.error || response.statusText}`);
-  }
-  const data = await response.json();
-  geofencesCache = data;
-  return data;
-};
-
 const fetchGeofenceStats = async () => {
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
@@ -74,6 +78,8 @@ const createGeofence = async (geofenceData) => {
     const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(`Failed to create geofence: ${errorData.error || response.statusText}`);
   }
+  geofencesCache = null;
+  geofencesPromise = null;
   return await response.json();
 };
 
@@ -257,36 +263,42 @@ function ImageCarousel() {
 }
 
 export default function Geofencing() {
+  const [geofences, setGeofences] = useState(geofencesCache);
+  const [error, setError] = useState(null);
+  const [viewState, setViewState] = useState(hasInitiatedGeofences ? 'loading' : 'initial');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    lat: 37.7749,
-    lng: -122.4194,
-    radius: 200
-  });
-  const [showDummyButton, setShowDummyButton] = useState(true);
-  const [processingMessage, setProcessingMessage] = useState(false);
+  const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
-  const [bgIndex, setBgIndex] = useState(0);
-  const [initiateClicked, setInitiateClicked] = useState(false);
 
-  const backgrounds = [
-    "from-[#232526] to-[#414345]",
-    "from-[#283E51] to-[#485563]",
-    "from-[#232526] to-[#1a2980]",
-    "from-[#0f2027] to-[#2c5364]",
-    "from-[#1e3c72] to-[#2a5298]"
-  ];
-
-  const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
 
+  const handleInitiate = () => {
+    if (viewState === 'initial') {
+      hasInitiatedGeofences = true;
+      setViewState('loading');
+      prefetchGeofences()
+        .then(data => {
+          setGeofences(data);
+          setViewState('dashboard');
+        })
+        .catch(e => {
+          setError(e.message);
+          setViewState('error');
+        });
+    }
+  };
+
+  const refetchGeofencesData = () => {
+    prefetchGeofences().then(data => {
+        setGeofences(data);
+    }).catch(e => setError(e.message));
+  };
+  
   const createMutation = useMutation(createGeofence, {
     onSuccess: () => {
-      refetchGeofences();
+      refetchGeofencesData();
       refetchStats();
       setShowCreateForm(false);
       setFormData({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
@@ -298,7 +310,7 @@ export default function Geofencing() {
 
   const optimizeMutation = useMutation(optimizeGeofences, {
     onSuccess: (result) => {
-      refetchGeofences();
+      refetchGeofencesData();
       refetchStats();
       alert(result.message);
     },
@@ -315,31 +327,33 @@ export default function Geofencing() {
     }
   };
 
-  const handleDummyButtonClick = () => {
-    setProcessingMessage(true);
-    setInitiateClicked(true);
-    setTimeout(() => {
-      setShowDummyButton(false);
-      setProcessingMessage(false);
-    }, 3000);
-  };
+  useEffect(() => {
+    if (hasInitiatedGeofences && !geofences) {
+      setViewState('loading');
+      prefetchGeofences()
+        .then(data => {
+          setGeofences(data);
+          setViewState('dashboard');
+        })
+        .catch(e => {
+          setError(e.message);
+          setViewState('error');
+        });
+    } else if (geofences) {
+      setViewState('dashboard');
+    }
+  }, [geofences]);
 
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
-    const bgInterval = setInterval(() => {
-      setBgIndex((prev) => (prev + 1) % backgrounds.length);
-    }, 6000);
-    return () => {
-      clearInterval(factInterval);
-      clearInterval(bgInterval);
-    };
+    return () => clearInterval(factInterval);
   }, []);
 
-  const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
+  const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
-  if ((isLoading && !processingMessage) || showDummyButton) {
+  if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -398,7 +412,7 @@ export default function Geofencing() {
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            {processingMessage || initiateClicked ? (
+            {viewState === 'loading' ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
                   {[...Array(3)].map((_, i) => (
@@ -415,7 +429,7 @@ export default function Geofencing() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
                 <Button
-                  onClick={handleDummyButtonClick}
+                  onClick={handleInitiate}
                   className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
                 >
                   <Brain className="w-6 h-6 mr-3 animate-pulse" />
@@ -477,6 +491,20 @@ export default function Geofencing() {
         `}</style>
       </div>
     );
+  }
+
+  if (viewState === 'error') {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-red-400 text-lg">
+          Failed to load geofencing data: {error}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewState !== 'dashboard' || !geofences) {
+    return null;
   }
 
   const mlMetrics = analytics?.ml_metrics || {};
@@ -566,13 +594,13 @@ export default function Geofencing() {
       </div>
       <div className="flex space-x-4 mb-6">
         {['overview', 'analytics'].map((tab) => (
-          <Button
+          <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={activeTab === tab ? 'bg-green-600 text-white' : 'border-green-400/30 text-green-400 bg-transparent'}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === tab ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </Button>
+          </button>
         ))}
       </div>
       {activeTab === 'overview' && (
@@ -584,21 +612,21 @@ export default function Geofencing() {
                 ML-Optimized Zones
               </CardTitle>
               <div className="flex gap-2">
-                <Button
+                <button
                   onClick={() => optimizeMutation.mutate()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5"
                   disabled={optimizeMutation.isPending}
                 >
-                  <Brain className="w-4 h-4 mr-2" />
+                  <Brain className="w-4 h-4" />
                   Optimize
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-1.5"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4" />
                   Add Zone
-                </Button>
+                </button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -751,14 +779,14 @@ export default function Geofencing() {
                 />
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                <Button
-                  className="border-green-400 text-green-400 hover:bg-green-900/20 bg-transparent"
+                <button
+                  className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600"
                   onClick={() => setShowCreateForm(false)}
                 >
                   Cancel
-                </Button>
-                <Button
-                  className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                </button>
+                <button
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
                   onClick={handleCreateSubmit}
                   disabled={
                     createMutation.isPending || !formData.name.trim() || !formData.address.trim() ||
@@ -766,7 +794,7 @@ export default function Geofencing() {
                   }
                 >
                   {createMutation.isPending ? 'Creating...' : 'Create Zone'}
-                </Button>
+                </button>
               </div>
             </CardContent>
           </Card>

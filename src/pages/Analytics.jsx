@@ -6,11 +6,21 @@ const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-
 
 let analyticsCache = null;
 let analyticsPromise = null;
+let isInitialLoad = true;
+
 export function prefetchAnalytics() {
   if (!analyticsCache && !analyticsPromise) {
     analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
       .then(res => res.json())
-      .then(data => { analyticsCache = data; return data; });
+      .then(data => { 
+        analyticsCache = data; 
+        isInitialLoad = false;
+        return data; 
+      })
+      .catch(error => {
+        analyticsPromise = null;
+        throw error;
+      });
   }
   return analyticsPromise;
 }
@@ -160,21 +170,43 @@ export default function Analytics() {
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [isLoading, setIsLoading] = useState(!analyticsCache);
   const [error, setError] = useState(null);
-  const [showDummyButton, setShowDummyButton] = useState(true);
+  const [showDummyButton, setShowDummyButton] = useState(isInitialLoad && !analyticsCache);
   const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
   const [initiateClicked, setInitiateClicked] = useState(false);
 
   useEffect(() => {
-    if (!analyticsCache) {
+    if (analyticsCache) {
+      setAnalyticsData(analyticsCache);
+      setIsLoading(false);
+      setShowDummyButton(false);
+      return;
+    }
+
+    if (!analyticsData && !analyticsPromise) {
+      setIsLoading(true);
       prefetchAnalytics()
         .then(data => {
           setAnalyticsData(data);
           setIsLoading(false);
+          setShowDummyButton(false);
         })
         .catch(e => {
           setError(e.message);
           setIsLoading(false);
+          setShowDummyButton(false);
+        });
+    } else if (analyticsPromise && !analyticsData) {
+      analyticsPromise
+        .then(data => {
+          setAnalyticsData(data);
+          setIsLoading(false);
+          setShowDummyButton(false);
+        })
+        .catch(e => {
+          setError(e.message);
+          setIsLoading(false);
+          setShowDummyButton(false);
         });
     }
   }, []);
@@ -189,13 +221,27 @@ export default function Analytics() {
   const handleDummyButtonClick = () => {
     setProcessingMessage(true);
     setInitiateClicked(true);
+    
     setTimeout(() => {
       setShowDummyButton(false);
       setProcessingMessage(false);
-    }, 3000);
+      
+      if (!analyticsData && !analyticsPromise) {
+        setIsLoading(true);
+        prefetchAnalytics()
+          .then(data => {
+            setAnalyticsData(data);
+            setIsLoading(false);
+          })
+          .catch(e => {
+            setError(e.message);
+            setIsLoading(false);
+          });
+      }
+    }, 1500);
   };
 
-  if ((isLoading && !processingMessage) || showDummyButton) {
+  if ((isLoading && !analyticsData) || (showDummyButton && isInitialLoad)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -359,57 +405,29 @@ export default function Analytics() {
           </div>
         </div>
         <style jsx>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes tilt {
-            0%, 50%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-          }
-          @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes spin-reverse {
-            from { transform: rotate(360deg); }
-            to { transform: rotate(0deg); }
-          }
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-          @keyframes float-delay {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-          }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.8s ease-out;
-          }
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
-          }
-          .animate-spin-slow {
-            animation: spin-slow 20s infinite linear;
-          }
-          .animate-spin-reverse {
-            animation: spin-reverse 15s infinite linear;
-          }
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-          .animate-float-delay {
-            animation: float-delay 3s ease-in-out infinite;
-          }
-          .animate-pulse-slow {
-            animation: pulse-slow 3s ease-in-out infinite;
-          }
-        `}</style>
+            @keyframes fade-in {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes tilt {
+              0%, 50%, 100% { transform: rotate(0deg); }
+              25% { transform: rotate(1deg); }
+              75% { transform: rotate(-1deg); }
+            }
+            @keyframes spin-slow { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+            @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0); } }
+            @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            @keyframes float-delay { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+            @keyframes pulse-slow { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+            .animate-fade-in { animation: fade-in 0.8s ease-out; }
+            .animate-tilt { animation: tilt 10s infinite linear; }
+            .animate-spin-slow { animation: spin-slow 20s infinite linear; }
+            .animate-spin-reverse { animation: spin-reverse 15s infinite linear; }
+            .animate-float { animation: float 3s ease-in-out infinite; }
+            .animate-float-delay { animation: float-delay 3s ease-in-out infinite; }
+            .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+            `}</style>
+
       </div>
     );
   }
@@ -519,7 +537,7 @@ export default function Analytics() {
                 <>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                    <div className="text-xs text-gray-400">Alpha (Î±)</div>
+                    <div className="text-xs text-gray-400">Alpha (α)</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
@@ -563,8 +581,8 @@ export default function Analytics() {
                     <div className="text-blue-400 font-mono text-sm">
                       {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
                         algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, Î± = ${algorithm?.parameters?.alpha}` :
-                        `Î± = ${algorithm?.parameters?.alpha}`}
+                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
+                        `α = ${algorithm?.parameters?.alpha}`}
                     </div>
                   </div>
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">

@@ -2,7 +2,6 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { useAppState } from '../AppContext';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -258,7 +257,6 @@ function ImageCarousel() {
 }
 
 export default function Geofencing() {
-  const { hasInitiated, setHasInitiated } = useAppState();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({
@@ -268,7 +266,19 @@ export default function Geofencing() {
     lng: -122.4194,
     radius: 200
   });
+  const [showDummyButton, setShowDummyButton] = useState(true);
+  const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
+  const [initiateClicked, setInitiateClicked] = useState(false);
+
+  const backgrounds = [
+    "from-[#232526] to-[#414345]",
+    "from-[#283E51] to-[#485563]",
+    "from-[#232526] to-[#1a2980]",
+    "from-[#0f2027] to-[#2c5364]",
+    "from-[#1e3c72] to-[#2a5298]"
+  ];
 
   const { data: geofences, isLoading, error: geofenceError, refetch: refetchGeofences } = useApiData('geofences', fetchGeofences, 30000);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
@@ -305,22 +315,31 @@ export default function Geofencing() {
     }
   };
 
-  const handleInitiateClick = () => {
-    setHasInitiated(true);
+  const handleDummyButtonClick = () => {
+    setProcessingMessage(true);
+    setInitiateClicked(true);
+    setTimeout(() => {
+      setShowDummyButton(false);
+      setProcessingMessage(false);
+    }, 3000);
   };
 
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
+    const bgInterval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % backgrounds.length);
+    }, 6000);
     return () => {
       clearInterval(factInterval);
+      clearInterval(bgInterval);
     };
   }, []);
 
   const overallError = geofenceError || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
-  if (!hasInitiated) {
+  if ((isLoading && !processingMessage) || showDummyButton) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -379,17 +398,32 @@ export default function Geofencing() {
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
           </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-              <Button
-                onClick={handleInitiateClick}
-                className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
-              >
-                <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                Initiate Geofencing
-                <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
-              </Button>
-            </div>
+            {processingMessage || initiateClicked ? (
+              <div className="flex items-center space-x-4">
+                <div className="flex space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.2}s` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-lg font-semibold text-green-300">Processing request... Hold on...</span>
+              </div>
+            ) : (
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button
+                  onClick={handleDummyButtonClick}
+                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
+                >
+                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                  Initiate Geofencing
+                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
+                </Button>
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
@@ -442,17 +476,6 @@ export default function Geofencing() {
           }
         `}</style>
       </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-        <div className="min-h-[calc(100vh-80px)] bg-slate-900 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 border-4 border-t-green-500 border-gray-700 rounded-full animate-spin"></div>
-                <p className="text-white text-2xl font-semibold">Loading Geofencing Data...</p>
-            </div>
-        </div>
     );
   }
 

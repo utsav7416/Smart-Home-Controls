@@ -36,8 +36,7 @@ export default function SmartRoutinesDashboard() {
   const [routineForm, setRoutineForm] = useState({ name: "", time: "", days: "", icon: 0, color: 0 });
   const [showRoutineForm, setShowRoutineForm] = useState(false);
   const [currentPlayingId, setCurrentPlayingId] = useState(null);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-
+  const [playbackSpeeds, setPlaybackSpeeds] = useState({});
   const mediaRecorderRef = useRef(null);
   const audioRef = useRef(null);
   const chunksRef = useRef([]);
@@ -134,15 +133,18 @@ export default function SmartRoutinesDashboard() {
   }
 
   function playVoiceNote(id, url) {
-    if (currentPlayingId === id) {
+    const speed = playbackSpeeds[id] || 1;
+    audioRef.current.src = url;
+    audioRef.current.playbackRate = speed;
+    audioRef.current.play();
+    setCurrentPlayingId(id);
+    audioRef.current.onended = () => setCurrentPlayingId(null);
+  }
+
+  function stopVoiceNote() {
+    if (audioRef.current) {
       audioRef.current.pause();
       setCurrentPlayingId(null);
-    } else {
-      audioRef.current.src = url;
-      audioRef.current.playbackRate = playbackSpeed;
-      audioRef.current.play();
-      setCurrentPlayingId(id);
-      audioRef.current.onended = () => setCurrentPlayingId(null);
     }
   }
 
@@ -154,10 +156,10 @@ export default function SmartRoutinesDashboard() {
     }
   }
 
-  function handleSpeedChange(s) {
-    setPlaybackSpeed(s);
-    if (audioRef.current) {
-      audioRef.current.playbackRate = s;
+  function handleSpeedChange(id, speed) {
+    setPlaybackSpeeds(prev => ({ ...prev, [id]: speed }));
+    if (audioRef.current && currentPlayingId === id) {
+      audioRef.current.playbackRate = speed;
     }
   }
 
@@ -174,7 +176,7 @@ export default function SmartRoutinesDashboard() {
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
       <audio ref={audioRef} style={{ display: "none" }} />
       <div className="relative z-10 max-w-5xl mx-auto py-12 px-4">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-center bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent mb-2 drop-shadow-lg">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-center text-black mb-2">
           Smart Routines
         </h1>
         <div className="text-center text-lg text-white mb-1 drop-shadow-md">
@@ -205,7 +207,7 @@ export default function SmartRoutinesDashboard() {
             </div>
           ))}
         </div>
-        <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-emerald-400/30 shadow-2xl relative overflow-hidden mb-12">
+        <div className="bg-black/70 backdrop-blur-xl rounded-3xl border border-emerald-400/30 shadow-2xl relative overflow-hidden mb-12">
           <div className="p-7 md:p-10">
             <div className="flex items-center mb-4">
               <Sun className="text-amber-400 mr-3" size={32} />
@@ -344,7 +346,7 @@ export default function SmartRoutinesDashboard() {
           </div>
         </div>
         <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-amber-400/30 shadow-2xl relative overflow-hidden mb-8">
+          <div className="bg-black/70 backdrop-blur-xl rounded-3xl border border-amber-400/30 shadow-2xl relative overflow-hidden mb-8">
             <div className="p-7 md:p-10">
               <div className="flex items-center mb-4">
                 <StickyNote className="text-amber-400 mr-3" size={28} />
@@ -414,7 +416,7 @@ export default function SmartRoutinesDashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-green-400/30 shadow-2xl relative overflow-hidden mb-8">
+          <div className="bg-black/70 backdrop-blur-xl rounded-3xl border border-green-400/30 shadow-2xl relative overflow-hidden mb-8">
             <div className="p-7 md:p-10">
               <div className="flex items-center mb-4">
                 <Mic className="text-green-400 mr-3" size={32} />
@@ -433,8 +435,10 @@ export default function SmartRoutinesDashboard() {
               </div>
               <div className="flex gap-2 mb-4">
                 <button
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded bg-green-400 text-white font-semibold ${
-                    isRecording ? "bg-green-600" : ""
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded font-semibold ${
+                    isRecording
+                      ? "bg-red-600 text-white"
+                      : "bg-green-500 text-white"
                   }`}
                   onClick={isRecording ? stopRecording : startRecording}
                 >
@@ -464,7 +468,11 @@ export default function SmartRoutinesDashboard() {
                   >
                     <button
                       className="text-green-400"
-                      onClick={() => playVoiceNote(v.id, v.url)}
+                      onClick={() =>
+                        currentPlayingId === v.id
+                          ? stopVoiceNote()
+                          : playVoiceNote(v.id, v.url)
+                      }
                     >
                       {currentPlayingId === v.id ? (
                         <Square size={20} />
@@ -479,21 +487,24 @@ export default function SmartRoutinesDashboard() {
                       <div className="text-green-300 text-xs">
                         {v.timestamp}
                       </div>
-                    </div>
-                    <div className="flex gap-1 items-center">
-                      {[0.5, 1, 1.5, 2].map((s) => (
-                        <button
-                          key={s}
-                          className={`px-2 py-1 rounded text-xs ${
-                            playbackSpeed === s
-                              ? "bg-green-400 text-white"
-                              : "bg-green-200/80 text-green-700"
-                          }`}
-                          onClick={() => handleSpeedChange(s)}
-                        >
-                          {s}x
-                        </button>
-                      ))}
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-green-900 font-bold bg-green-100 px-2 py-1 rounded">
+                          Speed:
+                        </span>
+                        {[0.5, 1, 1.5, 2].map((s) => (
+                          <button
+                            key={s}
+                            className={`px-2 py-1 rounded text-xs ${
+                              (playbackSpeeds[v.id] || 1) === s
+                                ? "bg-black text-white"
+                                : "bg-green-200/80 text-green-700"
+                            }`}
+                            onClick={() => handleSpeedChange(v.id, s)}
+                          >
+                            {s}x
+                          </button>
+                        ))}
+                      </div>
                     </div>
                     <button
                       className="text-red-400 hover:text-red-600"
@@ -507,7 +518,7 @@ export default function SmartRoutinesDashboard() {
             </div>
           </div>
         </div>
-        <div className="bg-black/50 backdrop-blur-xl rounded-3xl border border-blue-400/30 shadow-2xl relative overflow-hidden mb-12 mt-8">
+        <div className="bg-black/70 backdrop-blur-xl rounded-3xl border border-blue-400/30 shadow-2xl relative overflow-hidden mb-12 mt-8">
           <div className="p-8">
             <h2 className="text-3xl font-bold text-white mb-8 text-center">Today's Progress</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -545,7 +556,7 @@ export default function SmartRoutinesDashboard() {
           </div>
         </div>
         <div className="mb-12 mt-8">
-          <h2 className="text-4xl font-bold text-white mb-10 text-center bg-gradient-to-r from-white via-green-100 to-green-200 bg-clip-text text-transparent drop-shadow-lg">
+          <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Smart Home Integration
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

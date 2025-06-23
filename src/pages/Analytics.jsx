@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
+import { useAppState } from './AppContext';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -156,28 +157,28 @@ function Carousel({ images }) {
 }
 
 export default function Analytics() {
+  const { hasInitiated, setHasInitiated } = useAppState();
   const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [isLoading, setIsLoading] = useState(!analyticsCache);
   const [error, setError] = useState(null);
-  const [showDummyButton, setShowDummyButton] = useState(true);
-  const [processingMessage, setProcessingMessage] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
-  const [initiateClicked, setInitiateClicked] = useState(false);
 
   useEffect(() => {
-    if (!analyticsCache) {
+    if (!analyticsData) {
+      setIsLoading(true);
       prefetchAnalytics()
         .then(data => {
           setAnalyticsData(data);
-          setIsLoading(false);
         })
         .catch(e => {
           setError(e.message);
+        })
+        .finally(() => {
           setIsLoading(false);
         });
     }
-  }, []);
+  }, [analyticsData]);
 
   useEffect(() => {
     const factInterval = setInterval(() => {
@@ -188,16 +189,11 @@ export default function Analytics() {
     };
   }, []);
 
-  const handleDummyButtonClick = () => {
-    setProcessingMessage(true);
-    setInitiateClicked(true);
-    setTimeout(() => {
-      setShowDummyButton(false);
-      setProcessingMessage(false);
-    }, 3000);
+  const handleInitiateClick = () => {
+    setHasInitiated(true);
   };
 
-  if ((isLoading && !processingMessage) || showDummyButton) {
+  if (!hasInitiated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -236,33 +232,18 @@ export default function Analytics() {
             <div style={{ width: 40 }} />
           </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
-            {processingMessage || initiateClicked ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex space-x-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-semibold text-blue-300">Processing request... Hold on...</span>
-              </div>
-            ) : (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button
-                  onClick={handleDummyButtonClick}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
-                  style={{ marginBottom: '1.5rem' }}
-                >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Anomaly/Tariff Analysis
-                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
-                </Button>
-              </div>
-            )}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+              <Button
+                onClick={handleInitiateClick}
+                className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
+                style={{ marginBottom: '1.5rem' }}
+              >
+                <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                Initiate Anomaly/Tariff Analysis
+                <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
+              </Button>
+            </div>
           </div>
           <div className="w-80 h-80 relative mb-12">
             <div className="absolute inset-0 flex items-center justify-center">
@@ -416,6 +397,17 @@ export default function Analytics() {
     );
   }
 
+  if (isLoading) {
+    return (
+        <div className="min-h-[calc(100vh-80px)] bg-slate-900 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 border-4 border-t-blue-500 border-gray-700 rounded-full animate-spin"></div>
+                <p className="text-white text-2xl font-semibold">Loading Analytics Data...</p>
+            </div>
+        </div>
+    );
+  }
+  
   if (error) {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">

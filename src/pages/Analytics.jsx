@@ -3,14 +3,25 @@ import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
+const SESSION_KEY = 'analytics_has_loaded';
 
 let analyticsCache = null;
 let analyticsPromise = null;
+
 export function prefetchAnalytics() {
-  if (!analyticsCache && !analyticsPromise) {
-    analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
+  if (analyticsCache) return Promise.resolve(analyticsCache);
+  if (!analyticsPromise) {
+    analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`, { cache: 'force-cache' })
       .then(res => res.json())
-      .then(data => { analyticsCache = data; return data; });
+      .then(data => {
+        analyticsCache = data;
+        sessionStorage.setItem('analytics_data', JSON.stringify(data));
+        return data;
+      })
+      .catch(error => {
+        analyticsPromise = null;
+        throw error;
+      });
   }
   return analyticsPromise;
 }
@@ -157,16 +168,61 @@ function Carousel({ images }) {
 
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
-  const [analyticsData, setAnalyticsData] = useState(analyticsCache);
-  const [isLoading, setIsLoading] = useState(!analyticsCache);
+  const [analyticsData, setAnalyticsData] = useState(() => {
+    const cached = sessionStorage.getItem('analytics_data');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [isLoading, setIsLoading] = useState(!analyticsData);
   const [error, setError] = useState(null);
-  const [showDummyButton, setShowDummyButton] = useState(true);
-  const [processingMessage, setProcessingMessage] = useState(false);
+  const [showInitScreen, setShowInitScreen] = useState(() => {
+    return !sessionStorage.getItem(SESSION_KEY);
+  });
+  const [processingInit, setProcessingInit] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
-  const [initiateClicked, setInitiateClicked] = useState(false);
 
   useEffect(() => {
-    if (!analyticsCache) {
+    if (!showInitScreen && !analyticsData) {
+      setIsLoading(true);
+      let didTimeout = false;
+      const timeout = setTimeout(() => {
+        didTimeout = true;
+        setIsLoading(false);
+      }, 4000);
+      prefetchAnalytics()
+        .then(data => {
+          setAnalyticsData(data);
+          setIsLoading(false);
+          clearTimeout(timeout);
+        })
+        .catch(e => {
+          setError(e.message);
+          setIsLoading(false);
+          clearTimeout(timeout);
+        });
+      return () => clearTimeout(timeout);
+    }
+  }, [showInitScreen]);
+
+  useEffect(() => {
+    if (analyticsData) {
+      sessionStorage.setItem('analytics_data', JSON.stringify(analyticsData));
+    }
+  }, [analyticsData]);
+
+  useEffect(() => {
+    const factInterval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
+    }, 4000);
+    return () => clearInterval(factInterval);
+  }, []);
+
+  const handleInitClick = () => {
+    setProcessingInit(true);
+    setTimeout(() => {
+      setShowInitScreen(false);
+      setProcessingInit(false);
+      sessionStorage.setItem(SESSION_KEY, 'true');
+      setIsLoading(true);
       prefetchAnalytics()
         .then(data => {
           setAnalyticsData(data);
@@ -176,26 +232,10 @@ export default function Analytics() {
           setError(e.message);
           setIsLoading(false);
         });
-    }
-  }, []);
-
-  useEffect(() => {
-    const factInterval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
-    }, 4000);
-    return () => clearInterval(factInterval);
-  }, []);
-
-  const handleDummyButtonClick = () => {
-    setProcessingMessage(true);
-    setInitiateClicked(true);
-    setTimeout(() => {
-      setShowDummyButton(false);
-      setProcessingMessage(false);
-    }, 3000);
+    }, 1500);
   };
 
-  if ((isLoading && !processingMessage) || showDummyButton) {
+  if (showInitScreen) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
@@ -234,7 +274,7 @@ export default function Analytics() {
             <div style={{ width: 40 }} />
           </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
-            {processingMessage || initiateClicked ? (
+            {processingInit ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
                   {[...Array(3)].map((_, i) => (
@@ -251,7 +291,7 @@ export default function Analytics() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
                 <Button
-                  onClick={handleDummyButtonClick}
+                  onClick={handleInitClick}
                   className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
                   style={{ marginBottom: '1.5rem' }}
                 >
@@ -262,154 +302,18 @@ export default function Analytics() {
               </div>
             )}
           </div>
-          <div className="w-80 h-80 relative mb-12">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow" style={{
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                animationDuration: '20s'
-              }}>
-                <div className="absolute w-4 h-4 bg-blue-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
-                <div className="absolute w-4 h-4 bg-cyan-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
-                <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
-                <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
-              </div>
-              <div className="absolute w-48 h-48 border-2 border-cyan-400/50 animate-spin-reverse" style={{
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                animationDuration: '15s'
-              }}>
-                <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-3 h-3 bg-blue-400 rounded-full top-1/4 -right-1.5" />
-                <div className="absolute w-3 h-3 bg-indigo-400 rounded-full top-3/4 -right-1.5" />
-                <div className="absolute w-3 h-3 bg-purple-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-3 h-3 bg-pink-400 rounded-full top-3/4 -left-1.5" />
-                <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-1/4 -left-1.5" />
-              </div>
-              <div className="absolute w-24 h-24 border border-indigo-300/60 animate-spin" style={{
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                animationDuration: '10s'
-              }}>
-                <div className="absolute w-2 h-2 bg-indigo-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-2 h-2 bg-blue-300 rounded-full top-1/4 -right-1" />
-                <div className="absolute w-2 h-2 bg-cyan-300 rounded-full top-3/4 -right-1" />
-                <div className="absolute w-2 h-2 bg-purple-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-2 h-2 bg-pink-300 rounded-full top-3/4 -left-1" />
-                <div className="absolute w-2 h-2 bg-teal-300 rounded-full top-1/4 -left-1" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-blue-400/30">
-                  <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
-                </div>
-              </div>
-              <div className="absolute inset-0">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-blue-400/30 to-transparent"
-                    style={{
-                      top: '50%',
-                      left: '50%',
-                      transformOrigin: 'bottom center',
-                      transform: `translate(-50%, -100%) rotate(${i * 60}deg)`,
-                      animation: `pulse 2s infinite ${i * 0.3}s`
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="absolute w-3 h-3 bg-blue-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
-              <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
-              <div className="absolute w-4 h-4 bg-indigo-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
-              <div className="absolute w-2 h-2 bg-purple-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
-              <div className="absolute w-3 h-3 bg-pink-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
-              <div className="absolute w-2 h-2 bg-teal-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: BarChart3, label: "Processing Data", delay: "0s" },
-              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
-              { icon: TrendingUp, label: "Training Models", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
-                <div
-                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
-                >
-                  <item.icon className="w-8 h-8 text-blue-400" />
-                </div>
-                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
-                    style={{
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-blue-400/60">
-              <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to analytics servers...</span>
-            </div>
-          </div>
         </div>
-        <style jsx>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes tilt {
-            0%, 50%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-          }
-          @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes spin-reverse {
-            from { transform: rotate(360deg); }
-            to { transform: rotate(0deg); }
-          }
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-          @keyframes float-delay {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-          }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.8s ease-out;
-          }
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
-          }
-          .animate-spin-slow {
-            animation: spin-slow 20s infinite linear;
-          }
-          .animate-spin-reverse {
-            animation: spin-reverse 15s infinite linear;
-          }
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-          .animate-float-delay {
-            animation: float-delay 3s ease-in-out infinite;
-          }
-          .animate-pulse-slow {
-            animation: pulse-slow 3s ease-in-out infinite;
-          }
-        `}</style>
+      </div>
+    );
+  }
+
+  if (isLoading && !analyticsData) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-16 h-16 border-4 border-blue-400 border-dashed rounded-full animate-spin" />
+          <div className="text-blue-300 text-lg">Loading analytics...</div>
+        </div>
       </div>
     );
   }
@@ -450,7 +354,7 @@ export default function Analytics() {
         const accuracy = 100 - Math.abs(item.consumption - item.prediction) / item.consumption * 100;
         return sum + Math.max(0, accuracy);
       }, 0) / adjustedWeeklyData.length
-    : 0;
+    : '--';
 
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
@@ -519,7 +423,7 @@ export default function Analytics() {
                 <>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                    <div className="text-xs text-gray-400">Alpha (Î±)</div>
+                    <div className="text-xs text-gray-400">Alpha (α)</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
@@ -563,8 +467,8 @@ export default function Analytics() {
                     <div className="text-blue-400 font-mono text-sm">
                       {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
                         algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, Î± = ${algorithm?.parameters?.alpha}` :
-                        `Î± = ${algorithm?.parameters?.alpha}`}
+                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
+                        `α = ${algorithm?.parameters?.alpha}`}
                     </div>
                   </div>
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
@@ -611,7 +515,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-200 text-sm font-medium">ML Prediction Accuracy</p>
-                <p className="text-3xl font-bold text-white">{predictionAccuracy.toFixed(1)}%</p>
+                <p className="text-3xl font-bold text-white">{predictionAccuracy !== '--' ? `${predictionAccuracy.toFixed(1)}%` : '--'}</p>
                 <p className="text-green-300 text-xs mt-1">Ensemble Model</p>
               </div>
               <Brain className="w-8 h-8 text-green-400" />
@@ -623,7 +527,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-200 text-sm font-medium">Anomalies Detected</p>
-                <p className="text-3xl font-bold text-white">{anomaliesDetected}</p>
+                <p className="text-3xl font-bold text-white">{anomaliesDetected || '--'}</p>
                 <p className="text-red-300 text-xs mt-1">Isolation Forest</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-400" />
@@ -647,7 +551,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-200 text-sm font-medium">Total Savings</p>
-                <p className="text-3xl font-bold text-white">${totalSavings}</p>
+                <p className="text-3xl font-bold text-white">{totalSavings ? `$${totalSavings}` : '--'}</p>
                 <p className="text-purple-300 text-xs mt-1">This Month</p>
               </div>
               <Target className="w-8 h-8 text-purple-400" />
@@ -659,7 +563,7 @@ export default function Analytics() {
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
-            Real-Time Anomaly Detection ({anomaliesDetected} detected)
+            Real-Time Anomaly Detection ({anomaliesDetected || '--'} detected)
           </CardTitle>
           <p className="text-gray-400 text-sm">Live anomaly detection using Isolation Forest algorithm</p>
         </CardHeader>

@@ -15,18 +15,11 @@ import warnings
 import os
 import threading
 from functools import lru_cache
-from flask_caching import Cache
-from flask_compress import Compress
 
 warnings.filterwarnings('ignore')
 
 app = Flask(__name__)
 CORS(app)
-Compress(app)
-
-app.config['CACHE_TYPE'] = 'RedisCache'
-app.config['CACHE_REDIS_URL'] = os.environ.get('REDIS_URL')
-cache = Cache(app)
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -111,13 +104,16 @@ def generate_realistic_energy_data(device_states_data=None):
     weekend_factor = 1.15 if day_of_week >= 5 else 1.0
     outdoor_temp = 70 + 15 * np.sin(2 * np.pi * hour / 24) + np.random.normal(0, 3)
     weather_factor = 1.2 if outdoor_temp > 80 or outdoor_temp < 60 else 1.0
+    
     device_change_factor = 1.0
     global last_device_change_time
     if last_device_change_time and (current_time - last_device_change_time).total_seconds() < 300:
         device_change_factor = random.uniform(1.15, 1.35)
+    
     total_consumption = (base_consumption + device_consumption) * time_factor * weekend_factor * weather_factor * device_change_factor
     noise = np.random.normal(0, total_consumption * 0.08)
     final_consumption = max(base_consumption, total_consumption + noise)
+    
     return {
         'timestamp': current_time.isoformat(),
         'consumption': round(final_consumption, 2),
@@ -195,7 +191,7 @@ def train_models_background():
             anomaly_detector.fit(X_scaled)
             mlp_model.fit(X_scaled, y)
         models_trained = True
-    except Exception:
+    except Exception as e:
         models_trained = False
 
 def ensure_initialized_and_trained():
@@ -217,11 +213,13 @@ def detect_dynamic_anomalies(df):
         return anomaly_data
     recent_data = df[-min(24, len(df)):]
     consumption_values = recent_data['consumption'].values
+    
     for _, row in recent_data.iterrows():
         hour = row['hour']
         consumption = row['consumption']
         timestamp = row['timestamp']
         device_consumption = row.get('device_consumption', 0)
+        
         similar_hours = recent_data[recent_data['hour'] == hour]['consumption']
         if len(similar_hours) > 1:
             hour_mean = similar_hours.mean()
@@ -238,6 +236,7 @@ def detect_dynamic_anomalies(df):
                         'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
                         'type': 'temporal_pattern'
                     })
+        
         if device_consumption > 0:
             expected_base = 50 + (device_consumption * 0.7)
             if consumption > expected_base * 1.25 or consumption < expected_base * 0.75:
@@ -250,6 +249,7 @@ def detect_dynamic_anomalies(df):
                         'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
                         'type': 'device_mismatch'
                     })
+    
     overall_mean = consumption_values.mean()
     overall_std = consumption_values.std()
     if overall_std > 0:
@@ -267,15 +267,18 @@ def detect_dynamic_anomalies(df):
                         'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
                         'type': 'statistical'
                     })
+    
     if len(recent_data) > 8 and models_trained:
         try:
             features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption']].fillna(0).values
             global last_calculated_contamination_rate
+            
             contamination_rate = 0.18
             if len(energy_data) > 15:
                 recent_variance = np.var(consumption_values)
                 if recent_variance > overall_mean * 0.1:
                     contamination_rate = min(0.25, contamination_rate + 0.05)
+            
             last_calculated_contamination_rate = contamination_rate
             temp_detector = IsolationForest(
                 contamination=contamination_rate,
@@ -286,6 +289,7 @@ def detect_dynamic_anomalies(df):
             temp_detector.fit(features)
             ml_anomalies = temp_detector.predict(features)
             ml_scores = temp_detector.decision_function(features)
+            
             for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
                 if is_anomaly == -1 and len(anomaly_data) < 15:
                     row = recent_data.iloc[i]
@@ -299,6 +303,7 @@ def detect_dynamic_anomalies(df):
                         })
         except Exception:
             pass
+    
     global last_device_change_time
     if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 600:
         recent_entries = recent_data.tail(3)
@@ -309,6 +314,7 @@ def detect_dynamic_anomalies(df):
                     'severity': 'medium', 'timestamp': row['timestamp'], 'score': 0.75,
                     'type': 'device_change'
                 })
+    
     return anomaly_data[:25]
 
 @app.route('/')
@@ -340,7 +346,6 @@ def update_device_states():
         return jsonify({'error': 'Failed to update device states'}), 500
 
 @app.route('/api/energy-data', methods=['GET'])
-@cache.cached(timeout=30)
 def get_energy_data():
     try:
         recent_data = energy_data[-12:] if len(energy_data) >= 12 else energy_data
@@ -377,13 +382,13 @@ def get_energy_data():
         return jsonify([]), 500
 
 @app.route('/api/analytics', methods=['GET'])
-@cache.cached(timeout=30)
 def get_analytics():
     global cached_analytics, analytics_cache_time
     try:
         current_time = time.time()
         if cached_analytics and analytics_cache_time and (current_time - analytics_cache_time) < CACHE_DURATION:
             return jsonify(cached_analytics)
+        
         if len(energy_data) < 5:
             return jsonify({'message': 'Insufficient data.'}), 200
         df = pd.DataFrame(energy_data[-72:] if len(energy_data) >= 72 else energy_data)
@@ -451,18 +456,20 @@ def get_analytics():
                 'description': 'A Multi-Layer Perceptron (MLP) is a class of feedforward artificial neural network. It\'s capable of learning non-linear relationships in complex energy datasets for more nuanced predictions.'
             }
         }
+        
         result = {
             'weeklyData': weekly_data, 'anomalyData': anomaly_data, 'costOptimization': cost_optimization,
             'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
         }
+        
         cached_analytics = result
         analytics_cache_time = current_time
+        
         return jsonify(result)
     except Exception:
         return jsonify({'error': 'Analytics unavailable'}), 500
 
 @app.route('/api/geofences', methods=['GET'])
-@cache.cached(timeout=30)
 def get_geofences():
     return jsonify(geofence_data)
 
@@ -477,17 +484,15 @@ def create_geofence():
             'lng': data.get('lng', -122.4194 + random.uniform(-0.01, 0.01)),
             'radius': data.get('radius', 200), 'isActive': True, 'automations': int(random.randint(1, 6)),
             'trigger_count': 0,
-            'energy_savings': random.uniform(5, 15),
+            'energy_savings': random.uniform(5, 15),  
             'created_at': datetime.now().isoformat()
         }
         geofence_data.append(new_geofence)
-        cache.delete_memoized(get_geofences)
         return jsonify(new_geofence)
     except Exception:
         return jsonify({'error': 'Failed to create geofence'}), 500
 
 @app.route('/api/geofences/stats', methods=['GET'])
-@cache.cached(timeout=30)
 def get_geofence_stats():
     try:
         total_zones = len([g for g in geofence_data if g.get('isActive', False)])
@@ -502,7 +507,6 @@ def get_geofence_stats():
         return jsonify({'error': 'Stats unavailable'}), 500
 
 @app.route('/api/geofences/analytics', methods=['GET'])
-@cache.cached(timeout=30)
 def get_geofence_analytics():
     try:
         global total_optimization_attempts, optimization_success_count
@@ -547,11 +551,11 @@ def optimize_geofences():
                 'radius_change': round(radius_change, 1)
             })
             total_energy_improvement += energy_improvement
-        if random.random() < 0.90:
+        if random.random() < 0.90: 
             optimization_success_count += 1
-        else:
+        else: 
             if optimization_success_count > 0:
-                optimization_success_count = max(0, optimization_success_count - random.randint(1, 3))
+                optimization_success_count = max(0, optimization_success_count - random.randint(1, 3)) 
         optimization_record = {
             'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
             'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count
@@ -561,9 +565,6 @@ def optimize_geofences():
             optimization_history.pop(0)
         optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
         dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
-        cache.delete_memoized(get_geofences)
-        cache.delete_memoized(get_geofence_stats)
-        cache.delete_memoized(get_geofence_analytics)
         return jsonify({
             'success': True, 'message': 'Geofences optimized using ML algorithms',
             'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),

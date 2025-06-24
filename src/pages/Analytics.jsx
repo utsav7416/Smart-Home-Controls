@@ -11,7 +11,7 @@ let hasInitiatedAnalytics = false;
 export function prefetchAnalytics() {
   if (analyticsCache) return Promise.resolve(analyticsCache);
   if (analyticsPromise) return analyticsPromise;
-  analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
+  analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`, { cache: 'force-cache', keepalive: true })
     .then(res => {
       if (!res.ok) throw new Error(`Analytics fetch failed: ${res.status}`);
       return res.json();
@@ -216,6 +216,7 @@ export default function Analytics() {
     }, 4000);
     return () => clearInterval(factInterval);
   }, []);
+
 
   if (viewState === 'initial' || viewState === 'loading') {
     return (

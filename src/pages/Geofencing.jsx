@@ -12,23 +12,21 @@ let hasInitiatedGeofences = false;
 export function prefetchGeofences() {
   if (geofencesCache) return Promise.resolve(geofencesCache);
   if (geofencesPromise) return geofencesPromise;
-  
-  geofencesPromise = fetch(`${FLASK_API_URL}/api/geofences`)
+  geofencesPromise = fetch(`${FLASK_API_URL}/api/geofences`, { cache: 'force-cache', keepalive: true })
     .then(res => {
-        if (!res.ok) throw new Error(`Geofencing fetch failed: ${res.status}`);
-        return res.json();
+      if (!res.ok) throw new Error(`Geofencing fetch failed: ${res.status}`);
+      return res.json();
     })
-    .then(data => { 
-        geofencesCache = data;
-        geofencesPromise = null;
-        return data; 
+    .then(data => {
+      geofencesCache = data;
+      geofencesPromise = null;
+      return data;
     })
     .catch(error => {
-        geofencesPromise = null;
-        hasInitiatedGeofences = false;
-        throw error;
+      geofencesPromise = null;
+      hasInitiatedGeofences = false;
+      throw error;
     });
-
   return geofencesPromise;
 }
 

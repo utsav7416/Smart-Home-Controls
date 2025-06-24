@@ -21,16 +21,18 @@ function App() {
     <Router>
       <div className="min-h-screen bg-[#07051c]">
         <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/smart-routines" element={<SmartRoutinesDashboard />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/geofencing" element={<Geofencing />} />
-          <Route path="/anomaly-analytics" element={<Analytics />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
+        <main className="pt-20">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/smart-routines" element={<SmartRoutinesDashboard />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/geofencing" element={<Geofencing />} />
+            <Route path="/anomaly-analytics" element={<Analytics />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/profile" element={<Profile />} />
+          </Routes>
+        </main>
         <Footer />
       </div>
     </Router>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
@@ -11,7 +11,6 @@ let hasInitiatedAnalytics = false;
 export function prefetchAnalytics() {
   if (analyticsCache) return Promise.resolve(analyticsCache);
   if (analyticsPromise) return analyticsPromise;
-
   analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`)
     .then(res => {
       if (!res.ok) throw new Error(`Analytics fetch failed: ${res.status}`);
@@ -27,7 +26,6 @@ export function prefetchAnalytics() {
       hasInitiatedAnalytics = false;
       throw error;
     });
-
   return analyticsPromise;
 }
 
@@ -177,6 +175,7 @@ export default function Analytics() {
   const [error, setError] = useState(null);
   const [factIndex, setFactIndex] = useState(0);
   const [viewState, setViewState] = useState(hasInitiatedAnalytics ? 'loading' : 'initial');
+  const expandedStatesRef = useRef({});
 
   const handleInitiate = () => {
     if (viewState === 'initial') {
@@ -384,56 +383,13 @@ export default function Analytics() {
           </div>
         </div>
         <style jsx>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes tilt {
-            0%, 50%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-          }
-          @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes spin-reverse {
-            from { transform: rotate(360deg); }
-            to { transform: rotate(0deg); }
-          }
-          @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-          }
-          @keyframes float-delay {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-          }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.8s ease-out;
-          }
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
-          }
-          .animate-spin-slow {
-            animation: spin-slow 20s infinite linear;
-          }
-          .animate-spin-reverse {
-            animation: spin-reverse 15s infinite linear;
-          }
-          .animate-float {
-            animation: float 3s ease-in-out infinite;
-          }
-          .animate-float-delay {
-            animation: float-delay 3s ease-in-out infinite;
-          }
-          .animate-pulse-slow {
-            animation: pulse-slow 3s ease-in-out infinite;
-          }
+          @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
+          @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+          @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+          @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         `}</style>
       </div>
     );
@@ -480,12 +436,17 @@ export default function Analytics() {
         return sum + Math.max(0, accuracy);
       }, 0) / adjustedWeeklyData.length
     : 0;
-  
+
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
-  
+
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const algorithmKey = algorithm?.name || 'unknown';
+    const isExpanded = expandedStatesRef.current[algorithmKey] || false;
+    const toggleExpanded = () => {
+      expandedStatesRef.current[algorithmKey] = !isExpanded;
+      setAnalyticsData({...analyticsData});
+    };
     if (!algorithm) return null;
     return (
       <div className="w-full">
@@ -559,7 +520,7 @@ export default function Analytics() {
             </div>
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">{algorithm.description}</p>
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={toggleExpanded}
               className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
             >
               <Settings className="w-4 h-4" />
@@ -572,8 +533,7 @@ export default function Analytics() {
                     <Code className="w-4 h-4" />
                     Parameters
                   </h4>
-                  <div className="space-y-2">
-                    {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
+                  <div className="space-y-2">{Object.entries(algorithm.parameters || {}).map(([key, value]) => (
                       <div key={key} className="flex justify-between items-center">
                         <span className="text-green-400 text-xs font-mono">{key}:</span>
                         <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">

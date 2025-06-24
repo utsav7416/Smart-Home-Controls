@@ -352,7 +352,7 @@ export default function Geofencing() {
   }, []);
 
   const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
-
+  
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -387,7 +387,9 @@ export default function Geofencing() {
                   {doYouKnowFacts[factIndex]}
                 </p>
               </div>
-              <p className="text-green-300 mt-2">Location-based automations incoming!</p>
+              <p className="text-green-300 mt-2 text-lg">
+                Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
+              </p>
             </div>
             <div style={{ width: 40 }} />
           </div>
@@ -423,7 +425,7 @@ export default function Geofencing() {
                     />
                   ))}
                 </div>
-                <span className="text-lg font-semibold text-green-300">Processing request... Hold on...</span>
+                <span className="text-lg font-semibold text-green-300">Processing request, this may take a while...</span>
               </div>
             ) : (
               <div className="relative group">

@@ -252,7 +252,9 @@ export default function Analytics() {
                   {doYouKnowFacts[factIndex]}
                 </p>
               </div>
-              <p className="text-blue-300 mt-2">Get ready for actionable insights!</p>
+              <p className="text-blue-300 mt-2 text-lg">
+                Our AI is diving deep into your energy data, searching for hidden patterns and savings opportunities. Prepare for a detailed breakdown of your home's energy DNA.
+              </p>
             </div>
             <div style={{ width: 40 }} />
           </div>
@@ -268,7 +270,7 @@ export default function Analytics() {
                     />
                   ))}
                 </div>
-                <span className="text-lg font-semibold text-blue-300">Processing request... Hold on...</span>
+                <span className="text-lg font-semibold text-blue-300">Processing request, this may take a while...</span>
               </div>
             ) : (
               <div className="relative group">
@@ -478,7 +480,7 @@ export default function Analytics() {
         return sum + Math.max(0, accuracy);
       }, 0) / adjustedWeeklyData.length
     : 0;
-
+  
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
   
@@ -609,7 +611,6 @@ export default function Analytics() {
       </div>
     );
   };
-
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
       <div className="relative text-center py-8">

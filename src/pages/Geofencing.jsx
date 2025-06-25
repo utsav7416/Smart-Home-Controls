@@ -24,12 +24,7 @@ const CardTitle = ({ children, className = '' }) => <h3 className={`text-lg font
 const CardContent = ({ children, className = '' }) => <div className={`px-6 pb-6 ${className}`}>{children}</div>;
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
-  <button 
-    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`} 
-    onClick={onClick} 
-    disabled={disabled} 
-    {...props}
-  >
+  <button className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`} onClick={onClick} disabled={disabled} {...props}>
     {children}
   </button>
 );
@@ -86,17 +81,21 @@ function ImageCarousel() {
   );
 }
 
-function Curtain({ revealed, duration = 1200 }) {
+function Curtain({ revealed, duration = 800, children }) {
   return (
     <div className="fixed inset-0 z-50 pointer-events-none" style={{ display: revealed ? 'none' : 'block' }}>
       <div className="absolute inset-0 flex">
         <div className="curtain-panel curtain-left" style={{
-          width: '50%', height: '100%', background: 'linear-gradient(120deg,#0f172a 60%,#22d3ee 100%)',
-          transform: revealed ? 'translateX(-100%)' : 'translateX(0)', transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
+          width: '50%', height: '100%', 
+          background: 'linear-gradient(120deg,#0f172a 60%,#22d3ee 100%)',
+          transform: revealed ? 'translateX(-100%)' : 'translateX(0)', 
+          transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
         }} />
         <div className="curtain-panel curtain-right" style={{
-          width: '50%', height: '100%', background: 'linear-gradient(-120deg,#0f172a 60%,#22d3ee 100%)',
-          transform: revealed ? 'translateX(100%)' : 'translateX(0)', transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
+          width: '50%', height: '100%', 
+          background: 'linear-gradient(-120deg,#0f172a 60%,#22d3ee 100%)',
+          transform: revealed ? 'translateX(100%)' : 'translateX(0)', 
+          transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
         }} />
         
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
@@ -124,6 +123,9 @@ function Curtain({ revealed, duration = 1200 }) {
                 <Brain className="w-16 h-16 text-green-400 animate-pulse" />
               </div>
             </div>
+            {[0, 0.5, 1, 1.5].map((delay, i) => (
+              <div key={i} className={`absolute ${['top-0 left-0', 'top-0 right-0', 'bottom-0 left-0', 'bottom-0 right-0'][i]} ${['w-8 h-8', 'w-6 h-6', 'w-7 h-7', 'w-5 h-5'][i]} ${['bg-green-400/80', 'bg-emerald-400/80', 'bg-teal-400/80', 'bg-cyan-400/80'][i]} rounded-full animate-bounce`} style={{ animationDelay: `${delay}s` }} />
+            ))}
           </div>
           
           <div className="w-full max-w-xs">
@@ -164,7 +166,7 @@ export default function Geofencing() {
       setTimeout(() => {
         setCurtainRevealed(true);
         localStorage.setItem('curtainRevealed_geofence', 'true');
-      }, 1200);
+      }, 1000);
     }
   }, [curtainRevealed, viewState]);
 
@@ -172,9 +174,7 @@ export default function Geofencing() {
     if (viewState === 'initial') {
       hasInitiatedGeofences = true;
       setViewState('loading');
-      prefetchGeofences()
-        .then(data => { setGeofences(data); setViewState('dashboard'); })
-        .catch(e => { setError(e.message); setViewState('error'); });
+      prefetchGeofences().then(data => { setGeofences(data); setViewState('dashboard'); }).catch(e => { setError(e.message); setViewState('error'); });
     }
   };
 
@@ -206,9 +206,7 @@ export default function Geofencing() {
   useEffect(() => {
     if (hasInitiatedGeofences && !geofences) {
       setViewState('loading');
-      prefetchGeofences()
-        .then(data => { setGeofences(data); setViewState('dashboard'); })
-        .catch(e => { setError(e.message); setViewState('error'); });
+      prefetchGeofences().then(data => { setGeofences(data); setViewState('dashboard'); }).catch(e => { setError(e.message); setViewState('error'); });
     } else if (geofences) {
       setViewState('dashboard');
     }
@@ -217,7 +215,7 @@ export default function Geofencing() {
   const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
   if (!curtainRevealed) {
-    return <Curtain revealed={curtainRevealed} duration={1200} />;
+    return <Curtain revealed={curtainRevealed} duration={800} />;
   }
 
   if (viewState === 'initial' || viewState === 'loading') {
@@ -238,6 +236,9 @@ export default function Geofencing() {
               <Brain className="w-16 h-16 text-green-400 animate-pulse" />
             </div>
           </div>
+          {[0, 0.5, 1, 1.5].map((delay, i) => (
+            <div key={i} className={`absolute ${['top-0 left-0', 'top-0 right-0', 'bottom-0 left-0', 'bottom-0 right-0'][i]} ${['w-8 h-8', 'w-6 h-6', 'w-7 h-7', 'w-5 h-5'][i]} ${['bg-green-400/80', 'bg-emerald-400/80', 'bg-teal-400/80', 'bg-cyan-400/80'][i]} rounded-full animate-bounce`} style={{ animationDelay: `${delay}s` }} />
+          ))}
         </div>
         
         <div className="mb-6 text-center">
@@ -287,11 +288,10 @@ export default function Geofencing() {
         </div>
       )}
       
-      <div className="text-center py-16 rounded-2xl relative overflow-hidden"
-        style={{
-          backgroundImage: `linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),url('https://thumbs.dreamstime.com/z/examining-impact-edge-computing-smart-home-security-systems-dusk-group-gathers-to-discuss-how-enhances-highlighting-356998640.jpg?ct=jpeg')`,
-          backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'
-        }}>
+      <div className="text-center py-16 rounded-2xl relative overflow-hidden" style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),url('https://thumbs.dreamstime.com/z/examining-impact-edge-computing-smart-home-security-systems-dusk-group-gathers-to-discuss-how-enhances-highlighting-356998640.jpg?ct=jpeg')`,
+        backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat'
+      }}>
         <div className="relative z-10">
           <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">AI-Powered Geofencing Control</h1>
           <p className="text-green-200 text-xl drop-shadow-md">Machine learning algorithms optimizing your location-based automation</p>
@@ -299,65 +299,25 @@ export default function Geofencing() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-        <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-200 text-sm">Model Accuracy</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.model_accuracy?.toFixed(1) || 0}%</p>
+        {[
+          { title: 'Model Accuracy', value: `${mlMetrics.model_accuracy?.toFixed(1) || 0}%`, icon: Brain, color: 'green' },
+          { title: 'Prediction Confidence', value: `${mlMetrics.prediction_confidence?.toFixed(1) || 0}%`, icon: TrendingUp, color: 'emerald' },
+          { title: 'Zones Created', value: stats?.total_zones || 0, icon: MapIcon, color: 'teal' },
+          { title: 'Total Triggers', value: stats?.total_triggers || 0, icon: Target, color: 'purple' },
+          { title: 'Optimization Success', value: `${mlMetrics.optimization_success_count?.toFixed(1) || 0}%`, icon: Brain, color: 'lime' }
+        ].map((metric, i) => (
+          <Card key={i} className={`bg-gradient-to-br from-${metric.color}-600/20 to-${metric.color}-800/20 backdrop-blur-md border border-${metric.color}-400/30`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-${metric.color}-200 text-sm`}>{metric.title}</p>
+                  <p className="text-3xl font-bold text-white">{metric.value}</p>
+                </div>
+                <metric.icon className={`w-8 h-8 text-${metric.color}-400`} />
               </div>
-              <Brain className="w-8 h-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 backdrop-blur-md border border-emerald-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-emerald-200 text-sm">Prediction Confidence</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.prediction_confidence?.toFixed(1) || 0}%</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-emerald-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-teal-600/20 to-teal-800/20 backdrop-blur-md border border-teal-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-teal-200 text-sm">Zones Created</p>
-                <p className="text-3xl font-bold text-white">{stats?.total_zones || 0}</p>
-              </div>
-              <MapIcon className="w-8 h-8 text-teal-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-md border border-purple-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-200 text-sm">Total Triggers</p>
-                <p className="text-3xl font-bold text-white">{stats?.total_triggers || 0}</p>
-              </div>
-              <Target className="w-8 h-8 text-purple-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-lime-600/20 to-lime-800/20 backdrop-blur-md border border-lime-400/30">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-lime-200 text-sm">Optimization Success</p>
-                <p className="text-3xl font-bold text-white">{mlMetrics.optimization_success_count?.toFixed(1) || 0}%</p>
-              </div>
-              <Brain className="w-8 h-8 text-lime-400" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
       
       <div className="flex space-x-4 mb-6">
@@ -373,17 +333,14 @@ export default function Geofencing() {
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-green-400" />
-                ML-Optimized Zones
+                <MapPin className="w-5 h-5 text-green-400" />ML-Optimized Zones
               </CardTitle>
               <div className="flex gap-2">
                 <button onClick={() => optimizeMutation.mutate()} className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5" disabled={optimizeMutation.isPending}>
-                  <Brain className="w-4 h-4" />
-                  Optimize
+                  <Brain className="w-4 h-4" />Optimize
                 </button>
                 <button onClick={() => setShowCreateForm(true)} className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-1.5">
-                  <Plus className="w-4 h-4" />
-                  Add Zone
+                  <Plus className="w-4 h-4" />Add Zone
                 </button>
               </div>
             </CardHeader>
@@ -415,17 +372,13 @@ export default function Geofencing() {
           <div className="flex flex-col gap-6">
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
-              <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living.
-              </p>
+              <p className="text-green-100 mb-4 text-base leading-relaxed">See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living.</p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
                 <li>• Instantly adjust lighting and temperature as you move from room to room.</li>
                 <li>• Save energy without sacrificing convenience or style.</li>
               </ul>
             </div>
-            <div className="mt-2">
-              <ImageCarousel />
-            </div>
+            <div className="mt-2"><ImageCarousel /></div>
           </div>
         </div>
       )}
@@ -433,9 +386,7 @@ export default function Geofencing() {
       {activeTab === 'analytics' && analytics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-            <CardHeader>
-              <CardTitle className="text-white">24h Energy Optimization</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-white">24h Energy Optimization</CardTitle></CardHeader>
             <CardContent>
               {analytics.energy_optimization && analytics.energy_optimization.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -456,9 +407,7 @@ export default function Geofencing() {
           </Card>
           
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-            <CardHeader>
-              <CardTitle className="text-white">Zone Efficiency</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-white">Zone Efficiency</CardTitle></CardHeader>
             <CardContent>
               {analytics.zone_efficiency && analytics.zone_efficiency.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
@@ -481,31 +430,29 @@ export default function Geofencing() {
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-white text-xl">Create New ML-Optimized Zone</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-white text-xl">Create New ML-Optimized Zone</CardTitle></CardHeader>
             
             <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <label className="block text-green-200 text-sm font-medium">Zone Name</label>
-                <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Home, Work, etc." value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-              </div>
-              
-              <div className="space-y-4">
-                <label className="block text-green-200 text-sm font-medium">Address</label>
-                <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="123 Main St, City, Country" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
-              </div>
+              {[
+                { label: 'Zone Name', key: 'name', placeholder: 'Home, Work, etc.', type: 'text' },
+                { label: 'Address', key: 'address', placeholder: '123 Main St, City, Country', type: 'text' }
+              ].map(field => (
+                <div key={field.key} className="space-y-4">
+                  <label className="block text-green-200 text-sm font-medium">{field.label}</label>
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder={field.placeholder} value={formData[field.key]} onChange={e => setFormData({ ...formData, [field.key]: e.target.value })} />
+                </div>
+              ))}
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-green-200 text-sm font-medium">Latitude</label>
-                  <input type="number" step="0.0001" className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="37.7749" value={formData.lat} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) || 0 })} />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="block text-green-200 text-sm font-medium">Longitude</label>
-                  <input type="number" step="0.0001" className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="-122.4194" value={formData.lng} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) || 0 })} />
-                </div>
+                {[
+                  { label: 'Latitude', key: 'lat', placeholder: '37.7749' },
+                  { label: 'Longitude', key: 'lng', placeholder: '-122.4194' }
+                ].map(field => (
+                  <div key={field.key} className="space-y-2">
+                    <label className="block text-green-200 text-sm font-medium">{field.label}</label>
+                    <input type="number" step="0.0001" className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" placeholder={field.placeholder} value={formData[field.key]} onChange={e => setFormData({ ...formData, [field.key]: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                ))}
               </div>
               
               <div className="space-y-4">
@@ -514,9 +461,7 @@ export default function Geofencing() {
               </div>
               
               <div className="flex justify-end gap-3 pt-4">
-                <button className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600" onClick={() => setShowCreateForm(false)}>
-                  Cancel
-                </button>
+                <button className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600" onClick={() => setShowCreateForm(false)}>Cancel</button>
                 <button className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50" onClick={handleCreateSubmit} disabled={createMutation.isPending || !formData.name.trim() || !formData.address.trim() || isNaN(formData.lat) || isNaN(formData.lng) || isNaN(formData.radius) || formData.radius <= 0}>
                   {createMutation.isPending ? 'Creating...' : 'Create Zone'}
                 </button>

@@ -3,7 +3,6 @@ import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft,
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Text, Float, Stars } from '@react-three/drei';
-import * as THREE from 'three';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -48,30 +47,23 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
   </button>
 );
 
+// Simple Three.js components that work with React 18
 function AnimatedSphere({ position, color, scale = 1 }) {
   const meshRef = useRef();
   
   useFrame((state) => {
-    try {
-      if (meshRef.current) {
-        meshRef.current.rotation.x = state.clock.elapsedTime * 0.3;
-        meshRef.current.rotation.y = state.clock.elapsedTime * 0.2;
-        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime) * 0.1;
-      }
-    } catch (error) {
-      console.warn('AnimatedSphere error:', error);
+    if (meshRef.current) {
+      meshRef.current.rotation.x = state.clock.elapsedTime * 0.3;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime) * 0.1;
     }
   });
 
   return (
     <Float speed={1.5} rotationIntensity={1} floatIntensity={2}>
       <mesh ref={meshRef} position={position}>
-        <sphereGeometry args={[0.5 * scale, 32, 32]} />
-        <meshStandardMaterial
-          color={color}
-          roughness={0.1}
-          metalness={0.8}
-        />
+        <sphereGeometry args={[0.5 * scale, 16, 16]} />
+        <meshStandardMaterial color={color} />
       </mesh>
     </Float>
   );
@@ -81,74 +73,37 @@ function GeofenceRing({ radius = 2, position = [0, 0, 0] }) {
   const ringRef = useRef();
   
   useFrame((state) => {
-    try {
-      if (ringRef.current) {
-        ringRef.current.rotation.z = state.clock.elapsedTime * 0.5;
-        if (ringRef.current.material) {
-          ringRef.current.material.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 2) * 0.2;
-        }
-      }
-    } catch (error) {
-      console.warn('GeofenceRing error:', error);
+    if (ringRef.current) {
+      ringRef.current.rotation.z = state.clock.elapsedTime * 0.5;
     }
   });
 
   return (
     <mesh ref={ringRef} position={position}>
-      <ringGeometry args={[radius, radius + 0.1, 32]} />
+      <ringGeometry args={[radius, radius + 0.1, 16]} />
       <meshBasicMaterial color="#22c55e" transparent opacity={0.5} />
     </mesh>
   );
 }
 
-function FloatingText({ text, position, size = 0.5 }) {
-  return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-      <Text
-        position={position}
-        fontSize={size}
-        color="#22c55e"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {text}
-      </Text>
-    </Float>
-  );
-}
-
 function ParticleField() {
   const points = useRef();
-  const particleCount = 500;
+  const particleCount = 200;
   
   const positions = React.useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      pos[i * 3] = (Math.random() - 0.5) * 10;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 10;
     }
     return pos;
   }, []);
 
-  const colors = React.useMemo(() => {
-    const col = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      col[i * 3] = Math.random() * 0.5 + 0.5;
-      col[i * 3 + 1] = Math.random() * 0.8 + 0.2;
-      col[i * 3 + 2] = Math.random() * 0.3 + 0.7;
-    }
-    return col;
-  }, []);
-
   useFrame((state) => {
-    try {
-      if (points.current) {
-        points.current.rotation.x = state.clock.elapsedTime * 0.05;
-        points.current.rotation.y = state.clock.elapsedTime * 0.03;
-      }
-    } catch (error) {
-      console.warn('ParticleField error:', error);
+    if (points.current) {
+      points.current.rotation.x = state.clock.elapsedTime * 0.05;
+      points.current.rotation.y = state.clock.elapsedTime * 0.03;
     }
   });
 
@@ -161,20 +116,8 @@ function ParticleField() {
           array={positions}
           itemSize={3}
         />
-        <bufferAttribute
-          attach="attributes-color"
-          count={particleCount}
-          array={colors}
-          itemSize={3}
-        />
       </bufferGeometry>
-      <pointsMaterial
-        size={0.02}
-        vertexColors
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-      />
+      <pointsMaterial size={0.05} color="#22c55e" />
     </points>
   );
 }
@@ -184,36 +127,27 @@ function LoadingScene() {
     <>
       <ambientLight intensity={0.4} />
       <pointLight position={[10, 10, 10]} intensity={1} color="#22c55e" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#10b981" />
       
-      <Stars
-        radius={100}
-        depth={50}
-        count={3000}
-        factor={4}
-        saturation={0}
-        fade
-        speed={1}
-      />
+      <Stars radius={50} depth={25} count={1000} factor={2} saturation={0} fade speed={1} />
       
       <ParticleField />
       
       <AnimatedSphere position={[0, 0, 0]} color="#22c55e" scale={1.5} />
-      <AnimatedSphere position={[3, 1, -2]} color="#10b981" scale={0.8} />
-      <AnimatedSphere position={[-3, -1, 2]} color="#059669" scale={0.6} />
-      <AnimatedSphere position={[0, 3, -3]} color="#047857" scale={0.4} />
+      <AnimatedSphere position={[2, 1, -1]} color="#10b981" scale={0.8} />
+      <AnimatedSphere position={[-2, -1, 1]} color="#059669" scale={0.6} />
       
+      <GeofenceRing radius={2} position={[0, 0, 0]} />
       <GeofenceRing radius={3} position={[0, 0, 0]} />
-      <GeofenceRing radius={5} position={[0, 0, 0]} />
-      <GeofenceRing radius={7} position={[0, 0, 0]} />
       
-      <FloatingText text="GEOFENCING" position={[0, -4, 0]} size={0.8} />
-      <FloatingText text="AI POWERED" position={[0, -5, 0]} size={0.4} />
+      <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
+        <Text position={[0, -3, 0]} fontSize={0.5} color="#22c55e" anchorX="center" anchorY="middle">
+          GEOFENCING
+        </Text>
+      </Float>
     </>
   );
 }
 
-// API Functions
 const fetchGeofenceStats = async () => {
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
   if (!response.ok) {
@@ -307,7 +241,9 @@ const useMutation = (mutationFn, options = {}) => {
 };
 
 const doYouKnowFacts = [
+  "Did you know? Geofencing can automate your lights and AC based on your location.",
   "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
+  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
   "Did you know? Your smart home learns and optimizes your energy usage over time."
 ];
 
@@ -319,7 +255,6 @@ const carouselImages = [
   { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "Smart lighting setup in a cozy room" }
 ];
 
-// Components
 function ImageCarousel() {
   const [index, setIndex] = useState(0);
   const [fade, setFade] = useState(true);
@@ -515,17 +450,10 @@ export default function Geofencing() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0 z-0">
-          <Canvas camera={{ position: [0, 0, 10], fov: 60 }} onCreated={({ gl }) => {
-            gl.setClearColor('#000000', 0);
-          }}>
+          <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
             <Suspense fallback={null}>
               <LoadingScene />
-              <OrbitControls
-                enableZoom={false}
-                enablePan={false}
-                autoRotate
-                autoRotateSpeed={0.5}
-              />
+              <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
             </Suspense>
           </Canvas>
         </div>
@@ -538,7 +466,6 @@ export default function Geofencing() {
               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
               alt="Geofencing Icon"
               className="w-10 h-10 mr-6 animate-pulse"
-              style={{ objectFit: 'contain' }}
             />
             <div className="text-center max-w-2xl flex-1">
               <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={400}>
@@ -569,7 +496,7 @@ export default function Geofencing() {
               </CurtainReveal>
               <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1400} duration={700}>
                 <p className="text-green-300 mt-2 text-lg backdrop-blur-sm bg-black/30 rounded-lg p-4">
-                  Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
+                  Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move.
                 </p>
               </CurtainReveal>
             </div>
@@ -593,7 +520,7 @@ export default function Geofencing() {
             ) : (
               <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1800} duration={600}>
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000" />
                   <Button
                     onClick={handleInitiate}
                     className="relative bg-gray-900/80 hover:bg-gray-800/80 border border-green-400/50 transform hover:scale-105 transition-all duration-300 backdrop-blur-sm"
@@ -624,21 +551,11 @@ export default function Geofencing() {
                 <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
-                    style={{
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
+                    style={{ animationDelay: item.delay, width: '100%' }}
                   />
                 </div>
               </div>
             ))}
-          </div>
-          
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-green-400/60 backdrop-blur-sm bg-black/20 rounded-lg p-3">
-              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to smart home network...</span>
-            </div>
           </div>
         </div>
         
@@ -647,16 +564,8 @@ export default function Geofencing() {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          @keyframes tilt {
-            0%, 50%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-          }
           .animate-fade-in {
             animation: fade-in 0.8s ease-out;
-          }
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
           }
         `}</style>
       </div>
@@ -666,16 +575,12 @@ export default function Geofencing() {
   if (viewState === 'error') {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to load geofencing data: {error}
-        </div>
+        <div className="text-red-400 text-lg">Failed to load geofencing data: {error}</div>
       </div>
     );
   }
 
-  if (viewState !== 'dashboard' || !geofences) {
-    return null;
-  }
+  if (viewState !== 'dashboard' || !geofences) return null;
 
   const mlMetrics = analytics?.ml_metrics || {};
 
@@ -687,22 +592,18 @@ export default function Geofencing() {
           <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
         </div>
       )}
+      
       <div
         className="text-center py-16 rounded-2xl relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://thumbs.dreamstime.com/z/examining-impact-edge-computing-smart-home-security-systems-dusk-group-gathers-to-discuss-how-enhances-highlighting-356998640.jpg?ct=jpeg')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundPosition: 'center'
         }}
       >
         <div className="relative z-10">
-          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
-            AI-Powered Geofencing Control
-          </h1>
-          <p className="text-green-200 text-xl drop-shadow-md">
-            Machine learning algorithms optimizing your location-based automation
-          </p>
+          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">AI-Powered Geofencing Control</h1>
+          <p className="text-green-200 text-xl drop-shadow-md">Machine learning algorithms optimizing your location-based automation</p>
         </div>
       </div>
       
@@ -775,6 +676,7 @@ export default function Geofencing() {
           </button>
         ))}
       </div>
+
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
@@ -830,14 +732,8 @@ export default function Geofencing() {
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
               <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing.
+                See how your smart zones come alive with geofencing technology that adapts to your lifestyle.
               </p>
-              <ul className="text-green-200 text-sm space-y-1 mb-4">
-                <li>• Instantly adjust lighting and temperature as you move from room to room.</li>
-                <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
-                <li>• Save energy without sacrificing convenience or style.</li>
-                <li>• Every image below represents a real scenario powered by smart geofencing.</li>
-              </ul>
             </div>
             <div className="mt-2">
               <ImageCarousel />
@@ -845,6 +741,7 @@ export default function Geofencing() {
           </div>
         </div>
       )}
+
       {activeTab === 'analytics' && analytics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
@@ -891,6 +788,7 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
+
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">
@@ -972,15 +870,6 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-      <style>{`
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }

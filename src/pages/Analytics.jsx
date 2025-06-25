@@ -44,7 +44,7 @@ const CardContent = ({ children, className = "" }) => (
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
-    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
+    className={`inline-flex items-center justify-center rounded-lg text-2xl font-bold transition-transform duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-16 py-7 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 hover:scale-105 text-white shadow-xl shadow-blue-500/40 animate-glow ${className}`}
     onClick={onClick}
     disabled={disabled}
     {...props}
@@ -190,17 +190,17 @@ function TypewriterText({ text, speed = 50, onDone, className = "" }) {
   return <span className={className}>{displayed}</span>;
 }
 
-const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 1000 }) => (
+const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 200 }) => (
   <div className="relative overflow-hidden">
     <div
-      className={`absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 z-10 transition-transform ease-out`}
+      className={`absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 z-10 transition-transform ease-out`}
       style={{
         transitionDuration: `${duration}ms`,
         transitionDelay: `${delay}ms`,
         transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
       }}
     />
-    <div className={`transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`transition-opacity duration-150 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
       {children}
     </div>
   </div>
@@ -261,7 +261,7 @@ export default function Analytics() {
     if (viewState === 'initial') {
       const timer = setTimeout(() => {
         setCurtainRevealed(true);
-      }, 300);
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [viewState]);
@@ -285,8 +285,8 @@ export default function Analytics() {
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
           <div className="text-center max-w-4xl mb-12">
-            <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={1000}>
-              <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={200}>
+              <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent animate-glow">
                 <TypewriterText
                   text="Tariff Analytics"
                   speed={90}
@@ -294,12 +294,12 @@ export default function Analytics() {
                 />
               </h1>
             </CurtainReveal>
-            <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={1000} duration={800}>
+            <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={200} duration={150}>
               <div className="mb-6">
                 <h2 className="text-4xl font-semibold mb-3 text-white">
                   <TypewriterText
                     text="Detection of Anomalous Usage Patterns"
-                    speed={50}
+                    speed={40}
                     onDone={() => setSubheadlineDone(true)}
                   />
                 </h2>
@@ -308,7 +308,7 @@ export default function Analytics() {
                 </p>
               </div>
             </CurtainReveal>
-            <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1800} duration={600}>
+            <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={350} duration={120}>
               <div className="h-16 flex items-center justify-center mb-6">
                 <p className="text-lg text-blue-300 animate-fade-in">
                   {doYouKnowFacts[factIndex]}
@@ -331,16 +331,16 @@ export default function Analytics() {
                 <span className="text-lg font-semibold text-blue-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={2200} duration={600}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={500} duration={120}>
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300 animate-glow" />
                   <Button
                     onClick={handleInitiate}
-                    className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
+                    className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 border border-blue-400/50 transform hover:scale-110 transition-all duration-200"
                   >
-                    <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                    <Brain className="w-7 h-7 mr-4 animate-spin" />
                     Initiate Analysis
-                    <span className="ml-3 text-base font-normal text-blue-200">Deep scan</span>
+                    <span className="ml-4 text-xl font-normal text-blue-200">Deep scan</span>
                   </Button>
                 </div>
               </CurtainReveal>
@@ -348,14 +348,8 @@ export default function Analytics() {
           </div>
           <div className="w-80 h-80 relative mt-12">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow rounded-full">
-                <div className="absolute w-4 h-4 bg-blue-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
-                <div className="absolute w-4 h-4 bg-cyan-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
-                <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
-                <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
-              </div>
+              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow rounded-full" />
+              <div className="absolute w-48 h-48 border-2 border-blue-500/60 animate-spin-reverse rounded-full" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-blue-400/30">
                   <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
@@ -373,12 +367,18 @@ export default function Analytics() {
             from { transform: rotate(0deg); } 
             to { transform: rotate(360deg); } 
           }
-          .animate-spin-slow { 
-            animation: spin-slow 20s linear infinite; 
+          @keyframes spin-reverse { 
+            from { transform: rotate(360deg); } 
+            to { transform: rotate(0deg); } 
           }
-          .animate-fade-in { 
-            animation: fade-in 0.5s ease-out; 
+          @keyframes glow {
+            0%, 100% { box-shadow: 0 0 10px #3b82f6, 0 0 40px #6366f1; }
+            50% { box-shadow: 0 0 30px #3b82f6, 0 0 80px #6366f1; }
           }
+          .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+          .animate-spin-reverse { animation: spin-reverse 15s linear infinite; }
+          .animate-fade-in { animation: fade-in 0.5s ease-out; }
+          .animate-glow { animation: glow 2s infinite; }
         `}</style>
       </div>
     );
@@ -443,15 +443,15 @@ export default function Analytics() {
           <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-green-400" />
+                <div className="w-10 h-10 bg-blue-950 rounded-md flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
                   <h3 className="text-white text-lg font-medium">{algorithm.name}</h3>
-                  <p className="text-green-400 text-sm">{algorithm.purpose}</p>
+                  <p className="text-blue-400 text-sm">{algorithm.purpose}</p>
                 </div>
               </div>
-              <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
+              <div className="bg-blue-950 text-blue-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
             </div>
           </div>
           <div className="p-6">
@@ -524,8 +524,8 @@ export default function Analytics() {
                   </h4>
                   <div className="space-y-2">{Object.entries(algorithm.parameters || {}).map(([key, value]) => (
                       <div key={key} className="flex justify-between items-center">
-                        <span className="text-green-400 text-xs font-mono">{key}:</span>
-                        <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
+                        <span className="text-blue-400 text-xs font-mono">{key}:</span>
+                        <span className="text-blue-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
                           {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
                         </span>
                       </div>
@@ -547,10 +547,10 @@ export default function Analytics() {
                   </div>
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                     <div className="flex items-center gap-2 mb-1">
-                      <Cpu className="w-4 h-4 text-purple-400" />
+                      <Cpu className="w-4 h-4 text-blue-400" />
                       <span className="text-white text-sm font-medium">Status</span>
                     </div>
-                    <div className="text-purple-400 font-mono text-sm">Processing</div>
+                    <div className="text-blue-400 font-mono text-sm">Processing</div>
                   </div>
                 </div>
               </div>
@@ -597,7 +597,6 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -610,7 +609,6 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -623,16 +621,15 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
+        <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-medium">Total Savings</p>
+                <p className="text-blue-200 text-sm font-medium">Total Savings</p>
                 <p className="text-3xl font-bold text-white">${totalSavings.toFixed(2)}</p>
-                <p className="text-purple-300 text-xs mt-1">This Month</p>
+                <p className="text-blue-300 text-xs mt-1">This Month</p>
               </div>
-              <Target className="w-8 h-8 text-purple-400" />
+              <Target className="w-8 h-8 text-blue-400" />
             </div>
           </CardContent>
         </Card>
@@ -795,7 +792,6 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-
       <style>{`
         @keyframes fade-in { 
           from { opacity: 0; transform: translateY(10px); } 

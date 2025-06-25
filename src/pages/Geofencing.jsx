@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -6,7 +6,6 @@ const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-
 
 let geofencesCache = null;
 let geofencesPromise = null;
-let hasInitiatedGeofences = false;
 
 export function prefetchGeofences() {
   if (geofencesCache) return Promise.resolve(geofencesCache);
@@ -23,7 +22,6 @@ export function prefetchGeofences() {
     })
     .catch(error => {
       geofencesPromise = null;
-      hasInitiatedGeofences = false;
       throw error;
     });
   return geofencesPromise;
@@ -36,7 +34,7 @@ const CardContent = ({ children, className = '' }) => <div className={`px-6 pb-6
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
-    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
+    className={`inline-flex items-center justify-center rounded-md text-2xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-14 py-7 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
     onClick={onClick}
     disabled={disabled}
     {...props}
@@ -128,7 +126,7 @@ function TypewriterText({ text, speed = 60, onDone, className = "" }) {
   return <span className={className}>{displayed}</span>;
 }
 
-const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 500 }) => (
+const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 200 }) => (
   <div className="relative overflow-hidden">
     <div
       className={`absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 z-10 transition-transform ease-out`}
@@ -138,7 +136,7 @@ const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 500 }) => (
         transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
       }}
     />
-    <div className={`transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`transition-opacity duration-150 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
       {children}
     </div>
   </div>
@@ -147,14 +145,21 @@ const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 500 }) => (
 function LoadingAnimation() {
   return (
     <div className="relative w-80 h-80 flex items-center justify-center">
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow rounded-full" />
-        <div className="absolute w-48 h-48 border-2 border-green-500/60 animate-spin-reverse rounded-full" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-green-400/30">
+      <div className="absolute inset-0 flex items-center justify-between">
+        <div className="flex flex-col items-center h-full justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-green-400/30 shadow-lg">
             <Brain className="w-10 h-10 text-green-400 animate-pulse" />
           </div>
         </div>
+        <div className="flex flex-col items-center h-full justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-purple-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-blue-400/30 shadow-lg">
+            <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
+          </div>
+        </div>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow rounded-full" />
+        <div className="absolute w-48 h-48 border-2 border-green-500/60 animate-spin-reverse rounded-full" />
       </div>
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(20)].map((_, i) => (
@@ -174,116 +179,45 @@ function LoadingAnimation() {
   );
 }
 
-const fetchGeofenceStats = async () => {
-  const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to fetch stats: ${errorData.error || response.statusText}`);
-  }
-  return await response.json();
-};
+function sessionCurtainState() {
+  if (typeof window === "undefined") return false;
+  if (window.sessionStorage.getItem("geofence_initiated") === "1") return true;
+  return false;
+}
 
-const createGeofence = async (geofenceData) => {
-  const response = await fetch(`${FLASK_API_URL}/api/geofences`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geofenceData)
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to create geofence: ${errorData.error || response.statusText}`);
-  }
-  geofencesCache = null;
-  geofencesPromise = null;
-  return await response.json();
-};
-
-const fetchAnalytics = async () => {
-  const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to fetch analytics: ${errorData.error || response.statusText}`);
-  }
-  return await response.json();
-};
-
-const optimizeGeofences = async () => {
-  const response = await fetch(`${FLASK_API_URL}/api/geofences/optimize`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(`Failed to optimize geofences: ${errorData.error || response.statusText}`);
-  }
-  return await response.json();
-};
-
-const useApiData = (key, fetchFn, refetchInterval = 30000) => {
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      const result = await fetchFn();
-      setData(result);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-    if (refetchInterval) {
-      const interval = setInterval(fetchData, refetchInterval);
-      return () => clearInterval(interval);
-    }
-  }, [key, refetchInterval]);
-
-  return { data, isLoading, error, refetch: fetchData };
-};
-
-const useMutation = (mutationFn, options = {}) => {
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState(null);
-
-  const mutate = async (variables) => {
-    try {
-      setIsPending(true);
-      setError(null);
-      const result = await mutationFn(variables);
-      if (options.onSuccess) options.onSuccess(result);
-      return result;
-    } catch (err) {
-      setError(err.message);
-      if (options.onError) options.onError(err);
-    } finally {
-      setIsPending(false);
-    }
-  };
-  return { mutate, isPending, error };
-};
+function setSessionCurtainState() {
+  if (typeof window !== "undefined") window.sessionStorage.setItem("geofence_initiated", "1");
+}
 
 export default function Geofencing() {
   const [geofences, setGeofences] = useState(geofencesCache);
   const [error, setError] = useState(null);
-  const [viewState, setViewState] = useState(hasInitiatedGeofences ? 'loading' : 'initial');
+  const [viewState, setViewState] = useState(sessionCurtainState() ? 'loading' : 'initial');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
-  const [curtainRevealed, setCurtainRevealed] = useState(false);
-  const [headlineDone, setHeadlineDone] = useState(false);
-  const [subheadlineDone, setSubheadlineDone] = useState(false);
+  const [curtainRevealed, setCurtainRevealed] = useState(sessionCurtainState());
+  const [headlineDone, setHeadlineDone] = useState(sessionCurtainState());
+  const [subheadlineDone, setSubheadlineDone] = useState(sessionCurtainState());
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
 
+  useEffect(() => {
+    if (sessionCurtainState()) {
+      setCurtainRevealed(true);
+      setHeadlineDone(true);
+      setSubheadlineDone(true);
+    }
+  }, []);
+
   const handleInitiate = () => {
     if (viewState === 'initial') {
-      hasInitiatedGeofences = true;
+      setSessionCurtainState();
+      setCurtainRevealed(true);
+      setHeadlineDone(true);
+      setSubheadlineDone(true);
       setViewState('loading');
       prefetchGeofences()
         .then(data => {
@@ -335,7 +269,7 @@ export default function Geofencing() {
   };
 
   useEffect(() => {
-    if (hasInitiatedGeofences && !geofences) {
+    if (sessionCurtainState() && !geofences) {
       setViewState('loading');
       prefetchGeofences()
         .then(data => {
@@ -362,14 +296,14 @@ export default function Geofencing() {
     if (viewState === 'initial') {
       const timer = setTimeout(() => {
         setCurtainRevealed(true);
-      }, 300);
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [viewState]);
 
   const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
 
-  if (viewState === 'initial' || viewState === 'loading') {
+  if ((viewState === 'initial' || viewState === 'loading') && !sessionCurtainState()) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0 z-0">
@@ -377,46 +311,50 @@ export default function Geofencing() {
         </div>
         <div className="absolute inset-0 bg-black/20 z-10" />
         <div className="relative z-20 flex flex-col items-center justify-center min-h-screen p-8">
-          <div className="flex flex-row items-center justify-center w-full mb-8">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
-              alt="Geofencing Icon"
-              className="w-10 h-10 mr-6 animate-pulse"
-            />
+          <div className="flex flex-row items-center justify-between w-full mb-8">
+            <div className="flex-1 flex justify-start">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-green-400/30 shadow-lg">
+                <Brain className="w-10 h-10 text-green-400 animate-pulse" />
+              </div>
+            </div>
             <div className="text-center max-w-2xl flex-1">
-              <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={400}>
+              <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={200}>
                 <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   <TypewriterText
                     text="Initializing Geofencing Engine"
-                    speed={75}
+                    speed={55}
                     onDone={() => setHeadlineDone(true)}
                   />
                 </h1>
               </CurtainReveal>
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={400} duration={600}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={200} duration={200}>
                 <div className="h-16 flex items-center justify-center mb-2">
                   <TypewriterText
                     text="Adaptive Smart Zones & ML-Driven Location Automation"
-                    speed={40}
+                    speed={28}
                     onDone={() => setSubheadlineDone(true)}
                     className="text-xl text-green-200"
                   />
                 </div>
               </CurtainReveal>
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1000} duration={700}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={400} duration={200}>
                 <div className="h-16 flex items-center justify-center">
                   <p className="text-lg text-green-300 animate-fade-in">
                     {doYouKnowFacts[factIndex]}
                   </p>
                 </div>
               </CurtainReveal>
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1400} duration={700}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={600} duration={200}>
                 <p className="text-green-300 mt-2 text-lg backdrop-blur-sm bg-black/30 rounded-lg p-4">
                   Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move.
                 </p>
               </CurtainReveal>
             </div>
-            <div style={{ width: 40 }} />
+            <div className="flex-1 flex justify-end">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500/40 to-purple-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-blue-400/30 shadow-lg">
+                <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
+              </div>
+            </div>
           </div>
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
             {viewState === 'loading' ? (
@@ -433,16 +371,16 @@ export default function Geofencing() {
                 <span className="text-lg font-semibold text-green-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1800} duration={600}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={800} duration={200}>
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-700" />
                   <Button
                     onClick={handleInitiate}
                     className="relative bg-gray-900/80 hover:bg-gray-800/80 border border-green-400/50 transform hover:scale-105 transition-all duration-300 backdrop-blur-sm"
                   >
-                    <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                    <Brain className="w-7 h-7 mr-4 animate-pulse" />
                     Initiate Geofencing
-                    <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
+                    <span className="ml-4 text-xl font-normal text-green-200">Smart zone setup</span>
                   </Button>
                 </div>
               </CurtainReveal>
@@ -528,7 +466,12 @@ export default function Geofencing() {
       >
         <div className="relative z-10">
           <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">AI-Powered Geofencing Control</h1>
-          <p className="text-green-200 text-xl drop-shadow-md">Machine learning algorithms optimizing your location-based automation</p>
+          <p className="text-green-200 text-2xl font-semibold drop-shadow-md max-w-3xl mx-auto leading-relaxed bg-black/30 rounded-xl px-6 py-4 mt-2 mb-2">
+            Smart Home in Action<br />
+            <span className="text-green-100 font-medium">
+              See how your smart zones come alive with geofencing technology that adapts to your lifestyle, learns your preferences, and delivers seamless, energy-efficient comfort. Every room, every moment, always optimized for you and your family. Experience a new era of intelligent living—where your home is truly in sync with your life.
+            </span>
+          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
@@ -588,7 +531,6 @@ export default function Geofencing() {
           </CardContent>
         </Card>
       </div>
-
       <div className="flex space-x-4 mb-6">
         {['overview', 'analytics'].map((tab) => (
           <button
@@ -654,8 +596,8 @@ export default function Geofencing() {
           <div className="flex flex-col gap-6">
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
-              <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive with geofencing technology that adapts to your lifestyle.
+              <p className="text-green-100 mb-4 text-xl leading-relaxed font-semibold">
+                See how your smart zones come alive with geofencing technology that adapts to your lifestyle, learns your preferences, and delivers seamless, energy-efficient comfort. Every room, every moment, always optimized for you and your family. Experience a new era of intelligent living—where your home is truly in sync with your life.
               </p>
             </div>
             <div className="mt-2">

@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, Float, Stars } from '@react-three/drei';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -47,104 +45,132 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
   </button>
 );
 
-// Simple Three.js components that work with React 18
-function AnimatedSphere({ position, color, scale = 1 }) {
-  const meshRef = useRef();
-  
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.elapsedTime * 0.3;
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime) * 0.1;
-    }
-  });
+const doYouKnowFacts = [
+  "Did you know? Geofencing can automate your lights and AC based on your location.",
+  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
+  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
+  "Did you know? Your smart home learns and optimizes your energy usage over time."
+];
 
+const carouselImages = [
+  { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "Modern living room with smart home controls" },
+  { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "Smart lighting and climate control" },
+  { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "Smart home dashboard interface" },
+  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "Connected devices in a smart home" },
+  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "Smart lighting setup in a cozy room" }
+];
+
+function ImageCarousel() {
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+  useEffect(() => {
+    setFade(false);
+    const fadeTimeout = setTimeout(() => setFade(true), 50);
+    const timer = setTimeout(() => {
+      setIndex((prev) => (prev + 1) % carouselImages.length);
+    }, 5000);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fadeTimeout);
+    };
+  }, [index]);
+  const goPrev = () => {
+    setFade(false);
+    setTimeout(() => {
+      setIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+      setFade(true);
+    }, 100);
+  };
+  const goNext = () => {
+    setFade(false);
+    setTimeout(() => {
+      setIndex((prev) => (prev + 1) % carouselImages.length);
+      setFade(true);
+    }, 100);
+  };
   return (
-    <Float speed={1.5} rotationIntensity={1} floatIntensity={2}>
-      <mesh ref={meshRef} position={position}>
-        <sphereGeometry args={[0.5 * scale, 16, 16]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </Float>
+    <div className="relative w-full h-64 flex items-center justify-center group overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30">
+      <button onClick={goPrev} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all" aria-label="Previous">
+        <ChevronLeft className="w-7 h-7 text-green-200" />
+      </button>
+      <div className={`transition-all duration-700 ease-in-out w-full h-full ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        <img src={carouselImages[index].url} alt={carouselImages[index].alt} className="w-full h-64 object-cover rounded-lg shadow-xl" />
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full text-green-100 text-sm shadow-lg backdrop-blur">
+          {carouselImages[index].alt}
+        </div>
+      </div>
+      <button onClick={goNext} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all" aria-label="Next">
+        <ChevronRight className="w-7 h-7 text-green-200" />
+      </button>
+      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
+        {carouselImages.map((_, i) => (
+          <span key={i} className={`block w-3 h-3 rounded-full transition-all duration-300 ${i === index ? 'bg-green-400' : 'bg-green-900/40'}`} />
+        ))}
+      </div>
+    </div>
   );
 }
 
-function GeofenceRing({ radius = 2, position = [0, 0, 0] }) {
-  const ringRef = useRef();
-  
-  useFrame((state) => {
-    if (ringRef.current) {
-      ringRef.current.rotation.z = state.clock.elapsedTime * 0.5;
-    }
-  });
-
-  return (
-    <mesh ref={ringRef} position={position}>
-      <ringGeometry args={[radius, radius + 0.1, 16]} />
-      <meshBasicMaterial color="#22c55e" transparent opacity={0.5} />
-    </mesh>
-  );
+function TypewriterText({ text, speed = 60, onDone, className = "" }) {
+  const [displayed, setDisplayed] = useState("");
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        if (onDone) onDone();
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed, onDone]);
+  return <span className={className}>{displayed}</span>;
 }
 
-function ParticleField() {
-  const points = useRef();
-  const particleCount = 200;
-  
-  const positions = React.useMemo(() => {
-    const pos = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 10;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 10;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 10;
-    }
-    return pos;
-  }, []);
+const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 500 }) => (
+  <div className="relative overflow-hidden">
+    <div
+      className={`absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 z-10 transition-transform ease-out`}
+      style={{
+        transitionDuration: `${duration}ms`,
+        transitionDelay: `${delay}ms`,
+        transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
+      }}
+    />
+    <div className={`transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+      {children}
+    </div>
+  </div>
+);
 
-  useFrame((state) => {
-    if (points.current) {
-      points.current.rotation.x = state.clock.elapsedTime * 0.05;
-      points.current.rotation.y = state.clock.elapsedTime * 0.03;
-    }
-  });
-
+function LoadingAnimation() {
   return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particleCount}
-          array={positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial size={0.05} color="#22c55e" />
-    </points>
-  );
-}
-
-function LoadingScene() {
-  return (
-    <>
-      <ambientLight intensity={0.4} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#22c55e" />
-      
-      <Stars radius={50} depth={25} count={1000} factor={2} saturation={0} fade speed={1} />
-      
-      <ParticleField />
-      
-      <AnimatedSphere position={[0, 0, 0]} color="#22c55e" scale={1.5} />
-      <AnimatedSphere position={[2, 1, -1]} color="#10b981" scale={0.8} />
-      <AnimatedSphere position={[-2, -1, 1]} color="#059669" scale={0.6} />
-      
-      <GeofenceRing radius={2} position={[0, 0, 0]} />
-      <GeofenceRing radius={3} position={[0, 0, 0]} />
-      
-      <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-        <Text position={[0, -3, 0]} fontSize={0.5} color="#22c55e" anchorX="center" anchorY="middle">
-          GEOFENCING
-        </Text>
-      </Float>
-    </>
+    <div className="relative w-80 h-80 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow rounded-full" />
+        <div className="absolute w-48 h-48 border-2 border-green-500/60 animate-spin-reverse rounded-full" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-green-400/30">
+            <Brain className="w-10 h-10 text-green-400 animate-pulse" />
+          </div>
+        </div>
+      </div>
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-green-400/60 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -239,109 +265,6 @@ const useMutation = (mutationFn, options = {}) => {
   };
   return { mutate, isPending, error };
 };
-
-const doYouKnowFacts = [
-  "Did you know? Geofencing can automate your lights and AC based on your location.",
-  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
-  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
-  "Did you know? Your smart home learns and optimizes your energy usage over time."
-];
-
-const carouselImages = [
-  { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "Modern living room with smart home controls" },
-  { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "Smart lighting and climate control" },
-  { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "Smart home dashboard interface" },
-  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "Connected devices in a smart home" },
-  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "Smart lighting setup in a cozy room" }
-];
-
-function ImageCarousel() {
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    setFade(false);
-    const fadeTimeout = setTimeout(() => setFade(true), 50);
-    const timer = setTimeout(() => {
-      setIndex((prev) => (prev + 1) % carouselImages.length);
-    }, 5000);
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(fadeTimeout);
-    };
-  }, [index]);
-
-  const goPrev = () => {
-    setFade(false);
-    setTimeout(() => {
-      setIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
-      setFade(true);
-    }, 100);
-  };
-
-  const goNext = () => {
-    setFade(false);
-    setTimeout(() => {
-      setIndex((prev) => (prev + 1) % carouselImages.length);
-      setFade(true);
-    }, 100);
-  };
-
-  return (
-    <div className="relative w-full h-64 flex items-center justify-center group overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30">
-      <button onClick={goPrev} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all" aria-label="Previous">
-        <ChevronLeft className="w-7 h-7 text-green-200" />
-      </button>
-      <div className={`transition-all duration-700 ease-in-out w-full h-full ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-        <img src={carouselImages[index].url} alt={carouselImages[index].alt} className="w-full h-64 object-cover rounded-lg shadow-xl" />
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full text-green-100 text-sm shadow-lg backdrop-blur">
-          {carouselImages[index].alt}
-        </div>
-      </div>
-      <button onClick={goNext} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all" aria-label="Next">
-        <ChevronRight className="w-7 h-7 text-green-200" />
-      </button>
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
-        {carouselImages.map((_, i) => (
-          <span key={i} className={`block w-3 h-3 rounded-full transition-all duration-300 ${i === index ? 'bg-green-400' : 'bg-green-900/40'}`} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TypewriterText({ text, speed = 60, onDone, className = "" }) {
-  const [displayed, setDisplayed] = useState("");
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayed(text.slice(0, i + 1));
-      i++;
-      if (i >= text.length) {
-        clearInterval(interval);
-        if (onDone) onDone();
-      }
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed, onDone]);
-  return <span className={className}>{displayed}</span>;
-}
-
-const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 500 }) => (
-  <div className="relative overflow-hidden">
-    <div
-      className={`absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 z-10 transition-transform ease-out`}
-      style={{
-        transitionDuration: `${duration}ms`,
-        transitionDelay: `${delay}ms`,
-        transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
-      }}
-    />
-    <div className={`transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
-      {children}
-    </div>
-  </div>
-);
 
 export default function Geofencing() {
   const [geofences, setGeofences] = useState(geofencesCache);
@@ -450,16 +373,9 @@ export default function Geofencing() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0 z-0">
-          <Canvas camera={{ position: [0, 0, 5], fov: 75 }}>
-            <Suspense fallback={null}>
-              <LoadingScene />
-              <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
-            </Suspense>
-          </Canvas>
+          <LoadingAnimation />
         </div>
-        
         <div className="absolute inset-0 bg-black/20 z-10" />
-        
         <div className="relative z-20 flex flex-col items-center justify-center min-h-screen p-8">
           <div className="flex flex-row items-center justify-center w-full mb-8">
             <img
@@ -502,7 +418,6 @@ export default function Geofencing() {
             </div>
             <div style={{ width: 40 }} />
           </div>
-          
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
             {viewState === 'loading' ? (
               <div className="flex items-center space-x-4 backdrop-blur-sm bg-black/30 rounded-lg p-4">
@@ -533,7 +448,6 @@ export default function Geofencing() {
               </CurtainReveal>
             )}
           </div>
-          
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
             {[
               { icon: MapPin, label: "Mapping Zones", delay: "0s" },
@@ -558,15 +472,27 @@ export default function Geofencing() {
             ))}
           </div>
         </div>
-        
         <style>{`
           @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          .animate-fade-in {
-            animation: fade-in 0.8s ease-out;
+          @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
+          @keyframes spin-reverse {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
+          .animate-fade-in { animation: fade-in 0.8s ease-out; }
+          .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+          .animate-spin-reverse { animation: spin-reverse 15s linear infinite; }
+          .animate-float { animation: float 3s ease-in-out infinite; }
         `}</style>
       </div>
     );
@@ -592,7 +518,6 @@ export default function Geofencing() {
           <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
         </div>
       )}
-      
       <div
         className="text-center py-16 rounded-2xl relative overflow-hidden"
         style={{
@@ -606,7 +531,6 @@ export default function Geofencing() {
           <p className="text-green-200 text-xl drop-shadow-md">Machine learning algorithms optimizing your location-based automation</p>
         </div>
       </div>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
           <CardContent className="p-6">
@@ -676,7 +600,6 @@ export default function Geofencing() {
           </button>
         ))}
       </div>
-
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
@@ -741,7 +664,6 @@ export default function Geofencing() {
           </div>
         </div>
       )}
-
       {activeTab === 'analytics' && analytics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
@@ -788,7 +710,6 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">

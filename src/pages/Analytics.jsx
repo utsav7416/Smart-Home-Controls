@@ -44,7 +44,7 @@ const CardContent = ({ children, className = "" }) => (
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
-    className={`inline-flex items-center justify-center rounded-lg text-2xl font-bold transition-transform duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-16 py-7 bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 hover:scale-105 text-white shadow-xl shadow-blue-500/40 animate-glow ${className}`}
+    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
     onClick={onClick}
     disabled={disabled}
     {...props}
@@ -86,15 +86,11 @@ const useDeviceSync = () => {
         const devices = JSON.parse(storedDevices);
         setDeviceStates(devices);
         let total = 0;
-        if (devices && typeof devices === 'object') {
-          Object.values(devices).forEach((roomDevices) => {
-            if (Array.isArray(roomDevices)) {
-              roomDevices.forEach((device) => {
-                total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
-              });
-            }
+        Object.values(devices).forEach((roomDevices) => {
+          roomDevices.forEach((device) => {
+            total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
           });
-        }
+        });
         setTotalDevicePower(total);
       }
     };
@@ -173,48 +169,12 @@ function Carousel({ images }) {
   );
 }
 
-function TypewriterText({ text, speed = 50, onDone, className = "" }) {
-  const [displayed, setDisplayed] = useState("");
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayed(text.slice(0, i + 1));
-      i++;
-      if (i >= text.length) {
-        clearInterval(interval);
-        if (onDone) onDone();
-      }
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed, onDone]);
-  return <span className={className}>{displayed}</span>;
-}
-
-const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 200 }) => (
-  <div className="relative overflow-hidden">
-    <div
-      className={`absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 z-10 transition-transform ease-out`}
-      style={{
-        transitionDuration: `${duration}ms`,
-        transitionDelay: `${delay}ms`,
-        transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
-      }}
-    />
-    <div className={`transition-opacity duration-150 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
-      {children}
-    </div>
-  </div>
-);
-
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [error, setError] = useState(null);
   const [factIndex, setFactIndex] = useState(0);
   const [viewState, setViewState] = useState(hasInitiatedAnalytics ? 'loading' : 'initial');
-  const [curtainRevealed, setCurtainRevealed] = useState(false);
-  const [headlineDone, setHeadlineDone] = useState(false);
-  const [subheadlineDone, setSubheadlineDone] = useState(false);
   const expandedStatesRef = useRef({});
 
   const handleInitiate = () => {
@@ -257,14 +217,6 @@ export default function Analytics() {
     return () => clearInterval(factInterval);
   }, []);
 
-  useEffect(() => {
-    if (viewState === 'initial') {
-      const timer = setTimeout(() => {
-        setCurtainRevealed(true);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [viewState]);
 
   if (viewState === 'initial' || viewState === 'loading') {
     return (
@@ -284,39 +236,29 @@ export default function Analytics() {
           ))}
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
-          <div className="text-center max-w-4xl mb-12">
-            <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={200}>
-              <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent animate-glow">
-                <TypewriterText
-                  text="Tariff Analytics"
-                  speed={90}
-                  onDone={() => setHeadlineDone(true)}
-                />
+          <div className="flex flex-row items-center justify-center w-full mb-8">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4Iw-ps9v75UC9kcr-NLTe3aL-PwT2bsX6ZA&s"
+              alt="Analytics Icon"
+              className="w-10 h-10 mr-6"
+              style={{ objectFit: 'contain' }}
+            />
+            <div className="text-center max-w-2xl flex-1">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                Initializing ML Analytics Engine
               </h1>
-            </CurtainReveal>
-            <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={200} duration={150}>
-              <div className="mb-6">
-                <h2 className="text-4xl font-semibold mb-3 text-white">
-                  <TypewriterText
-                    text="Detection of Anomalous Usage Patterns"
-                    speed={40}
-                    onDone={() => setSubheadlineDone(true)}
-                  />
-                </h2>
-                <p className="text-xl text-blue-200">
-                  AI-powered insights for smarter energy management
-                </p>
-              </div>
-            </CurtainReveal>
-            <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={350} duration={120}>
-              <div className="h-16 flex items-center justify-center mb-6">
-                <p className="text-lg text-blue-300 animate-fade-in">
+              <div className="h-16 flex items-center justify-center">
+                <p className="text-xl text-blue-200 animate-fade-in">
                   {doYouKnowFacts[factIndex]}
                 </p>
               </div>
-            </CurtainReveal>
+              <p className="text-blue-300 mt-2 text-lg">
+                Our AI is diving deep into your energy data, searching for hidden patterns and savings opportunities. Prepare for a detailed breakdown of your home's energy DNA.
+              </p>
+            </div>
+            <div style={{ width: 40 }} />
           </div>
-          <div className="flex flex-col items-center space-y-8">
+          <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
             {viewState === 'loading' ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
@@ -331,54 +273,124 @@ export default function Analytics() {
                 <span className="text-lg font-semibold text-blue-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={500} duration={120}>
-                <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300 animate-glow" />
-                  <Button
-                    onClick={handleInitiate}
-                    className="relative bg-gradient-to-br from-blue-700 via-blue-600 to-blue-800 border border-blue-400/50 transform hover:scale-110 transition-all duration-200"
-                  >
-                    <Brain className="w-7 h-7 mr-4 animate-spin" />
-                    Initiate Analysis
-                    <span className="ml-4 text-xl font-normal text-blue-200">Deep scan</span>
-                  </Button>
-                </div>
-              </CurtainReveal>
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button
+                  onClick={handleInitiate}
+                  className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
+                  style={{ marginBottom: '1.5rem' }}
+                >
+                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                  Initiate Anomaly/Tariff Analysis
+                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
+                </Button>
+              </div>
             )}
           </div>
-          <div className="w-80 h-80 relative mt-12">
+          <div className="w-80 h-80 relative mb-12">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow rounded-full" />
-              <div className="absolute w-48 h-48 border-2 border-blue-500/60 animate-spin-reverse rounded-full" />
+              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow" style={{
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                animationDuration: '20s'
+              }}>
+                <div className="absolute w-4 h-4 bg-blue-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
+                <div className="absolute w-4 h-4 bg-cyan-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
+                <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
+                <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
+              </div>
+              <div className="absolute w-48 h-48 border-2 border-cyan-400/50 animate-spin-reverse" style={{
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                animationDuration: '15s'
+              }}>
+                <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-3 h-3 bg-blue-400 rounded-full top-1/4 -right-1.5" />
+                <div className="absolute w-3 h-3 bg-indigo-400 rounded-full top-3/4 -right-1.5" />
+                <div className="absolute w-3 h-3 bg-purple-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-3 h-3 bg-pink-400 rounded-full top-3/4 -left-1.5" />
+                <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-1/4 -left-1.5" />
+              </div>
+              <div className="absolute w-24 h-24 border border-indigo-300/60 animate-spin" style={{
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                animationDuration: '10s'
+              }}>
+                <div className="absolute w-2 h-2 bg-indigo-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-2 h-2 bg-blue-300 rounded-full top-1/4 -right-1" />
+                <div className="absolute w-2 h-2 bg-cyan-300 rounded-full top-3/4 -right-1" />
+                <div className="absolute w-2 h-2 bg-purple-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-2 h-2 bg-pink-300 rounded-full top-3/4 -left-1" />
+                <div className="absolute w-2 h-2 bg-teal-300 rounded-full top-1/4 -left-1" />
+              </div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-blue-400/30">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-blue-400/30">
                   <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
                 </div>
               </div>
+              <div className="absolute inset-0">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-blue-400/30 to-transparent"
+                    style={{
+                      top: '50%',
+                      left: '50%',
+                      transformOrigin: 'bottom center',
+                      transform: `translate(-50%, -100%) rotate(${i * 60}deg)`,
+                      animation: `pulse 2s infinite ${i * 0.3}s`
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="absolute w-3 h-3 bg-blue-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
+              <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
+              <div className="absolute w-4 h-4 bg-indigo-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
+              <div className="absolute w-2 h-2 bg-purple-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
+              <div className="absolute w-3 h-3 bg-pink-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
+              <div className="absolute w-2 h-2 bg-teal-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: BarChart3, label: "Processing Data", delay: "0s" },
+              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
+              { icon: TrendingUp, label: "Training Models", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div
+                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
+                  style={{ animationDelay: item.delay }}
+                >
+                  <item.icon className="w-8 h-8 text-blue-400" />
+                </div>
+                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
+                    style={{
+                      animationDelay: item.delay,
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-2 text-blue-400/60">
+              <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
+              <span className="text-sm">Connecting to analytics servers...</span>
             </div>
           </div>
         </div>
-        <style>{`
-          @keyframes fade-in { 
-            from { opacity: 0; transform: translateY(10px); } 
-            to { opacity: 1; transform: translateY(0); } 
-          }
-          @keyframes spin-slow { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-          }
-          @keyframes spin-reverse { 
-            from { transform: rotate(360deg); } 
-            to { transform: rotate(0deg); } 
-          }
-          @keyframes glow {
-            0%, 100% { box-shadow: 0 0 10px #3b82f6, 0 0 40px #6366f1; }
-            50% { box-shadow: 0 0 30px #3b82f6, 0 0 80px #6366f1; }
-          }
-          .animate-spin-slow { animation: spin-slow 20s linear infinite; }
-          .animate-spin-reverse { animation: spin-reverse 15s linear infinite; }
-          .animate-fade-in { animation: fade-in 0.5s ease-out; }
-          .animate-glow { animation: glow 2s infinite; }
+        <style jsx>{`
+          @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
+          @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+          @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+          @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         `}</style>
       </div>
     );
@@ -443,15 +455,15 @@ export default function Analytics() {
           <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-950 rounded-md flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-blue-400" />
+                <div className="w-10 h-10 bg-green-950 rounded-md flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
                   <h3 className="text-white text-lg font-medium">{algorithm.name}</h3>
-                  <p className="text-blue-400 text-sm">{algorithm.purpose}</p>
+                  <p className="text-green-400 text-sm">{algorithm.purpose}</p>
                 </div>
               </div>
-              <div className="bg-blue-950 text-blue-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
+              <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
             </div>
           </div>
           <div className="p-6">
@@ -498,7 +510,7 @@ export default function Analytics() {
                 <>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                    <div className="text-xs text-gray-400">Alpha (α)</div>
+                    <div className="text-xs text-gray-400">Alpha (Î±)</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
@@ -524,8 +536,8 @@ export default function Analytics() {
                   </h4>
                   <div className="space-y-2">{Object.entries(algorithm.parameters || {}).map(([key, value]) => (
                       <div key={key} className="flex justify-between items-center">
-                        <span className="text-blue-400 text-xs font-mono">{key}:</span>
-                        <span className="text-blue-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
+                        <span className="text-green-400 text-xs font-mono">{key}:</span>
+                        <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
                           {Array.isArray(value) ? `[${value.join(', ')}]` : String(value)}
                         </span>
                       </div>
@@ -541,16 +553,16 @@ export default function Analytics() {
                     <div className="text-blue-400 font-mono text-sm">
                       {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
                         algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
-                        `α = ${algorithm?.parameters?.alpha}`}
+                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, Î± = ${algorithm?.parameters?.alpha}` :
+                        `Î± = ${algorithm?.parameters?.alpha}`}
                     </div>
                   </div>
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                     <div className="flex items-center gap-2 mb-1">
-                      <Cpu className="w-4 h-4 text-blue-400" />
+                      <Cpu className="w-4 h-4 text-purple-400" />
                       <span className="text-white text-sm font-medium">Status</span>
                     </div>
-                    <div className="text-blue-400 font-mono text-sm">Processing</div>
+                    <div className="text-purple-400 font-mono text-sm">Processing</div>
                   </div>
                 </div>
               </div>
@@ -560,7 +572,6 @@ export default function Analytics() {
       </div>
     );
   };
-
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
       <div className="relative text-center py-8">
@@ -583,7 +594,6 @@ export default function Analytics() {
           </div>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
           <CardContent className="p-6 pt-8">
@@ -621,20 +631,19 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
+        <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-200 text-sm font-medium">Total Savings</p>
+                <p className="text-purple-200 text-sm font-medium">Total Savings</p>
                 <p className="text-3xl font-bold text-white">${totalSavings.toFixed(2)}</p>
-                <p className="text-blue-300 text-xs mt-1">This Month</p>
+                <p className="text-purple-300 text-xs mt-1">This Month</p>
               </div>
-              <Target className="w-8 h-8 text-blue-400" />
+              <Target className="w-8 h-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
       </div>
-
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -648,7 +657,7 @@ export default function Analytics() {
             <div className="w-[60%]">
               <ResponsiveContainer width="100%" height={300}>
                 <ScatterChart data={anomalyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="time" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip
@@ -686,7 +695,6 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -704,7 +712,6 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-
       <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -718,7 +725,7 @@ export default function Analytics() {
             <div className="w-[70%]">
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="day" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip
@@ -744,7 +751,6 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -764,7 +770,7 @@ export default function Analytics() {
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="hour" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip
@@ -792,15 +798,6 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
-      <style>{`
-        @keyframes fade-in { 
-          from { opacity: 0; transform: translateY(10px); } 
-          to { opacity: 1; transform: translateY(0); } 
-        }
-        .animate-fade-in { 
-          animation: fade-in 0.5s ease-out; 
-        }
-      `}</style>
     </div>
   );
 }

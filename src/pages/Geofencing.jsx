@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -46,18 +45,16 @@ const CardContent = ({ children, className = '' }) => (
   <div className={`px-6 pb-6 ${className}`}>{children}</div>
 );
 
-const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
-  return (
-    <button
-      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
+const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
+  <button
+    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+    {...props}
+  >
+    {children}
+  </button>
+);
 
 const fetchGeofenceStats = async () => {
   const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
@@ -260,6 +257,39 @@ function ImageCarousel() {
   );
 }
 
+function TypewriterText({ text, speed = 60, onDone, className = "" }) {
+  const [displayed, setDisplayed] = useState("");
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        if (onDone) onDone();
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed, onDone]);
+  return <span className={className}>{displayed}</span>;
+}
+
+const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 2000 }) => (
+  <div className="relative overflow-hidden">
+    <div
+      className={`absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 z-10 transition-transform ease-out`}
+      style={{
+        transitionDuration: `${duration}ms`,
+        transitionDelay: `${delay}ms`,
+        transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
+      }}
+    />
+    <div className={`transition-opacity duration-500 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+      {children}
+    </div>
+  </div>
+);
+
 export default function Geofencing() {
   const [geofences, setGeofences] = useState(geofencesCache);
   const [error, setError] = useState(null);
@@ -268,6 +298,9 @@ export default function Geofencing() {
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
+  const [curtainRevealed, setCurtainRevealed] = useState(false);
+  const [headlineDone, setHeadlineDone] = useState(false);
+  const [subheadlineDone, setSubheadlineDone] = useState(false);
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
@@ -293,7 +326,7 @@ export default function Geofencing() {
         setGeofences(data);
     }).catch(e => setError(e.message));
   };
-  
+
   const createMutation = useMutation(createGeofence, {
     onSuccess: () => {
       refetchGeofencesData();
@@ -349,8 +382,17 @@ export default function Geofencing() {
     return () => clearInterval(factInterval);
   }, []);
 
+  useEffect(() => {
+    if (viewState === 'initial') {
+      const timer = setTimeout(() => {
+        setCurtainRevealed(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [viewState]);
+
   const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
-  
+
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -377,17 +419,37 @@ export default function Geofencing() {
               style={{ objectFit: 'contain' }}
             />
             <div className="text-center max-w-2xl flex-1">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                Initializing Geofencing Engine
-              </h1>
-              <div className="h-16 flex items-center justify-center">
-                <p className="text-xl text-green-200 animate-fade-in">
-                  {doYouKnowFacts[factIndex]}
+              <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={2000}>
+                <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                  <TypewriterText
+                    text="Initializing Geofencing Engine"
+                    speed={75}
+                    onDone={() => setHeadlineDone(true)}
+                  />
+                </h1>
+              </CurtainReveal>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={2000} duration={1500}>
+                <div className="h-16 flex items-center justify-center mb-2">
+                  <TypewriterText
+                    text="Adaptive Smart Zones & ML-Driven Location Automation"
+                    speed={40}
+                    onDone={() => setSubheadlineDone(true)}
+                    className="text-xl text-green-200"
+                  />
+                </div>
+              </CurtainReveal>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={3500} duration={1000}>
+                <div className="h-16 flex items-center justify-center">
+                  <p className="text-lg text-green-300 animate-fade-in">
+                    {doYouKnowFacts[factIndex]}
+                  </p>
+                </div>
+              </CurtainReveal>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={4000} duration={1000}>
+                <p className="text-green-300 mt-2 text-lg">
+                  Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
                 </p>
-              </div>
-              <p className="text-green-300 mt-2 text-lg">
-                Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
-              </p>
+              </CurtainReveal>
             </div>
             <div style={{ width: 40 }} />
           </div>
@@ -426,17 +488,19 @@ export default function Geofencing() {
                 <span className="text-lg font-semibold text-green-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button
-                  onClick={handleInitiate}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
-                >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Geofencing
-                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
-                </Button>
-              </div>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={4500} duration={800}>
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                  <Button
+                    onClick={handleInitiate}
+                    className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
+                  >
+                    <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                    Initiate Geofencing
+                    <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
+                  </Button>
+                </div>
+              </CurtainReveal>
             )}
           </div>
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
@@ -472,7 +536,7 @@ export default function Geofencing() {
             </div>
           </div>
         </div>
-        <style jsx>{`
+        <style>{`
           @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -800,7 +864,7 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-      <style jsx>{`
+      <style>{`
         .animate-fade-in {
           animation: fade-in 0.8s ease-out;
         }

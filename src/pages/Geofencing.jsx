@@ -27,6 +27,98 @@ export function prefetchGeofences() {
   return geofencesPromise;
 }
 
+const fetchGeofenceStats = async () => {
+  const response = await fetch(`${FLASK_API_URL}/api/geofences/stats`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+    throw new Error(`Failed to fetch stats: ${errorData.error || response.statusText}`);
+  }
+  return await response.json();
+};
+
+const createGeofence = async (geofenceData) => {
+  const response = await fetch(`${FLASK_API_URL}/api/geofences`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geofenceData)
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+    throw new Error(`Failed to create geofence: ${errorData.error || response.statusText}`);
+  }
+  geofencesCache = null;
+  geofencesPromise = null;
+  return await response.json();
+};
+
+const fetchAnalytics = async () => {
+  const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+    throw new Error(`Failed to fetch analytics: ${errorData.error || response.statusText}`);
+  }
+  return await response.json();
+};
+
+const optimizeGeofences = async () => {
+  const response = await fetch(`${FLASK_API_URL}/api/geofences/optimize`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+    throw new Error(`Failed to optimize geofences: ${errorData.error || response.statusText}`);
+  }
+  return await response.json();
+};
+
+const useApiData = (key, fetchFn, refetchInterval = 30000) => {
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const result = await fetchFn();
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    if (refetchInterval) {
+      const interval = setInterval(fetchData, refetchInterval);
+      return () => clearInterval(interval);
+    }
+  }, [key, refetchInterval]);
+
+  return { data, isLoading, error, refetch: fetchData };
+};
+
+const useMutation = (mutationFn, options = {}) => {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState(null);
+
+  const mutate = async (variables) => {
+    try {
+      setIsPending(true);
+      setError(null);
+      const result = await mutationFn(variables);
+      if (options.onSuccess) options.onSuccess(result);
+      return result;
+    } catch (err) {
+      setError(err.message);
+      if (options.onError) options.onError(err);
+    } finally {
+      setIsPending(false);
+    }
+  };
+  return { mutate, isPending, error };
+};
+
 const Card = ({ children, className = '' }) => <div className={`rounded-lg shadow-lg ${className}`}>{children}</div>;
 const CardHeader = ({ children, className = '' }) => <div className={`px-6 py-4 ${className}`}>{children}</div>;
 const CardTitle = ({ children, className = '' }) => <h3 className={`text-lg font-semibold ${className}`}>{children}</h3>;

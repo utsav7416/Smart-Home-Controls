@@ -156,10 +156,10 @@ const useMutation = (mutationFn, options = {}) => {
 };
 
 const doYouKnowFacts = [
-  "Did you know? Geofencing can automate your lights and AC based on your location.",
-  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
-  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
-  "Did you know? Your smart home learns and optimizes your energy usage over time."
+  "Initializing smart zones...",
+  "Calibrating automation systems...",
+  "Optimizing energy patterns...",
+  "Learning your preferences..."
 ];
 
 const carouselImages = [
@@ -268,6 +268,8 @@ export default function Geofencing() {
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
+  const [curtainRevealed, setCurtainRevealed] = useState(false);
+  const [showContent, setShowContent] = useState(false);
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
@@ -276,10 +278,15 @@ export default function Geofencing() {
     if (viewState === 'initial') {
       hasInitiatedGeofences = true;
       setViewState('loading');
+      
+      // Start curtain reveal animation
+      setTimeout(() => setCurtainRevealed(true), 300);
+      setTimeout(() => setShowContent(true), 1500);
+      
       prefetchGeofences()
         .then(data => {
           setGeofences(data);
-          setViewState('dashboard');
+          setTimeout(() => setViewState('dashboard'), 5000); // Wait for full animation
         })
         .catch(e => {
           setError(e.message);
@@ -345,7 +352,7 @@ export default function Geofencing() {
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
-    }, 4000);
+    }, 1200);
     return () => clearInterval(factInterval);
   }, []);
 
@@ -355,138 +362,152 @@ export default function Geofencing() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(30)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-2 h-2 bg-green-400/20 rounded-full animate-pulse"
+              className="absolute w-1 h-1 bg-green-400/30 rounded-full animate-pulse"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`
+                animationDuration: `${2 + Math.random() * 3}s`
               }}
             />
           ))}
         </div>
+
+        <div className="absolute inset-0 z-40">
+          <div 
+            className={`absolute top-0 left-0 h-full bg-gradient-to-r from-slate-900 via-slate-800 to-transparent transition-all duration-[2500ms] ease-out ${
+              curtainRevealed ? '-translate-x-full' : 'w-1/2'
+            }`}
+            style={{
+              background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 70%, transparent 100%)'
+            }}
+          />
+          
+          <div 
+            className={`absolute top-0 right-0 h-full bg-gradient-to-l from-slate-900 via-slate-800 to-transparent transition-all duration-[2500ms] ease-out ${
+              curtainRevealed ? 'translate-x-full' : 'w-1/2'
+            }`}
+            style={{
+              background: 'linear-gradient(270deg, #0f172a 0%, #1e293b 70%, transparent 100%)'
+            }}
+          />
+        </div>
+
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
-          <div className="flex flex-row items-center justify-center w-full mb-8">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
-              alt="Geofencing Icon"
-              className="w-10 h-10 mr-6"
-              style={{ objectFit: 'contain' }}
-            />
-            <div className="text-center max-w-2xl flex-1">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
-                Initializing Geofencing Engine
-              </h1>
-              <div className="h-16 flex items-center justify-center">
-                <p className="text-xl text-green-200 animate-fade-in">
-                  {doYouKnowFacts[factIndex]}
-                </p>
+          <div className={`w-80 h-80 relative mb-8 transition-all duration-1000 ${showContent ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+            <div className="absolute inset-0 rounded-full border-4 border-green-500/20 animate-spin" style={{ animationDuration: '10s' }}>
+              <div className="absolute w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full -top-4 left-1/2 transform -translate-x-1/2 shadow-lg shadow-green-400/50 animate-pulse" />
+            </div>
+            
+            <div className="absolute inset-8 rounded-full border-2 border-emerald-400/30 animate-spin" style={{ animationDuration: '7s', animationDirection: 'reverse' }}>
+              <div className="absolute w-6 h-6 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full -top-3 left-1/2 transform -translate-x-1/2 animate-bounce" />
+            </div>
+            
+            <div className="absolute inset-16 rounded-full border border-teal-300/40 animate-spin" style={{ animationDuration: '5s' }}>
+              <div className="absolute w-4 h-4 bg-gradient-to-r from-teal-300 to-cyan-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
+            </div>
+            
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-40 h-40 bg-gradient-to-br from-green-500/20 via-emerald-600/30 to-teal-700/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-green-400/20 shadow-2xl">
+                <Brain className="w-20 h-20 text-green-400 animate-pulse" style={{ filter: 'drop-shadow(0 0 20px rgba(34, 197, 94, 0.6))' }} />
               </div>
-              <p className="text-green-300 mt-2 text-lg">
-                Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
+            </div>
+
+            <div className="absolute top-4 left-4 w-12 h-12 bg-green-400/60 rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '2s' }} />
+            <div className="absolute top-4 right-4 w-10 h-10 bg-emerald-400/60 rounded-full animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '2.2s' }} />
+            <div className="absolute bottom-4 left-4 w-14 h-14 bg-teal-400/60 rounded-full animate-bounce" style={{ animationDelay: '1s', animationDuration: '1.8s' }} />
+            <div className="absolute bottom-4 right-4 w-8 h-8 bg-cyan-400/60 rounded-full animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '2.4s' }} />
+          </div>
+
+          <div className={`text-center transition-all duration-1000 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              Geofencing Engine
+            </h1>
+            <div className="h-12 flex items-center justify-center mb-8">
+              <p className="text-2xl text-green-200 font-light animate-fade-in">
+                {doYouKnowFacts[factIndex]}
               </p>
             </div>
-            <div style={{ width: 40 }} />
           </div>
-          <div className="w-80 h-80 relative mb-12">
-            <div className="absolute inset-0 rounded-full border-4 border-green-500/30 animate-spin" style={{ animationDuration: '8s' }}>
-              <div className="absolute w-6 h-6 bg-green-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-green-400/50" />
-            </div>
-            <div className="absolute inset-4 rounded-full border-2 border-emerald-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
-              <div className="absolute w-4 h-4 bg-emerald-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
-            </div>
-            <div className="absolute inset-8 rounded-full border border-teal-300/50 animate-spin" style={{ animationDuration: '4s' }}>
-              <div className="absolute w-3 h-3 bg-teal-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-gradient-to-br from-green-500/30 to-emerald-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
-                <Brain className="w-16 h-16 text-green-400 animate-pulse" />
-              </div>
-            </div>
-            <div className="absolute top-0 left-0 w-8 h-8 bg-green-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-            <div className="absolute top-0 right-0 w-6 h-6 bg-emerald-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
-            <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
-            <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
-          </div>
-          <div className="flex flex-col items-center space-y-6 mt-2 mb-6">
-            {viewState === 'loading' ? (
-              <div className="flex items-center space-x-4">
-                <div className="flex space-x-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-semibold text-green-300">Processing request, this may take a while...</span>
-              </div>
-            ) : (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button
-                  onClick={handleInitiate}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300"
-                >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Geofencing
-                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
-                </Button>
-              </div>
-            )}
-          </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+
+          <div className={`grid grid-cols-3 gap-12 mb-12 transition-all duration-1000 delay-500 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             {[
-              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
+              { icon: MapPin, label: "Mapping", delay: "0s", color: "green" },
+              { icon: Target, label: "Optimizing", delay: "1s", color: "emerald" },
+              { icon: TrendingUp, label: "Learning", delay: "2s", color: "teal" }
             ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
+              <div key={idx} className="flex flex-col items-center space-y-4">
                 <div
-                  className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
+                  className={`w-20 h-20 bg-gradient-to-br from-${item.color}-500/30 to-${item.color}-600/30 rounded-3xl flex items-center justify-center border border-${item.color}-400/40 animate-pulse shadow-lg`}
+                  style={{ 
+                    animationDelay: item.delay,
+                    boxShadow: `0 0 30px rgba(34, 197, 94, 0.3)`
+                  }}
                 >
-                  <item.icon className="w-8 h-8 text-green-400" />
+                  <item.icon className={`w-10 h-10 text-${item.color}-400`} />
                 </div>
-                <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                <span className={`text-lg text-${item.color}-300 font-medium`}>{item.label}</span>
+                <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                    className={`h-full bg-gradient-to-r from-${item.color}-400 to-${item.color}-500 rounded-full animate-pulse`}
                     style={{
                       animationDelay: item.delay,
-                      width: '100%'
+                      width: '100%',
+                      animationDuration: '2s'
                     }}
                   />
                 </div>
               </div>
             ))}
           </div>
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-green-400/60">
-              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to smart home network...</span>
+
+          {viewState === 'initial' && (
+            <div className={`relative group transition-all duration-1000 delay-1000 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <div className="absolute -inset-2 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-xl blur-lg opacity-70 group-hover:opacity-100 transition duration-1000 animate-pulse" />
+              <Button
+                onClick={handleInitiate}
+                className="relative bg-gray-900/80 hover:bg-gray-800/80 border border-green-400/50 backdrop-blur-sm transform hover:scale-105 transition-all duration-300"
+              >
+                <Brain className="w-6 h-6 mr-3 animate-pulse" />
+                Initialize System
+              </Button>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {viewState === 'loading' && (
+            <div className={`flex items-center space-x-6 transition-all duration-1000 ${showContent ? 'opacity-100' : 'opacity-0'}`}>
+              <div className="flex space-x-3">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-bounce"
+                    style={{ animationDelay: `${i * 0.2}s`, animationDuration: '1s' }}
+                  />
+                ))}
+              </div>
+              <span className="text-xl font-semibold text-green-300">System Activating...</span>
+            </div>
+          )}
+
+          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-3 text-green-400/60">
+              <div className="w-3 h-3 bg-green-400/60 rounded-full animate-ping" />
+              <span className="text-sm">Smart Home Network Connected</span>
             </div>
           </div>
         </div>
+
         <style jsx>{`
           @keyframes fade-in {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          @keyframes tilt {
-            0%, 50%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-          }
           .animate-fade-in {
             animation: fade-in 0.8s ease-out;
-          }
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
           }
         `}</style>
       </div>
@@ -535,6 +556,7 @@ export default function Geofencing() {
           </p>
         </div>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
           <CardContent className="p-6">

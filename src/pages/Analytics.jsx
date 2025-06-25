@@ -1,54 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
-let analyticsCache = null;
-let analyticsPromise = null;
-let hasInitiatedAnalytics = false;
+let analyticsCache = null, analyticsPromise = null, hasInitiatedAnalytics = false;
 
 export function prefetchAnalytics() {
   if (analyticsCache) return Promise.resolve(analyticsCache);
   if (analyticsPromise) return analyticsPromise;
   analyticsPromise = fetch(`${FLASK_API_URL}/api/analytics`, { cache: 'force-cache', keepalive: true })
-    .then(res => {
-      if (!res.ok) throw new Error(`Analytics fetch failed: ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      analyticsCache = data;
-      analyticsPromise = null;
-      return data;
-    })
-    .catch(error => {
-      analyticsPromise = null;
-      hasInitiatedAnalytics = false;
-      throw error;
-    });
+    .then(res => { if (!res.ok) throw new Error(`Analytics fetch failed: ${res.status}`); return res.json(); })
+    .then(data => { analyticsCache = data; analyticsPromise = null; return data; })
+    .catch(error => { analyticsPromise = null; hasInitiatedAnalytics = false; throw error; });
   return analyticsPromise;
 }
 
-const Card = ({ children, className = "" }) => (
-  <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
-);
-const CardHeader = ({ children }) => (
-  <div className="flex flex-col space-y-1.5 p-6">{children}</div>
-);
-const CardTitle = ({ children, className = "" }) => (
-  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
-);
-const CardContent = ({ children, className = "" }) => (
-  <div className={`p-6 pt-0 ${className}`}>{children}</div>
-);
+const Card = ({ children, className = "" }) => <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>;
+const CardHeader = ({ children }) => <div className="flex flex-col space-y-1.5 p-6">{children}</div>;
+const CardTitle = ({ children, className = "" }) => <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
+const CardContent = ({ children, className = "" }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
-  <button
-    className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`}
-    onClick={onClick}
-    disabled={disabled}
-    {...props}
-  >
+  <button className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-blue-700 hover:bg-blue-800 text-white shadow-lg shadow-blue-500/50 ${className}`} onClick={onClick} disabled={disabled} {...props}>
     {children}
   </button>
 );
@@ -86,15 +60,11 @@ const useDeviceSync = () => {
         const devices = JSON.parse(storedDevices);
         setDeviceStates(devices);
         let total = 0;
-        if (devices && typeof devices === 'object') {
-          Object.values(devices).forEach((roomDevices) => {
-            if (Array.isArray(roomDevices)) {
-              roomDevices.forEach((device) => {
-                total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
-              });
-            }
+        Object.values(devices).forEach((roomDevices) => {
+          roomDevices.forEach((device) => {
+            total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
           });
-        }
+        });
         setTotalDevicePower(total);
       }
     };
@@ -111,72 +81,106 @@ const doYouKnowFacts = [
   "Did you know? Machine learning optimizes your home energy usage in real-time.",
 ];
 
-const introCarouselImages = [
-  {
-    url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrARaumVFnt3_HYlJO_78gDkXR2u9QLUyTHg&s",
-    alt: "Smart Home Dashboard"
-  },
-  {
-    url: "https://images.stockcake.com/public/b/5/6/b567a060-1fdb-4dde-bec6-210d14656836_large/smart-home-control-stockcake.jpg",
-    alt: "Smart Home Control"
-  },
-  {
-    url: "https://images.stockcake.com/public/5/4/d/54dbb4bc-5b1e-4a14-a243-97b8fbf702e9_large/smart-home-interior-stockcake.jpg",
-    alt: "Smart Home Interior"
-  }
+const carouselImages = [
+  { url: "https://img.freepik.com/premium-photo/realistic-3d-illustration-modern-bedroom-night-city-view-interior-design-apartment-luxury-home-architecture-bed-decor-urban_1088041-51665.jpg", alt: "1" },
+  { url: "https://img.freepik.com/free-photo/indoor-design-luxury-resort_23-2150497286.jpg?semt=ais_hybrid&w=740", alt: "2" },
+  { url: "https://img.freepik.com/premium-photo/modern-bedroom-interior-design-with-forest-view-3d-illustration_1233553-83781.jpg?w=360", alt: "3" }
 ];
 
-function IntroCarousel({ images }) {
+function Carousel({ images }) {
   const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+  
   useEffect(() => {
-    const interval = setInterval(() => setIndex(i => (i + 1) % images.length), 1800);
-    return () => clearInterval(interval);
-  }, [images.length]);
+    setFade(false);
+    const fadeTimeout = setTimeout(() => setFade(true), 50);
+    const timer = setTimeout(() => setIndex(prev => (prev + 1) % images.length), 3500);
+    return () => { clearTimeout(timer); clearTimeout(fadeTimeout); };
+  }, [index, images.length]);
+  
+  const prev = () => { setFade(false); setTimeout(() => { setIndex(prev => (prev - 1 + images.length) % images.length); setFade(true); }, 100); };
+  const next = () => { setFade(false); setTimeout(() => { setIndex(prev => (prev + 1) % images.length); setFade(true); }, 100); };
+  
   return (
-    <div className="relative w-full max-w-lg mx-auto h-56 flex items-center justify-center">
-      <img src={images[index].url} alt={images[index].alt} className="w-full h-56 object-cover rounded-lg transition-all duration-700" />
+    <div className="relative w-full h-[280px] flex items-center justify-center">
+      <div className={`transition-all duration-700 ease-in-out w-full h-full ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        <img src={images[index].url} alt={images[index].alt} className="w-full h-[280px] object-cover rounded-lg" />
+      </div>
+      <button className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 hover:bg-black/80" onClick={prev} aria-label="Previous">
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 hover:bg-black/80" onClick={next} aria-label="Next">
+        <ChevronRight className="w-5 h-5" />
+      </button>
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
         {images.map((_, i) => (
-          <span key={i} className={`w-3 h-3 rounded-full ${i === index ? 'bg-blue-400' : 'bg-gray-500'} transition-all`} />
+          <span key={i} className={`w-2 h-2 rounded-full ${i === index ? 'bg-blue-400' : 'bg-gray-500'}`} />
         ))}
       </div>
     </div>
   );
 }
 
-function TypewriterText({ text, speed = 45, onDone, className = "" }) {
-  const [displayed, setDisplayed] = useState("");
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayed(text.slice(0, i + 1));
-      i++;
-      if (i >= text.length) {
-        clearInterval(interval);
-        if (onDone) onDone();
-      }
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed, onDone]);
-  return <span className={className}>{displayed}</span>;
-}
-
-function FullCurtain({ revealed, duration = 1800 }) {
+function Curtain({ revealed, duration = 1200 }) {
   return (
-    <>
-      <div className={`fixed inset-0 z-50 pointer-events-none`}>
-        <div className="absolute inset-0 flex">
-          <div className={`flex-1 bg-gradient-to-br from-blue-900 to-blue-700 transition-transform`} style={{
-            transform: revealed ? 'translateX(-100%)' : 'translateX(0)',
-            transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
-          }} />
-          <div className={`flex-1 bg-gradient-to-br from-blue-900 to-cyan-700 transition-transform`} style={{
-            transform: revealed ? 'translateX(100%)' : 'translateX(0)',
-            transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
-          }} />
+    <div className="fixed inset-0 z-50 pointer-events-none" style={{ display: revealed ? 'none' : 'block' }}>
+      <div className="absolute inset-0 flex">
+        <div className="curtain-panel curtain-left" style={{
+          width: '50%', height: '100%', background: 'linear-gradient(120deg,#0f172a 60%,#3b82f6 100%)',
+          transform: revealed ? 'translateX(-100%)' : 'translateX(0)', transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
+        }} />
+        <div className="curtain-panel curtain-right" style={{
+          width: '50%', height: '100%', background: 'linear-gradient(-120deg,#0f172a 60%,#3b82f6 100%)',
+          transform: revealed ? 'translateX(100%)' : 'translateX(0)', transition: `transform ${duration}ms cubic-bezier(.77,0,.18,1)`
+        }} />
+        
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
+          <div className="mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent drop-shadow-lg">
+              Initializing ML Analytics Engine
+            </h1>
+            <h2 className="text-2xl md:text-3xl font-semibold text-blue-100 mt-2">
+              Advanced Energy Intelligence & Anomaly Detection
+            </h2>
+          </div>
+          
+          <div className="w-80 h-80 relative mb-8">
+            <div className="absolute inset-0 rounded-full border-4 border-blue-500/30 animate-spin" style={{ animationDuration: '7s' }}>
+              <div className="absolute w-6 h-6 bg-blue-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-blue-400/50" />
+            </div>
+            <div className="absolute inset-4 rounded-full border-2 border-cyan-400/40 animate-spin" style={{ animationDuration: '5s', animationDirection: 'reverse' }}>
+              <div className="absolute w-4 h-4 bg-cyan-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
+            </div>
+            <div className="absolute inset-8 rounded-full border border-indigo-300/50 animate-spin" style={{ animationDuration: '3s' }}>
+              <div className="absolute w-3 h-3 bg-indigo-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 bg-gradient-to-br from-blue-500/30 to-cyan-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
+                <Brain className="w-16 h-16 text-blue-400 animate-pulse" />
+              </div>
+            </div>
+            <div className="absolute top-0 left-0 w-8 h-8 bg-blue-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+            <div className="absolute top-0 right-0 w-6 h-6 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-0 left-0 w-7 h-7 bg-indigo-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+            <div className="absolute bottom-0 right-0 w-5 h-5 bg-purple-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
+          </div>
+          
+          <div className="w-full max-w-xs">
+            <Carousel images={carouselImages} />
+          </div>
+          
+          <div className="mt-8 text-lg text-blue-200">
+            {doYouKnowFacts[0]}
+          </div>
         </div>
       </div>
-    </>
+      
+      <style>{`
+        .curtain-panel { position: relative; }
+        .curtain-left { border-top-right-radius: 3vw; border-bottom-right-radius: 3vw; }
+        .curtain-right { border-top-left-radius: 3vw; border-bottom-left-radius: 3vw; }
+      `}</style>
+    </div>
   );
 }
 
@@ -186,24 +190,27 @@ export default function Analytics() {
   const [error, setError] = useState(null);
   const [factIndex, setFactIndex] = useState(0);
   const [viewState, setViewState] = useState(hasInitiatedAnalytics ? 'loading' : 'initial');
-  const [curtainRevealed, setCurtainRevealed] = useState(false);
-  const [headlineDone, setHeadlineDone] = useState(false);
-  const [subheadlineDone, setSubheadlineDone] = useState(false);
+  const [curtainRevealed, setCurtainRevealed] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('curtainRevealed_analytics')) || false; } catch { return false; }
+  });
   const expandedStatesRef = useRef({});
+
+  useEffect(() => {
+    if (!curtainRevealed && viewState === 'initial') {
+      setTimeout(() => {
+        setCurtainRevealed(true);
+        localStorage.setItem('curtainRevealed_analytics', 'true');
+      }, 1200);
+    }
+  }, [curtainRevealed, viewState]);
 
   const handleInitiate = () => {
     if (viewState === 'initial') {
       hasInitiatedAnalytics = true;
       setViewState('loading');
       prefetchAnalytics()
-        .then(data => {
-          setAnalyticsData(data);
-          setViewState('dashboard');
-        })
-        .catch(e => {
-          setError(e.message);
-          setViewState('error');
-        });
+        .then(data => { setAnalyticsData(data); setViewState('dashboard'); })
+        .catch(e => { setError(e.message); setViewState('error'); });
     }
   };
 
@@ -211,110 +218,157 @@ export default function Analytics() {
     if (hasInitiatedAnalytics && !analyticsData) {
       setViewState('loading');
       prefetchAnalytics()
-        .then(data => {
-          setAnalyticsData(data);
-          setViewState('dashboard');
-        })
-        .catch(e => {
-          setError(e.message);
-          setViewState('error');
-        });
+        .then(data => { setAnalyticsData(data); setViewState('dashboard'); })
+        .catch(e => { setError(e.message); setViewState('error'); });
     } else if (analyticsData) {
       setViewState('dashboard');
     }
   }, [analyticsData]);
 
   useEffect(() => {
-    const factInterval = setInterval(() => setFactIndex(f => (f + 1) % doYouKnowFacts.length), 3000);
+    const factInterval = setInterval(() => {
+      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
+    }, 4000);
     return () => clearInterval(factInterval);
   }, []);
 
-  useEffect(() => {
-    if (viewState === 'initial') {
-      setTimeout(() => setCurtainRevealed(true), 400);
-    }
-  }, [viewState]);
+  if (!curtainRevealed) {
+    return <Curtain revealed={curtainRevealed} duration={1200} />;
+  }
 
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
-        <FullCurtain revealed={curtainRevealed} duration={1800} />
-        <div className="absolute inset-0 pointer-events-none z-40">
-          {[...Array(18)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${1.2 + Math.random() * 1.8}s`
-              }}
-            />
+        <div className="absolute inset-0">
+          {[...Array(25)].map((_, i) => (
+            <div key={i} className="absolute w-2 h-2 bg-blue-400/20 rounded-full animate-pulse" style={{
+              left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`, animationDuration: `${2 + Math.random() * 2}s`
+            }} />
           ))}
         </div>
-        <div className="relative z-50 flex flex-col items-center justify-center min-h-screen p-6">
-          <header className="w-full max-w-3xl mx-auto flex flex-col items-center mb-10">
-            <div className="flex flex-col items-center gap-4">
-              <div className="mb-2">
-                <TypewriterText
-                  text="Tariff Analytics"
-                  speed={55}
-                  onDone={() => setHeadlineDone(true)}
-                  className="text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent"
-                />
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+          <div className="flex flex-row items-center justify-center w-full mb-8">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4Iw-ps9v75UC9kcr-NLTe3aL-PwT2bsX6ZA&s" alt="Analytics Icon" className="w-10 h-10 mr-6" style={{ objectFit: 'contain' }} />
+            <div className="text-center max-w-2xl flex-1">
+              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                Initializing ML Analytics Engine
+              </h1>
+              <div className="h-16 flex items-center justify-center">
+                <p className="text-xl text-blue-200 animate-fade-in">{doYouKnowFacts[factIndex]}</p>
               </div>
-              <div style={{ minHeight: 50 }}>
-                {headlineDone && (
-                  <TypewriterText
-                    text="Detection of Anomalous Usage Patterns"
-                    speed={36}
-                    onDone={() => setSubheadlineDone(true)}
-                    className="text-2xl md:text-3xl font-semibold text-blue-200"
-                  />
-                )}
-              </div>
-              <div className="w-full max-w-lg mt-3">
-                <IntroCarousel images={introCarouselImages} />
-              </div>
-              <div className="h-10 mt-2 flex items-center justify-center">
-                {subheadlineDone && (
-                  <span className="text-lg text-blue-300 animate-fade-in">{doYouKnowFacts[factIndex]}</span>
-                )}
-              </div>
+              <p className="text-blue-300 mt-2 text-lg">
+                Our AI is diving deep into your energy data, searching for hidden patterns and savings opportunities. Prepare for a detailed breakdown of your home's energy DNA.
+              </p>
             </div>
-          </header>
-          <div className="flex flex-col items-center space-y-8 mt-2">
+            <div style={{ width: 40 }} />
+          </div>
+          <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
             {viewState === 'loading' ? (
               <div className="flex items-center space-x-4">
                 <div className="flex space-x-2">
                   {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: `${i * 0.2}s` }}
-                    />
+                    <div key={i} className="w-3 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.2}s` }} />
                   ))}
                 </div>
                 <span className="text-lg font-semibold text-blue-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <div className="mt-4">
-                <Button
-                  onClick={handleInitiate}
-                  className="bg-blue-700 hover:bg-blue-800 border border-blue-400/50"
-                >
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <Button onClick={handleInitiate} className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300" style={{ marginBottom: '1.5rem' }}>
                   <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Analysis
-                  <span className="ml-3 text-base font-normal text-blue-200">Deep scan</span>
+                  Initiate Anomaly/Tariff Analysis
+                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
                 </Button>
               </div>
             )}
           </div>
+          <div className="w-80 h-80 relative mb-12">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow" style={{
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)', animationDuration: '20s'
+              }}>
+                <div className="absolute w-4 h-4 bg-blue-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
+                <div className="absolute w-4 h-4 bg-cyan-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
+                <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
+                <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
+                <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
+              </div>
+              <div className="absolute w-48 h-48 border-2 border-cyan-400/50 animate-spin-reverse" style={{
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)', animationDuration: '15s'
+              }}>
+                <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-3 h-3 bg-blue-400 rounded-full top-1/4 -right-1.5" />
+                <div className="absolute w-3 h-3 bg-indigo-400 rounded-full top-3/4 -right-1.5" />
+                <div className="absolute w-3 h-3 bg-purple-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-3 h-3 bg-pink-400 rounded-full top-3/4 -left-1.5" />
+                <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-1/4 -left-1.5" />
+              </div>
+              <div className="absolute w-24 h-24 border border-indigo-300/60 animate-spin" style={{
+                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)', animationDuration: '10s'
+              }}>
+                <div className="absolute w-2 h-2 bg-indigo-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-2 h-2 bg-blue-300 rounded-full top-1/4 -right-1" />
+                <div className="absolute w-2 h-2 bg-cyan-300 rounded-full top-3/4 -right-1" />
+                <div className="absolute w-2 h-2 bg-purple-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
+                <div className="absolute w-2 h-2 bg-pink-300 rounded-full top-3/4 -left-1" />
+                <div className="absolute w-2 h-2 bg-teal-300 rounded-full top-1/4 -left-1" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-blue-400/30">
+                  <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
+                </div>
+              </div>
+              <div className="absolute inset-0">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-blue-400/30 to-transparent" style={{
+                    top: '50%', left: '50%', transformOrigin: 'bottom center',
+                    transform: `translate(-50%, -100%) rotate(${i * 60}deg)`, animation: `pulse 2s infinite ${i * 0.3}s`
+                  }} />
+                ))}
+              </div>
+              <div className="absolute w-3 h-3 bg-blue-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
+              <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
+              <div className="absolute w-4 h-4 bg-indigo-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
+              <div className="absolute w-2 h-2 bg-purple-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
+              <div className="absolute w-3 h-3 bg-pink-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
+              <div className="absolute w-2 h-2 bg-teal-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+            {[
+              { icon: BarChart3, label: "Processing Data", delay: "0s" },
+              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
+              { icon: TrendingUp, label: "Training Models", delay: "1s" }
+            ].map((item, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse" style={{ animationDelay: item.delay }}>
+                  <item.icon className="w-8 h-8 text-blue-400" />
+                </div>
+                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
+                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse" style={{ animationDelay: item.delay, width: '100%' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-2 text-blue-400/60">
+              <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
+              <span className="text-sm">Connecting to analytics servers...</span>
+            </div>
+          </div>
         </div>
-        <style>{`
+        <style jsx>{`
           @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-          .animate-fade-in { animation: fade-in 0.6s ease-out; }
+          @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
+          @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+          @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+          @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         `}</style>
       </div>
     );
@@ -323,25 +377,14 @@ export default function Analytics() {
   if (viewState === 'error') {
     return (
       <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to load analytics data: {error}
-        </div>
+        <div className="text-red-400 text-lg">Failed to load analytics data: {error}</div>
       </div>
     );
   }
 
-  if (viewState !== 'dashboard' || !analyticsData) {
-    return null;
-  }
+  if (viewState !== 'dashboard' || !analyticsData) return null;
 
-  const {
-    weeklyData = [],
-    anomalyData = [],
-    costOptimization = [],
-    mlPerformance = {},
-    hourlyPatterns = [],
-    mlAlgorithms = {}
-  } = analyticsData;
+  const { weeklyData = [], anomalyData = [], costOptimization = [], mlPerformance = {}, hourlyPatterns = [], mlAlgorithms = {} } = analyticsData;
 
   const adjustedWeeklyData = weeklyData.map((item) => ({
     ...item,
@@ -444,10 +487,7 @@ export default function Analytics() {
               )}
             </div>
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">{algorithm.description}</p>
-            <button
-              onClick={toggleExpanded}
-              className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
-            >
+            <button onClick={toggleExpanded} className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700">
               <Settings className="w-4 h-4" />
               {isExpanded ? 'Hide Parameters' : 'View Parameters'}
             </button>
@@ -499,62 +539,64 @@ export default function Analytics() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
-      <header className="flex flex-col md:flex-row items-center justify-between mb-8">
-        <div className="flex-1 flex flex-col items-start">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white mb-2">Tariff Analytics</h1>
-          <h2 className="text-xl font-semibold text-blue-200 mb-1">Detection of Anomalous Usage Patterns</h2>
-          <p className="text-base text-blue-300">AI-powered insights for smarter energy management</p>
+      <div className="relative text-center py-8">
+        <img src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg" alt="Smart Home" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+        <div className="relative z-10 mx-auto max-w-3xl bg-black/70 backdrop-blur-sm rounded-xl p-6">
+          <h1 className="text-4xl font-bold text-white mb-2">Advanced Energy Analytics & ML Insights</h1>
+          <p className="text-gray-300 text-xl mb-4">Real-time machine learning algorithms analyzing your energy consumption patterns</p>
+          <div className="flex flex-wrap justify-center gap-8 text-base text-gray-400">
+            <span>• Anomaly Detection Active</span>
+            <span>• Predictive Modeling Enabled</span>
+            <span>• Cost Optimization Running</span>
+          </div>
         </div>
-        <div className="flex-1 flex justify-end gap-3 mt-5 md:mt-0">
-          <Button onClick={handleInitiate}>Refresh</Button>
-        </div>
-      </header>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent>
+        <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
+          <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-200 text-sm font-bold tracking-wide">ML Prediction Accuracy</p>
-                <p className="text-4xl font-black text-white mb-1">{predictionAccuracy.toFixed(1)}%</p>
-                <p className="text-blue-300 text-xs font-mono">Ensemble Model Active</p>
+                <p className="text-green-200 text-sm font-medium">ML Prediction Accuracy</p>
+                <p className="text-3xl font-bold text-white">{predictionAccuracy.toFixed(1)}%</p>
+                <p className="text-green-300 text-xs mt-1">Ensemble Model</p>
               </div>
-              <Brain className="w-10 h-10 text-blue-400" />
+              <Brain className="w-8 h-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent>
+        <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
+          <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-200 text-sm font-bold tracking-wide">Anomalies Detected</p>
-                <p className="text-4xl font-black text-white mb-1">{anomaliesDetected}</p>
-                <p className="text-orange-300 text-xs font-mono">Isolation Forest AI</p>
+                <p className="text-red-200 text-sm font-medium">Anomalies Detected</p>
+                <p className="text-3xl font-bold text-white">{anomaliesDetected}</p>
+                <p className="text-red-300 text-xs mt-1">Isolation Forest</p>
               </div>
-              <AlertTriangle className="w-10 h-10 text-orange-400" />
+              <AlertTriangle className="w-8 h-8 text-red-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent>
+        <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
+          <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-cyan-200 text-sm font-bold tracking-wide">Live Device Load</p>
-                <p className="text-4xl font-black text-white mb-1">{(totalDevicePower/1000).toFixed(2)}kW</p>
-                <p className="text-cyan-300 text-xs font-mono">Real-time Consumption</p>
+                <p className="text-blue-200 text-sm font-medium">Current Device Load</p>
+                <p className="text-3xl font-bold text-white">{(totalDevicePower/1000).toFixed(2)}kW</p>
+                <p className="text-blue-300 text-xs mt-1">Live Consumption</p>
               </div>
-              <Zap className="w-10 h-10 text-cyan-400" />
+              <Zap className="w-8 h-8 text-blue-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent>
+        <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
+          <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-pink-200 text-sm font-bold tracking-wide">Total Savings</p>
-                <p className="text-4xl font-black text-white mb-1">${totalSavings.toFixed(2)}</p>
-                <p className="text-pink-300 text-xs font-mono">Optimized This Month</p>
+                <p className="text-purple-200 text-sm font-medium">Total Savings</p>
+                <p className="text-3xl font-bold text-white">${totalSavings.toFixed(2)}</p>
+                <p className="text-purple-300 text-xs mt-1">This Month</p>
               </div>
-              <Target className="w-10 h-10 text-pink-400" />
+              <Target className="w-8 h-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
@@ -572,23 +614,13 @@ export default function Analytics() {
             <div className="w-[60%]">
               <ResponsiveContainer width="100%" height={300}>
                 <ScatterChart data={anomalyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="time" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white'
-                    }}
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white' }} />
                   <Scatter dataKey="consumption" name="Consumption">
                     {anomalyData?.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'}
-                      />
+                      <Cell key={`cell-${index}`} fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'} />
                     ))}
                   </Scatter>
                 </ScatterChart>
@@ -605,7 +637,7 @@ export default function Analytics() {
               </div>
             </div>
             <div className="w-[40%] flex items-center justify-center">
-              <IntroCarousel images={introCarouselImages} />
+              <Carousel images={carouselImages} />
             </div>
           </div>
         </CardContent>
@@ -640,28 +672,17 @@ export default function Analytics() {
             <div className="w-[70%]">
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="day" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white'
-                    }}
-                  />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white' }} />
                   <Bar dataKey="consumption" fill="#60a5fa" name="Actual Consumption (kWh)" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="prediction" fill="#22c55e" name="ML Prediction (kWh)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
             <div className="w-[30%]">
-              <img
-                src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
-                alt="Smart Home Analytics"
-                className="w-full h-[400px] object-cover rounded-lg"
-              />
+              <img src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg" alt="Smart Home Analytics" className="w-full h-[400px] object-cover rounded-lg" />
             </div>
           </div>
         </CardContent>
@@ -685,38 +706,21 @@ export default function Analytics() {
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="hour" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white'
-                    }}
-                  />
-                  <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
-                    fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
-                  <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
-                    fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', color: 'white' }} />
+                  <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1} fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
+                  <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
             <div className="w-[30%]">
-              <img
-                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg"
-                alt="Smart Home Interior"
-                className="w-full h-[350px] object-cover rounded-lg"
-              />
+              <img src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" alt="Smart Home Interior" className="w-full h-[350px] object-cover rounded-lg" />
             </div>
           </div>
         </CardContent>
       </Card>
-      <style>{`
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.6s ease-out; }
-      `}</style>
     </div>
   );
 }

@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sphere, MeshDistortMaterial, Text, Float, Stars, Ring } from '@react-three/drei';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -48,101 +46,53 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
   </button>
 );
 
-// Three.js Components
-function AnimatedSphere({ position, color, scale = 1 }) {
-  const meshRef = useRef();
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.elapsedTime * 0.3;
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.2;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime) * 0.1;
-    }
-  });
-
+// Simple CSS-based 3D Loading Animation (No Three.js)
+function LoadingAnimation() {
   return (
-    <Float speed={1.5} rotationIntensity={1} floatIntensity={2}>
-      <Sphere ref={meshRef} args={[0.5 * scale, 64, 64]} position={position}>
-        <MeshDistortMaterial color={color} attach="material" distort={0.3} speed={2} roughness={0.1} metalness={0.8} />
-      </Sphere>
-    </Float>
-  );
-}
-
-function GeofenceRing({ radius = 2, position = [0, 0, 0] }) {
-  const ringRef = useRef();
-  useFrame((state) => {
-    if (ringRef.current) {
-      ringRef.current.rotation.z = state.clock.elapsedTime * 0.5;
-      ringRef.current.material.opacity = 0.3 + Math.sin(state.clock.elapsedTime * 2) * 0.2;
-    }
-  });
-
-  return (
-    <Ring ref={ringRef} args={[radius, radius + 0.1, 64]} position={position}>
-      <meshBasicMaterial color="#22c55e" transparent opacity={0.5} />
-    </Ring>
-  );
-}
-
-function ParticleField() {
-  const points = useRef();
-  const particleCount = 1000;
-  const positions = new Float32Array(particleCount * 3);
-  const colors = new Float32Array(particleCount * 3);
-  
-  for (let i = 0; i < particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-    colors[i * 3] = Math.random() * 0.5 + 0.5;
-    colors[i * 3 + 1] = Math.random() * 0.8 + 0.2;
-    colors[i * 3 + 2] = Math.random() * 0.3 + 0.7;
-  }
-
-  useFrame((state) => {
-    if (points.current) {
-      points.current.rotation.x = state.clock.elapsedTime * 0.05;
-      points.current.rotation.y = state.clock.elapsedTime * 0.03;
-    }
-  });
-
-  return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={particleCount} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={particleCount} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial size={0.02} vertexColors transparent opacity={0.6} sizeAttenuation />
-    </points>
-  );
-}
-
-function LoadingScene() {
-  return (
-    <>
-      <ambientLight intensity={0.4} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#22c55e" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#10b981" />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <ParticleField />
-      <AnimatedSphere position={[0, 0, 0]} color="#22c55e" scale={1.5} />
-      <AnimatedSphere position={[3, 1, -2]} color="#10b981" scale={0.8} />
-      <AnimatedSphere position={[-3, -1, 2]} color="#059669" scale={0.6} />
-      <AnimatedSphere position={[0, 3, -3]} color="#047857" scale={0.4} />
-      <GeofenceRing radius={3} position={[0, 0, 0]} />
-      <GeofenceRing radius={5} position={[0, 0, 0]} />
-      <GeofenceRing radius={7} position={[0, 0, 0]} />
-      <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-        <Text position={[0, -4, 0]} fontSize={0.8} color="#22c55e" anchorX="center" anchorY="middle">
-          GEOFENCING
-        </Text>
-      </Float>
-      <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-        <Text position={[0, -5, 0]} fontSize={0.4} color="#22c55e" anchorX="center" anchorY="middle">
-          AI POWERED
-        </Text>
-      </Float>
-    </>
+    <div className="relative w-80 h-80 flex items-center justify-center">
+      {/* Animated rings */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow rounded-full">
+          <div className="absolute w-4 h-4 bg-green-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
+          <div className="absolute w-4 h-4 bg-cyan-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
+        </div>
+        
+        {/* Inner ring */}
+        <div className="absolute w-48 h-48 border-2 border-green-500/60 animate-spin-reverse rounded-full">
+          <div className="absolute w-3 h-3 bg-green-500 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+          <div className="absolute w-3 h-3 bg-emerald-500 rounded-full top-1/2 -right-1.5 transform -translate-y-1/2" />
+          <div className="absolute w-3 h-3 bg-teal-500 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
+          <div className="absolute w-3 h-3 bg-cyan-500 rounded-full top-1/2 -left-1.5 transform -translate-y-1/2" />
+        </div>
+        
+        {/* Center orb */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse border-2 border-green-400/30 shadow-lg shadow-green-500/50">
+            <Brain className="w-10 h-10 text-green-400 animate-pulse" />
+          </div>
+        </div>
+      </div>
+      
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-green-400/60 rounded-full animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -329,7 +279,7 @@ function TypewriterText({ text, speed = 60, onDone, className = "" }) {
   return <span className={className}>{displayed}</span>;
 }
 
-const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 800 }) => (
+const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 600 }) => (
   <div className="relative overflow-hidden">
     <div
       className={`absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 z-10 transition-transform ease-out`}
@@ -452,18 +402,23 @@ export default function Geofencing() {
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
-        <div className="absolute inset-0 z-0">
-          <Canvas camera={{ position: [0, 0, 10], fov: 60 }}>
-            <Suspense fallback={null}>
-              <LoadingScene />
-              <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
-            </Suspense>
-          </Canvas>
+        {/* Background particles */}
+        <div className="absolute inset-0">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-green-400/20 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
         </div>
         
-        <div className="absolute inset-0 bg-black/20 z-10" />
-        
-        <div className="relative z-20 flex flex-col items-center justify-center min-h-screen p-8">
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
           <div className="flex flex-row items-center justify-center w-full mb-8">
             <img
               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
@@ -472,7 +427,7 @@ export default function Geofencing() {
               style={{ objectFit: 'contain' }}
             />
             <div className="text-center max-w-2xl flex-1">
-              <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={800}>
+              <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={600}>
                 <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   <TypewriterText
                     text="Initializing Geofencing Engine"
@@ -481,7 +436,7 @@ export default function Geofencing() {
                   />
                 </h1>
               </CurtainReveal>
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={800} duration={600}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={600} duration={500}>
                 <div className="h-16 flex items-center justify-center mb-2">
                   <TypewriterText
                     text="Adaptive Smart Zones & ML-Driven Location Automation"
@@ -491,14 +446,14 @@ export default function Geofencing() {
                   />
                 </div>
               </CurtainReveal>
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1400} duration={500}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1100} duration={400}>
                 <div className="h-16 flex items-center justify-center">
                   <p className="text-lg text-green-300 animate-fade-in">
                     {doYouKnowFacts[factIndex]}
                   </p>
                 </div>
               </CurtainReveal>
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1600} duration={500}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1300} duration={400}>
                 <p className="text-green-300 mt-2 text-lg backdrop-blur-sm bg-black/30 rounded-lg p-4">
                   Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
                 </p>
@@ -522,7 +477,7 @@ export default function Geofencing() {
                 <span className="text-lg font-semibold text-green-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1800} duration={400}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1500} duration={300}>
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
                   <Button
@@ -538,7 +493,9 @@ export default function Geofencing() {
             )}
           </div>
           
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
+          <LoadingAnimation />
+          
+          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md mt-8">
             {[
               { icon: MapPin, label: "Mapping Zones", delay: "0s" },
               { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
@@ -583,11 +540,32 @@ export default function Geofencing() {
             25% { transform: rotate(1deg); }
             75% { transform: rotate(-1deg); }
           }
+          @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes spin-reverse {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+          }
+          @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+          }
           .animate-fade-in {
             animation: fade-in 0.8s ease-out;
           }
           .animate-tilt {
             animation: tilt 10s infinite linear;
+          }
+          .animate-spin-slow {
+            animation: spin-slow 20s linear infinite;
+          }
+          .animate-spin-reverse {
+            animation: spin-reverse 15s linear infinite;
+          }
+          .animate-float {
+            animation: float 3s ease-in-out infinite;
           }
         `}</style>
       </div>
@@ -723,7 +701,7 @@ export default function Geofencing() {
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
               <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. Whether you're optimizing your climate, streamlining your routines, or simply enjoying the peace of mind that comes with automation, every zone you create brings your home closer to effortless living.
+                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing.
               </p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
                 <li>• Instantly adjust lighting and temperature as you move from room to room.</li>

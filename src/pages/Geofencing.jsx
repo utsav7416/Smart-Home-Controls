@@ -722,13 +722,11 @@ export default function Geofencing() {
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
               <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. Whether you're optimizing your climate, streamlining your routines, or simply enjoying the peace of mind that comes with automation, every zone you create brings your home closer to effortless living.
+                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. 
               </p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
                 <li>• Instantly adjust lighting and temperature as you move from room to room.</li>
-                <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
                 <li>• Save energy without sacrificing convenience or style.</li>
-                <li>• Every image below represents a real scenario powered by smart geofencing.</li>
               </ul>
             </div>
             <div className="mt-2">

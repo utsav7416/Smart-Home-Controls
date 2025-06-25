@@ -190,7 +190,7 @@ function TypewriterText({ text, speed = 50, onDone, className = "" }) {
   return <span className={className}>{displayed}</span>;
 }
 
-const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 2000 }) => (
+const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 1000 }) => (
   <div className="relative overflow-hidden">
     <div
       className={`absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 z-10 transition-transform ease-out`}
@@ -200,7 +200,7 @@ const CurtainReveal = ({ children, isRevealed, delay = 0, duration = 2000 }) => 
         transform: isRevealed ? 'translateX(-100%)' : 'translateX(0)',
       }}
     />
-    <div className={`transition-opacity duration-500 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`transition-opacity duration-300 ${isRevealed ? 'opacity-100' : 'opacity-0'}`}>
       {children}
     </div>
   </div>
@@ -261,7 +261,7 @@ export default function Analytics() {
     if (viewState === 'initial') {
       const timer = setTimeout(() => {
         setCurtainRevealed(true);
-      }, 500);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [viewState]);
@@ -285,7 +285,7 @@ export default function Analytics() {
         </div>
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
           <div className="text-center max-w-4xl mb-12">
-            <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={2000}>
+            <CurtainReveal isRevealed={curtainRevealed} delay={0} duration={1000}>
               <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
                 <TypewriterText
                   text="Tariff Analytics"
@@ -294,7 +294,7 @@ export default function Analytics() {
                 />
               </h1>
             </CurtainReveal>
-            <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={2000} duration={1500}>
+            <CurtainReveal isRevealed={curtainRevealed && headlineDone} delay={1000} duration={800}>
               <div className="mb-6">
                 <h2 className="text-4xl font-semibold mb-3 text-white">
                   <TypewriterText
@@ -308,7 +308,7 @@ export default function Analytics() {
                 </p>
               </div>
             </CurtainReveal>
-            <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={3500} duration={1000}>
+            <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={1800} duration={600}>
               <div className="h-16 flex items-center justify-center mb-6">
                 <p className="text-lg text-blue-300 animate-fade-in">
                   {doYouKnowFacts[factIndex]}
@@ -331,7 +331,7 @@ export default function Analytics() {
                 <span className="text-lg font-semibold text-blue-300">Processing request, this may take a while...</span>
               </div>
             ) : (
-              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={4000} duration={1000}>
+              <CurtainReveal isRevealed={curtainRevealed && headlineDone && subheadlineDone} delay={2200} duration={600}>
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-300 animate-pulse" />
                   <Button
@@ -563,114 +563,79 @@ export default function Analytics() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-blue-900/20 to-cyan-900/20 backdrop-blur-sm"></div>
-        <div className="relative z-10 text-center py-12 px-8">
-          <div className="max-w-5xl mx-auto">
-            <div className="inline-block p-1 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-2xl mb-8">
-              <div className="bg-black rounded-xl px-8 py-6 backdrop-blur-sm">
-                <h1 className="text-5xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-4">
-                  Neural Energy Analytics
-                </h1>
-                <p className="text-xl text-gray-300 font-medium mb-2">
-                  Advanced ML-Powered Energy Intelligence Platform
-                </p>
-                <div className="flex justify-center items-center space-x-8 text-sm text-gray-400 font-mono">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span>Real-time Anomaly Detection</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                    <span>Predictive Modeling</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                    <span>Tariff Optimization</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="relative text-center py-8">
+        <img
+          src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg"
+          alt="Smart Home"
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
+        />
+        <div className="relative z-10 mx-auto max-w-3xl bg-black/70 backdrop-blur-sm rounded-xl p-6">
+          <h1 className="text-4xl font-bold text-white mb-2">
+            Advanced Energy Analytics & ML Insights
+          </h1>
+          <p className="text-gray-300 text-xl mb-4">
+            Real-time machine learning algorithms analyzing your energy consumption patterns
+          </p>
+          <div className="flex flex-wrap justify-center gap-8 text-base text-gray-400">
+            <span>• Anomaly Detection Active</span>
+            <span>• Predictive Modeling Enabled</span>
+            <span>• Cost Optimization Running</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-          <Card className="relative bg-black/90 backdrop-blur-sm border-0 transform group-hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 pt-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-200 text-sm font-bold tracking-wide">ML PREDICTION ACCURACY</p>
-                  <p className="text-4xl font-black text-white mb-1">{predictionAccuracy.toFixed(1)}%</p>
-                  <p className="text-green-300 text-xs font-mono">Ensemble Model Active</p>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-green-400 rounded-full blur-md opacity-50 animate-pulse"></div>
-                  <Brain className="relative w-10 h-10 text-green-400" />
-                </div>
+        <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
+          <CardContent className="p-6 pt-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-200 text-sm font-medium">ML Prediction Accuracy</p>
+                <p className="text-3xl font-bold text-white">{predictionAccuracy.toFixed(1)}%</p>
+                <p className="text-green-300 text-xs mt-1">Ensemble Model</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Brain className="w-8 h-8 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-          <Card className="relative bg-black/90 backdrop-blur-sm border-0 transform group-hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 pt-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-200 text-sm font-bold tracking-wide">ANOMALIES DETECTED</p>
-                  <p className="text-4xl font-black text-white mb-1">{anomaliesDetected}</p>
-                  <p className="text-orange-300 text-xs font-mono">Isolation Forest AI</p>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-orange-400 rounded-full blur-md opacity-50 animate-pulse"></div>
-                  <AlertTriangle className="relative w-10 h-10 text-orange-400" />
-                </div>
+        <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
+          <CardContent className="p-6 pt-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-200 text-sm font-medium">Anomalies Detected</p>
+                <p className="text-3xl font-bold text-white">{anomaliesDetected}</p>
+                <p className="text-red-300 text-xs mt-1">Isolation Forest</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <AlertTriangle className="w-8 h-8 text-red-400" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-          <Card className="relative bg-black/90 backdrop-blur-sm border-0 transform group-hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 pt-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-cyan-200 text-sm font-bold tracking-wide">LIVE DEVICE LOAD</p>
-                  <p className="text-4xl font-black text-white mb-1">{(totalDevicePower/1000).toFixed(2)}kW</p>
-                  <p className="text-cyan-300 text-xs font-mono">Real-time Consumption</p>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-cyan-400 rounded-full blur-md opacity-50 animate-pulse"></div>
-                  <Zap className="relative w-10 h-10 text-cyan-400" />
-                </div>
+        <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
+          <CardContent className="p-6 pt-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-200 text-sm font-medium">Current Device Load</p>
+                <p className="text-3xl font-bold text-white">{(totalDevicePower/1000).toFixed(2)}kW</p>
+                <p className="text-blue-300 text-xs mt-1">Live Consumption</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Zap className="w-8 h-8 text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="group relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl blur-sm opacity-75 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-          <Card className="relative bg-black/90 backdrop-blur-sm border-0 transform group-hover:scale-105 transition-transform duration-300">
-            <CardContent className="p-6 pt-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-pink-200 text-sm font-bold tracking-wide">TOTAL SAVINGS</p>
-                  <p className="text-4xl font-black text-white mb-1">${totalSavings.toFixed(2)}</p>
-                  <p className="text-pink-300 text-xs font-mono">Optimized This Month</p>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-pink-400 rounded-full blur-md opacity-50 animate-pulse"></div>
-                  <Target className="relative w-10 h-10 text-pink-400" />
-                </div>
+        <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
+          <CardContent className="p-6 pt-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-200 text-sm font-medium">Total Savings</p>
+                <p className="text-3xl font-bold text-white">${totalSavings.toFixed(2)}</p>
+                <p className="text-purple-300 text-xs mt-1">This Month</p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <Target className="w-8 h-8 text-purple-400" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">

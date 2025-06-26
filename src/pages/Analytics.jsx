@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, PieChart, Pie } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -141,15 +141,15 @@ const loadingCarouselImages = [
     alt: "2"
   },
   {
-    url: "https://i.pinimg.com/736x/ac/50/b5/ac50b5d06af7b1ff559529c7a420490b.jpg",
+    url: "https://images.unsplash.com/photo-1514803400321-3ca29fc47334?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNtYXJ0JTIwaG9tZXxlbnwwfHwwfHx8MA%3D%3D",
     alt: "3"
   },
   {
-    url: "https://images.unsplash.com/photo-1514803400321-3ca29fc47334?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNtYXJ0JTIwaG9tZXxlbnwwfHwwfHx8MA%3D%3D",
+    url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQHoFDkjhWSYwiur6Qt_OuwyMrrJ3h5Lz8Cw&s",
     alt: "4"
   },
   {
-    url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8uVtsN2Ynv6Y20ff0edcEQCUQGHjmHCtBvzEQSGWm3Wy9KgSx8IRrdmyF4s7G8A4Ypvs&usqp=CAU",
+    url: "https://www.iotworlds.com/wp-content/uploads/2023/01/iotworlds-smart-lighting-system-using-iot.png",
     alt: "5"
   }
 ];
@@ -266,7 +266,6 @@ export default function Analytics() {
     }
   }, [analyticsData]);
 
-
   useEffect(() => {
     const factInterval = setInterval(() => {
       setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
@@ -331,15 +330,14 @@ export default function Analytics() {
               </div>
             ) : (
               <div className="relative group">
-                <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-1000 animate-tilt" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/40 to-cyan-600/40 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-1000 animate-tilt" />
                 
                 <Button
                   onClick={handleInitiate}
-                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-2 border-blue-400/50 transform hover:scale-110 transition-all duration-300 text-2xl px-16 py-8 shadow-2xl shadow-blue-500/50 font-black tracking-wide"
+                  className="relative bg-gradient-to-r from-blue-600/80 to-blue-700/80 hover:from-blue-700 hover:to-blue-800 border border-blue-400/30 transform hover:scale-105 transition-all duration-300 text-2xl px-16 py-8 shadow-lg shadow-blue-500/30 font-black tracking-wide"
                   style={{ marginBottom: '1.5rem' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-md" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent rounded-md" />
                   <Brain className="w-8 h-8 mr-4 animate-pulse" />
                   <span className="relative z-10">Initiate Anomaly/Tariff Analysis</span>
                   <span className="ml-4 text-lg font-normal text-blue-200 relative z-10">⚡ Quick scan for savings</span>
@@ -354,9 +352,27 @@ export default function Analytics() {
             </div>
           )}
 
-          <div className="w-full max-w-4xl mb-8">
-            <Carousel images={loadingCarouselImages} />
+          <div className="w-full max-w-6xl mb-8">
+            <div className="flex justify-center items-center gap-6">
+              {loadingCarouselImages.map((image, index) => (
+                <div
+                  key={index}
+                  className="w-48 h-32 overflow-hidden rounded-lg shadow-lg animate-subtle-rotate"
+                  style={{
+                    animationDelay: `${index * 0.5}s`,
+                    transform: `rotate(${(Math.random() - 0.5) * 20}deg)`
+                  }}
+                >
+                  <img
+                    src={image.url}
+                    alt={image.alt}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
+
           <div className="w-80 h-80 relative mb-12">
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow" style={{
@@ -461,7 +477,19 @@ export default function Analytics() {
           @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
           @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
           @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+          @keyframes subtle-rotate { 0%, 100% { transform: rotate(var(--rotation)) scale(1); } 50% { transform: rotate(calc(var(--rotation) + 5deg)) scale(1.02); } }
+          .animate-subtle-rotate { animation: subtle-rotate 4s ease-in-out infinite; }
         `}</style>
+      </div>
+    );
+  }
+
+  if (viewState === 'error') {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-red-400 text-lg">
+          Failed to load analytics data: {error}
+        </div>
       </div>
     );
   }
@@ -485,12 +513,6 @@ export default function Analytics() {
 
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
-
-  const pieChartData = [
-    { name: 'Total Savings ($)', value: totalSavings, fill: '#22c55e' },
-    { name: 'Anomalies Detected', value: anomaliesDetected, fill: '#ef4444' },
-    { name: 'Device Load (kW)', value: totalDevicePower / 1000, fill: '#3b82f6' }
-  ];
 
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
     const algorithmKey = algorithm?.name || 'unknown';
@@ -845,44 +867,6 @@ export default function Analytics() {
                 alt="Smart Home Interior"
                 className="w-full h-[350px] object-cover rounded-lg"
               />
-            </div>
-          </div>
-          <div className="mt-6">
-            <div className="bg-gray-800 rounded-lg p-4 flex flex-col md:flex-row items-center gap-4">
-              <div className="w-full md:w-1/2">
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={pieChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: 'white'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="w-full md:w-1/2">
-                <img
-                  src="https://cdn.greenmatch.co.uk/cdn-cgi/image/format=auto/2/2024/06/15-Tips-on-how-to-save-energy-at-home.png"
-                  alt="Energy Saving Tips"
-                  className="w-full h-40 object-contain rounded"
-                />
-              </div>
             </div>
           </div>
         </CardContent>

@@ -451,18 +451,6 @@ export default function Geofencing() {
                 </div>
               </div>
               
-              <div className="w-80 h-80 relative mb-8">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-32 h-32 bg-gradient-to-br from-green-500/30 to-emerald-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
-                    <Brain className="w-16 h-16 text-green-400 animate-pulse" />
-                  </div>
-                </div>
-                <div className="absolute top-0 left-0 w-8 h-8 bg-green-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-                <div className="absolute top-0 right-0 w-6 h-6 bg-emerald-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
-                <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
-                <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
-              </div>
-
               <div className="flex flex-col items-center space-y-6 mt-4 mb-6">
                 {viewState === 'loading' ? (
                   <div className="flex items-center space-x-4">
@@ -490,6 +478,70 @@ export default function Geofencing() {
                     </Button>
                   </div>
                 )}
+              </div>
+
+              <div className="w-80 h-80 relative mb-8">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow" style={{
+                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                    animationDuration: '20s'
+                  }}>
+                    <div className="absolute w-4 h-4 bg-green-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
+                    <div className="absolute w-4 h-4 bg-emerald-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                    <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
+                    <div className="absolute w-4 h-4 bg-cyan-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
+                    <div className="absolute w-4 h-4 bg-lime-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
+                    <div className="absolute w-4 h-4 bg-mint-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
+                  </div>
+                  <div className="absolute w-48 h-48 border-2 border-emerald-400/50 animate-spin-reverse" style={{
+                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                    animationDuration: '15s'
+                  }}>
+                    <div className="absolute w-3 h-3 bg-emerald-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+                    <div className="absolute w-3 h-3 bg-green-400 rounded-full top-1/4 -right-1.5" />
+                    <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-3/4 -right-1.5" />
+                    <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
+                    <div className="absolute w-3 h-3 bg-lime-400 rounded-full top-3/4 -left-1.5" />
+                    <div className="absolute w-3 h-3 bg-mint-400 rounded-full top-1/4 -left-1.5" />
+                  </div>
+                  <div className="absolute w-24 h-24 border border-teal-300/60 animate-spin" style={{
+                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                    animationDuration: '10s'
+                  }}>
+                    <div className="absolute w-2 h-2 bg-teal-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
+                    <div className="absolute w-2 h-2 bg-green-300 rounded-full top-1/4 -right-1" />
+                    <div className="absolute w-2 h-2 bg-emerald-300 rounded-full top-3/4 -right-1" />
+                    <div className="absolute w-2 h-2 bg-cyan-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
+                    <div className="absolute w-2 h-2 bg-lime-300 rounded-full top-3/4 -left-1" />
+                    <div className="absolute w-2 h-2 bg-mint-300 rounded-full top-1/4 -left-1" />
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-emerald-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-green-400/30">
+                      <Brain className="w-10 h-10 text-green-400 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="absolute inset-0">
+                    {[...Array(6)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-green-400/30 to-transparent"
+                        style={{
+                          top: '50%',
+                          left: '50%',
+                          transformOrigin: 'bottom center',
+                          transform: `translate(-50%, -100%) rotate(${i * 60}deg)`,
+                          animation: `pulse 2s infinite ${i * 0.3}s`
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="absolute w-3 h-3 bg-green-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
+                  <div className="absolute w-2 h-2 bg-emerald-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
+                  <div className="absolute w-4 h-4 bg-teal-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
+                  <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
+                  <div className="absolute w-3 h-3 bg-lime-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
+                  <div className="absolute w-2 h-2 bg-mint-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-8 mb-8 w-full max-w-md">
@@ -550,6 +602,11 @@ export default function Geofencing() {
           @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
           @keyframes triangleBubble { 0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.3; } 100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; } }
           @keyframes rotateSubtle { 0% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } 100% { transform: rotate(-20deg); } }
+          @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+          @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+          @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
           .animate-fade-in { animation: fade-in 0.8s ease-out; }
           .animate-tilt { animation: tilt 10s infinite linear; }
           .triangle-bubble { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid rgba(34, 197, 94, 0.4); animation: triangleBubble 7s infinite linear; }

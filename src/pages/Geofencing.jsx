@@ -1,8 +1,7 @@
 import React from 'react';
-import { useState, useEffect, useRef } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, Home, Wifi, Thermometer, Camera, Lightbulb } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { motion, AnimatePresence } from "framer-motion";
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -31,15 +30,26 @@ export function prefetchGeofences() {
   return geofencesPromise;
 }
 
-const Card = ({ children, className = '' }) => <div className={`rounded-lg shadow-lg ${className}`}>{children}</div>;
-const CardHeader = ({ children, className = '' }) => <div className={`px-6 py-4 ${className}`}>{children}</div>;
-const CardTitle = ({ children, className = '' }) => <h3 className={`text-lg font-semibold ${className}`}>{children}</h3>;
-const CardContent = ({ children, className = '' }) => <div className={`px-6 pb-6 ${className}`}>{children}</div>;
+const Card = ({ children, className = '' }) => (
+  <div className={`rounded-lg shadow-lg ${className}`}>{children}</div>
+);
+
+const CardHeader = ({ children, className = '' }) => (
+  <div className={`px-6 py-4 ${className}`}>{children}</div>
+);
+
+const CardTitle = ({ children, className = '' }) => (
+  <h3 className={`text-lg font-semibold ${className}`}>{children}</h3>
+);
+
+const CardContent = ({ children, className = '' }) => (
+  <div className={`px-6 pb-6 ${className}`}>{children}</div>
+);
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => {
   return (
     <button
-      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-all duration-500 transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 hover:shadow-green-500/70 hover:shadow-xl ${className}`}
+      className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
       onClick={onClick}
       disabled={disabled}
       {...props}
@@ -92,7 +102,6 @@ const optimizeGeofences = async () => {
 };
 
 const useApiData = (key, fetchFn, refetchInterval = 30000) => {
-  
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -146,9 +155,13 @@ const useMutation = (mutationFn, options = {}) => {
   return { mutate, isPending, error };
 };
 
-const doYouKnowFacts = [
-  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
-  "Did you know? Your smart home learns and optimizes your energy usage over time."
+const smartHomeFacts = [
+  "Smart geofencing reduces home energy consumption by 34% on average",
+  "Automated lighting systems save up to $200 annually per household",
+  "Geofencing security systems reduce false alarms by 89%",
+  "Smart thermostats adapt to your schedule within 3 days of installation",
+  "IoT devices create 127 optimization opportunities daily in modern homes",
+  "Geofence automation increases home security response time by 400%"
 ];
 
 const carouselImages = [
@@ -173,384 +186,6 @@ const carouselImages = [
     alt: "Smart lighting setup in a cozy room"
   }
 ];
-
-const ICONS = [Brain, MapPin, Target, TrendingUp];
-const STEPS = [
-  "Initializing AI Engine",
-  "Mapping Smart Zones",
-  "Optimizing Routes",
-  "Connecting Devices",
-  "Syncing Network",
-  "Securing Connection"
-];
-const FACTS = [
-  "Smart zones reduce energy use by up to 30%.",
-  "AI adapts to your lifestyle in real time.",
-  "Geofencing creates seamless experiences.",
-  "Machine learning personalizes automation.",
-  "Your home is becoming self-aware.",
-  "Security is always evolving."
-];
-const PARTICLE_COLORS = [
-  "bg-green-400/40",
-  "bg-blue-400/40",
-  "bg-purple-400/40",
-  "bg-yellow-400/40",
-  "bg-pink-400/40"
-];
-
-const useInterval = (cb, delay) => {
-  const savedCb = useRef();
-  useEffect(() => { savedCb.current = cb; }, [cb]);
-  useEffect(() => {
-    if (delay === null) return;
-    const id = setInterval(() => savedCb.current(), delay);
-    return () => clearInterval(id);
-  }, [delay]);
-};
-
-function AnimatedCounter({ target, duration = 3000, className = "" }) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const end = target;
-    const increment = end / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
-
-    return () => clearInterval(timer);
-  }, [target, duration]);
-
-  return <span className={className}>{count}</span>;
-}
-
-function CurtainReveal({ children, isRevealed, delay = 0 }) {
-  const [showContent, setShowContent] = useState(false);
-
-  useEffect(() => {
-    if (isRevealed) {
-      const timer = setTimeout(() => setShowContent(true), delay);
-      return () => clearTimeout(timer);
-    }
-  }, [isRevealed, delay]);
-
-  return (
-    <div className="relative overflow-hidden">
-      <div className={`absolute inset-0 z-10 flex ${isRevealed ? 'animate-curtain-open' : ''}`}>
-        <div className="w-1/2 h-full bg-gradient-to-r from-slate-900 to-slate-800 transform transition-transform duration-1000 ease-out" 
-             style={{ transform: isRevealed ? 'translateX(-100%)' : 'translateX(0%)' }} />
-        <div className="w-1/2 h-full bg-gradient-to-l from-slate-900 to-slate-800 transform transition-transform duration-1000 ease-out" 
-             style={{ transform: isRevealed ? 'translateX(100%)' : 'translateX(0%)' }} />
-      </div>
-      <div className={`transition-opacity duration-1000 ${showContent ? 'opacity-100' : 'opacity-0'}`}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function TypewriterText({ text, speed = 50, className = "" }) {
-  const [displayText, setDisplayText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
-      }, speed);
-      return () => clearTimeout(timer);
-    }
-  }, [currentIndex, text, speed]);
-
-  return (
-    <span className={className}>
-      {displayText}
-      <span className="animate-pulse">|</span>
-    </span>
-  );
-}
-
-const OutOfThisWorldFloatingParticles = () => {
-  return (
-    <div className="absolute inset-0 pointer-events-none z-0">
-      {[...Array(60)].map((_, i) => {
-        const size = Math.random() * 12 + 8;
-        const dur = Math.random() * 12 + 8;
-        const left = Math.random() * 100;
-        const delay = Math.random() * 10;
-        const color = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
-        return (
-          <motion.div
-            key={i}
-            className={`absolute rounded-full ${color}`}
-            style={{
-              width: size,
-              height: size,
-              left: `${left}%`,
-              top: `${Math.random() * 100}%`,
-              filter: "blur(1.5px)"
-            }}
-            animate={{
-              y: ["0%", "120%"],
-              opacity: [0.3, 0.7, 0.1]
-            }}
-            transition={{
-              duration: dur,
-              repeat: Infinity,
-              repeatType: "loop",
-              delay
-            }}
-          />
-        );
-      })}
-    </div>
-  );
-};
-
-const HyperspaceTunnel = () => {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-      {[...Array(18)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute rounded-full border border-emerald-400/20"
-          style={{
-            width: 120 + i * 60,
-            height: 120 + i * 60,
-            borderWidth: 1 + i * 0.2,
-            opacity: 0.18 - i * 0.008
-          }}
-          animate={{
-            scale: [1, 1.16, 1],
-            opacity: [0.15, 0.08, 0.15]
-          }}
-          transition={{
-            duration: 2.5 + i * 0.1,
-            repeat: Infinity,
-            repeatType: "mirror",
-            delay: i * 0.08
-          }}
-        />
-      ))}
-      {[...Array(10)].map((_, i) => (
-        <motion.div
-          key={100 + i}
-          className="absolute rounded-full border border-emerald-400/30"
-          style={{
-            width: 300 + i * 80,
-            height: 300 + i * 80,
-            opacity: 0.06 - i * 0.004
-          }}
-          animate={{
-            rotate: [0, 360]
-          }}
-          transition={{
-            duration: 8 + i * 0.7,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-const NeonProgressRing = ({ progress }) => {
-  const size = 180;
-  const stroke = 8;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-  return (
-    <div className="relative flex items-center justify-center">
-      <svg width={size} height={size} className="block">
-        <defs>
-          <radialGradient id="glow" r="80%" cx="50%" cy="50%">
-            <stop offset="0%" stopColor="#34d399" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#10b981" stopOpacity="0.9" />
-          </radialGradient>
-          <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#34d399" />
-            <stop offset="100%" stopColor="#10b981" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="url(#glow)"
-          strokeWidth={stroke}
-          fill="none"
-          opacity="0.5"
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="url(#neon)"
-          strokeWidth={stroke}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          initial={false}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.6, ease: "easeInOut" }}
-          style={{ filter: "drop-shadow(0 0 16px #10b98199)" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.div
-          className="text-5xl font-extrabold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent"
-          key={progress}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <AnimatedCounter target={progress} />%
-        </motion.div>
-      </div>
-    </div>
-  );
-};
-
-const Typewriter = ({ text, speed = 70 }) => {
-  const [display, setDisplay] = useState("");
-  useEffect(() => {
-    setDisplay("");
-    let i = 0;
-    const timer = setInterval(() => {
-      setDisplay((prev) => prev + text[i]);
-      i++;
-      if (i >= text.length) clearInterval(timer);
-    }, speed);
-    return () => clearInterval(timer);
-  }, [text, speed]);
-  return (
-    <span>
-      {display}
-      <motion.span
-        animate={{ opacity: [1, 0] }}
-        transition={{ duration: 0.7, repeat: Infinity }}
-        className="ml-1"
-      >
-        |
-      </motion.span>
-    </span>
-  );
-};
-
-const Stepper = ({ current }) => {
-  return (
-    <div className="grid grid-cols-3 gap-7 mb-12">
-      {STEPS.map((label, i) => {
-        const Icon = ICONS[i % ICONS.length];
-        const active = i <= current;
-        return (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0.4, y: 36 }}
-            animate={{
-              opacity: active ? 1 : 0.4,
-              y: 0,
-              scale: i === current ? 1.18 : 1
-            }}
-            transition={{ delay: i * 0.14, duration: 0.6 }}
-            className="flex flex-col items-center space-y-3"
-          >
-            <motion.div
-              className={`w-16 h-16 rounded-2xl flex items-center justify-center border-2 border-emerald-400/30`}
-              animate={i === current ? { boxShadow: ["0 0 0 0 #10b98144", "0 0 0 18px #10b98100"] } : {}}
-              transition={{ duration: 2, repeat: Infinity }}
-              style={{
-                background: active
-                  ? "linear-gradient(135deg,#134e4a44 40%,#10b98118 100%)"
-                  : "linear-gradient(135deg,#0f172a44,#1e293b22)"
-              }}
-            >
-              <Icon className={`w-8 h-8 ${active ? "text-emerald-400" : "text-gray-500"}`} />
-            </motion.div>
-            <span className={`text-sm font-medium ${active ? "text-white" : "text-gray-500"}`}>
-              {label}
-            </span>
-            {active && (
-              <motion.div
-                className="w-12 h-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: 48 }}
-                transition={{ duration: 1 }}
-              />
-            )}
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-};
-
-const FactCarousel = ({ index }) => (
-  <AnimatePresence mode="wait">
-    <motion.div
-      key={index}
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -24 }}
-      transition={{ duration: 0.7 }}
-      className="text-lg text-emerald-200 italic text-center max-w-xl mx-auto mb-8"
-    >
-      <span className="mr-2">💡</span>
-      {FACTS[index]}
-    </motion.div>
-  </AnimatePresence>
-);
-
-const AuroraBackground = () => (
-  <div className="absolute inset-0 -z-10">
-    <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[600px] opacity-60 blur-2xl"
-      style={{
-        background: "radial-gradient(ellipse 60% 40% at 50% 40%,#34d39977 0%,#10b98111 100%)"
-      }}
-    />
-    <div className="absolute top-1/2 left-1/4 w-[400px] h-[500px] opacity-40 blur-2xl"
-      style={{
-        background: "radial-gradient(ellipse 60% 40% at 50% 40%,#2563eb66 0%,#1e293b11 100%)"
-      }}
-    />
-    <div className="absolute bottom-0 right-0 w-[400px] h-[400px] opacity-30 blur-2xl"
-      style={{
-        background: "radial-gradient(ellipse 60% 40% at 50% 40%,#f472b666 0%,#1e293b11 100%)"
-      }}
-    />
-  </div>
-);
-
-function FloatingParticles() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(30)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-green-400/30 rounded-full animate-float"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 5}s`,
-            animationDuration: `${3 + Math.random() * 4}s`
-          }}
-        />
-      ))}
-    </div>
-  );
-}
 
 function ImageCarousel() {
   const [index, setIndex] = useState(0);
@@ -588,7 +223,7 @@ function ImageCarousel() {
     <div className="relative w-full h-64 flex items-center justify-center group overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30">
       <button
         onClick={goPrev}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all transform hover:scale-110"
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all"
         aria-label="Previous"
         tabIndex={0}
       >
@@ -598,18 +233,18 @@ function ImageCarousel() {
         <img
           src={carouselImages[index].url}
           alt={carouselImages[index].alt}
-          className="w-full h-64 object-cover rounded-lg shadow-xl transform hover:scale-105 transition-transform duration-500"
+          className="w-full h-64 object-cover rounded-lg shadow-xl"
           style={{
             boxShadow: '0 6px 32px 0 rgba(34,197,94,0.15), 0 1.5px 7px 0 rgba(16,185,129,0.09)'
           }}
         />
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full text-green-100 text-sm shadow-lg backdrop-blur animate-slide-up">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full text-green-100 text-sm shadow-lg backdrop-blur">
           {carouselImages[index].alt}
         </div>
       </div>
       <button
         onClick={goNext}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all transform hover:scale-110"
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all"
         aria-label="Next"
         tabIndex={0}
       >
@@ -619,8 +254,7 @@ function ImageCarousel() {
         {carouselImages.map((_, i) => (
           <span
             key={i}
-            className={`block w-3 h-3 rounded-full transition-all duration-300 cursor-pointer hover:scale-125 ${i === index ? 'bg-green-400 scale-125' : 'bg-green-900/40'}`}
-            onClick={() => setIndex(i)}
+            className={`block w-3 h-3 rounded-full transition-all duration-300 ${i === index ? 'bg-green-400' : 'bg-green-900/40'}`}
           />
         ))}
       </div>
@@ -636,50 +270,20 @@ export default function Geofencing() {
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [curtainRevealed, setCurtainRevealed] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [step, setStep] = useState(0);
-  const [fact, setFact] = useState(0);
+  const [buildingStage, setBuildingStage] = useState(0);
+  const [devicesVisible, setDevicesVisible] = useState([]);
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
-
-  useInterval(() => {
-    setProgress((p) => {
-      if (p >= 100) return 100;
-      return Math.min(100, p + Math.random() * 8 + 2);
-    });
-  }, 220);
-  useInterval(() => {
-    setStep((s) => (s + 1) % STEPS.length);
-  }, 1700);
-  useInterval(() => {
-    setFact((f) => (f + 1) % FACTS.length);
-  }, 2600);
 
   const handleInitiate = () => {
     if (viewState === 'initial') {
       hasInitiatedGeofences = true;
       setViewState('loading');
-      
-      const progressInterval = setInterval(() => {
-        setLoadingProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            return 100;
-          }
-          return prev + Math.random() * 15;
-        });
-      }, 200);
-
       prefetchGeofences()
         .then(data => {
           setGeofences(data);
-          setTimeout(() => {
-            setCurtainRevealed(true);
-            setTimeout(() => setViewState('dashboard'), 1500);
-          }, 1000);
+          setViewState('dashboard');
         })
         .catch(e => {
           setError(e.message);
@@ -731,10 +335,7 @@ export default function Geofencing() {
       prefetchGeofences()
         .then(data => {
           setGeofences(data);
-          setTimeout(() => {
-            setCurtainRevealed(true);
-            setTimeout(() => setViewState('dashboard'), 1500);
-          }, 1000);
+          setViewState('dashboard');
         })
         .catch(e => {
           setError(e.message);
@@ -747,171 +348,281 @@ export default function Geofencing() {
 
   useEffect(() => {
     const factInterval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
+      setFactIndex((prev) => (prev + 1) % smartHomeFacts.length);
     }, 4000);
     return () => clearInterval(factInterval);
   }, []);
 
   useEffect(() => {
-    if (progress >= 100) {
-      setTimeout(() => {
-        setCurtainRevealed(true);
-        setTimeout(() => setViewState('dashboard'), 1500);
-      }, 900);
+    if (viewState === 'initial' || viewState === 'loading') {
+      const buildingInterval = setInterval(() => {
+        setBuildingStage(prev => (prev + 1) % 5);
+      }, 1200);
+      
+      const deviceInterval = setInterval(() => {
+        setDevicesVisible(prev => {
+          if (prev.length < 6) {
+            return [...prev, prev.length];
+          }
+          return [];
+        });
+      }, 800);
+
+      return () => {
+        clearInterval(buildingInterval);
+        clearInterval(deviceInterval);
+      };
     }
-  }, [progress]);
+  }, [viewState]);
 
   const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
   
   if (viewState === 'initial' || viewState === 'loading') {
     return (
-      <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 overflow-hidden">
-        <AuroraBackground />
-        <OutOfThisWorldFloatingParticles />
-        <HyperspaceTunnel />
-        <div className="relative z-20 flex flex-col items-center justify-center min-h-screen w-full px-4">
-          <motion.div
-            initial={{ opacity: 0, y: -40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2 }}
-            className="text-center mb-12"
-          >
-            <motion.div
-              className="flex items-center justify-center mb-6"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            >
-              <Brain className="w-16 h-16 text-emerald-400 drop-shadow-lg" />
-            </motion.div>
-            <h1 className="text-6xl font-extrabold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent drop-shadow-xl">
-              <Typewriter text="AI-Powered Smart Home" speed={60} />
-            </h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 2, duration: 1 }}
-              className="text-xl text-emerald-200"
-            >
-              Initializing your intelligent geofencing system...
-            </motion.p>
-          </motion.div>
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1, duration: 0.8, type: "spring" }}
-            className="mb-14"
-          >
-            <NeonProgressRing progress={Math.floor(progress)} />
-          </motion.div>
-          <Stepper current={step} />
-          <FactCarousel index={fact} />
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2, duration: 0.8 }}
-            className="flex items-center space-x-3 text-emerald-400"
-          >
-            <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="w-3 h-3 bg-emerald-400 rounded-full"
+      <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 select-none">
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(80)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-emerald-400/30 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 3}s`
+              }}
             />
-            <span className="text-sm font-medium">Connecting to smart home network...</span>
-          </motion.div>
+          ))}
+        </div>
 
-          <div className="flex flex-col items-center space-y-6 mt-8 mb-6">
-            {viewState === 'loading' ? (
-              <div className="flex flex-col items-center space-y-4">
-                <div className="flex items-center space-x-4">
+        <div className="relative flex flex-col items-center space-y-12 z-10 max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-green-300 mb-4 smart-home-title">
+              Smart Home Geofencing
+            </h1>
+            <div className="h-16 flex items-center justify-center mb-6">
+              <p className="text-2xl text-emerald-200 animate-fade font-medium">
+                {smartHomeFacts[factIndex]}
+              </p>
+            </div>
+            <div className="w-32 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 mx-auto rounded-full pulse-bar"></div>
+          </div>
+
+          <div className="flex items-center justify-center gap-16 w-full">
+            <div className="relative">
+              <svg width="300" height="240" viewBox="0 0 300 240" className="house-svg">
+                <defs>
+                  <linearGradient id="houseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#059669" />
+                  </linearGradient>
+                </defs>
+                
+                <path d="M50 180 L150 80 L250 180 Z" 
+                      className={`house-roof ${buildingStage >= 1 ? 'animate-draw' : 'opacity-0'}`}
+                      fill="none" stroke="url(#houseGrad)" strokeWidth="3" />
+                
+                <rect x="70" y="140" width="160" height="80" 
+                      className={`house-walls ${buildingStage >= 2 ? 'animate-draw' : 'opacity-0'}`}
+                      fill="none" stroke="url(#houseGrad)" strokeWidth="3" />
+                
+                <rect x="90" y="160" width="30" height="40" 
+                      className={`house-door ${buildingStage >= 3 ? 'animate-draw' : 'opacity-0'}`}
+                      fill="none" stroke="url(#houseGrad)" strokeWidth="2" />
+                
+                <rect x="140" y="160" width="25" height="25" 
+                      className={`house-window ${buildingStage >= 4 ? 'animate-draw' : 'opacity-0'}`}
+                      fill="none" stroke="url(#houseGrad)" strokeWidth="2" />
+                
+                <rect x="180" y="160" width="25" height="25" 
+                      className={`house-window ${buildingStage >= 4 ? 'animate-draw' : 'opacity-0'}`}
+                      fill="none" stroke="url(#houseGrad)" strokeWidth="2" />
+
+                <circle cx="150" cy="120" r="60" 
+                        className="geofence-zone-1" 
+                        fill="none" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="2" strokeDasharray="5,5" />
+                <circle cx="150" cy="120" r="90" 
+                        className="geofence-zone-2" 
+                        fill="none" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" strokeDasharray="8,4" />
+              </svg>
+
+              {[
+                { icon: Thermometer, x: 60, y: 40, delay: 0 },
+                { icon: Lightbulb, x: 240, y: 60, delay: 200 },
+                { icon: Camera, x: 280, y: 140, delay: 400 },
+                { icon: Wifi, x: 20, y: 140, delay: 600 },
+                { icon: Home, x: 150, y: 20, delay: 800 },
+                { icon: MapPin, x: 150, y: 280, delay: 1000 }
+              ].map((device, index) => (
+                <div
+                  key={index}
+                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${
+                    devicesVisible.includes(index) ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
+                  }`}
+                  style={{ left: device.x, top: device.y }}
+                >
+                  <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center border-2 border-emerald-400/50 smart-device">
+                    <device.icon className="w-6 h-6 text-emerald-300" />
+                  </div>
+                  <div className="absolute inset-0 w-12 h-12 rounded-full border border-emerald-400/30 animate-ping"></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col space-y-8">
+              <div className="grid grid-cols-1 gap-6">
+                {[
+                  { icon: Brain, label: "AI Learning Patterns", desc: "Analyzing daily routines" },
+                  { icon: Target, label: "Zone Optimization", desc: "Maximizing efficiency" },
+                  { icon: TrendingUp, label: "Energy Monitoring", desc: "Real-time insights" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center space-x-4 bg-emerald-900/20 p-4 rounded-xl border border-emerald-400/20 home-feature">
+                    <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                      <item.icon className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-emerald-200 font-semibold">{item.label}</h3>
+                      <p className="text-emerald-300/70 text-sm">{item.desc}</p>
+                    </div>
+                    <div className="w-16 h-2 bg-emerald-900/40 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full progress-bar"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {viewState === 'loading' ? (
+                <div className="flex flex-col items-center space-y-4 mt-8">
                   <div className="flex space-x-2">
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                       <div
                         key={i}
-                        className="w-3 h-3 bg-green-400 rounded-full animate-wave"
-                        style={{ animationDelay: `${i * 0.1}s` }}
+                        className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
                       />
                     ))}
                   </div>
-                  <span className="text-lg font-semibold text-green-300">Processing request...</span>
+                  <span className="text-lg font-semibold text-emerald-300">Initializing smart zones...</span>
                 </div>
-                <div className="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full transition-all duration-300 animate-pulse"
-                    style={{ width: `${Math.min(loadingProgress, 100)}%` }}
-                  />
+              ) : (
+                <div className="relative group mt-8">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000"></div>
+                  <button 
+                    onClick={handleInitiate} 
+                    className="relative px-12 py-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xl tracking-wide transform hover:scale-105 transition-all duration-300 w-full"
+                  >
+                    <Home className="inline-block w-6 h-6 mr-3"/>
+                    Initialize Smart Zones
+                    <span className="block text-sm font-normal text-emerald-200 mt-1">Begin home automation setup</span>
+                  </button>
                 </div>
-                <div className="text-green-300 text-sm">
-                  <AnimatedCounter target={Math.floor(loadingProgress)} />%
-                </div>
-              </div>
-            ) : (
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
-                <Button
-                  onClick={handleInitiate}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 animate-bounce-subtle"
-                >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Geofencing
-                  <span className="ml-3 text-base font-normal text-green-200">Smart zone setup</span>
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-              { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-              { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3 animate-fade-in-up" style={{ animationDelay: item.delay }}>
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-float hover:scale-110 transition-transform duration-300">
-                  <item.icon className="w-8 h-8 text-green-400" />
-                </div>
-                <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-progress" />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-green-400/60 animate-pulse">
-              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to smart home network...</span>
+          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-3 text-emerald-400/60">
+              <div className="w-2 h-2 bg-emerald-400/60 rounded-full animate-ping"></div>
+              <span className="text-sm">Connecting to home automation network...</span>
             </div>
           </div>
         </div>
 
-        <style jsx>{`
-          @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes gradient-x { 0%, 100% { background-size: 200% 200%; background-position: left center; } 50% { background-size: 200% 200%; background-position: right center; } }
-          @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-          @keyframes wave { 0%, 60%, 100% { transform: initial; } 30% { transform: translateY(-15px); } }
-          @keyframes orbit { from { transform: rotate(0deg) translateX(20px) rotate(0deg); } to { transform: rotate(360deg) translateX(20px) rotate(-360deg); } }
-          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-          @keyframes progress { 0% { width: 0%; } 100% { width: 100%; } }
-          @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-          @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-          @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
-          @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-          .animate-fade-in-up { animation: fade-in-up 0.8s ease-out; }
-          .animate-gradient-x { animation: gradient-x 3s ease infinite; }
-          .animate-spin-slow { animation: spin-slow 8s linear infinite; }
-          .animate-spin-reverse { animation: spin-reverse 6s linear infinite; }
-          .animate-wave { animation: wave 1.4s ease-in-out infinite; }
-          .animate-orbit { animation: orbit 4s linear infinite; }
-          .animate-float { animation: float 3s ease-in-out infinite; }
-          .animate-progress { animation: progress 2s ease-out; }
-          .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
-          .animate-slide-up { animation: slide-up 0.5s ease-out; }
-          .animate-tilt { animation: tilt 10s infinite linear; }
-          .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+        <style jsx="true">{`
+          .smart-home-title {
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+          }
+          
+          @keyframes titleGlow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.2); }
+          }
+          
+          .animate-draw {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 1.5s ease-in-out forwards;
+          }
+          
+          @keyframes draw {
+            to { stroke-dashoffset: 0; }
+          }
+          
+          .geofence-zone-1 {
+            animation: expandZone 2s ease-in-out infinite;
+          }
+          
+          .geofence-zone-2 {
+            animation: expandZone 2s ease-in-out infinite 0.5s;
+          }
+          
+          @keyframes expandZone {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+          }
+          
+          .smart-device {
+            animation: devicePulse 2s ease-in-out infinite;
+          }
+          
+          @keyframes devicePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+          
+          .home-feature {
+            animation: slideIn 0.8s ease-out forwards;
+            transform: translateX(20px);
+            opacity: 0;
+          }
+          
+          .home-feature:nth-child(1) { animation-delay: 0.2s; }
+          .home-feature:nth-child(2) { animation-delay: 0.4s; }
+          .home-feature:nth-child(3) { animation-delay: 0.6s; }
+          
+          @keyframes slideIn {
+            to { transform: translateX(0); opacity: 1; }
+          }
+          
+          .progress-bar {
+            animation: fillProgress 2s ease-in-out infinite;
+          }
+          
+          @keyframes fillProgress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+          }
+          
+          .pulse-bar {
+            animation: pulseWidth 3s ease-in-out infinite;
+          }
+          
+          @keyframes pulseWidth {
+            0%, 100% { width: 8rem; }
+            50% { width: 12rem; }
+          }
+          
+          .animate-fade {
+            animation: fadeContent 1s ease-out;
+          }
+          
+          @keyframes fadeContent {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
         `}</style>
-
+      </div>
+    );
+  }
+  
+  if (viewState === 'error') {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-red-400 text-lg">
+          Failed to load geofencing data: {error}
+        </div>
       </div>
     );
   }
@@ -923,16 +634,15 @@ export default function Geofencing() {
   const mlMetrics = analytics?.ml_metrics || {};
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in-up">
+    <div className="p-6 space-y-6 animate-fade-in">
       {overallError && (
-        <div className="bg-red-900/30 text-red-300 p-4 rounded-lg flex items-center gap-2 mb-4 border border-red-500 animate-slide-down">
+        <div className="bg-red-900/30 text-red-300 p-4 rounded-lg flex items-center gap-2 mb-4 border border-red-500">
           <XCircle className="w-5 h-5" />
           <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
         </div>
       )}
-
       <div
-        className="text-center py-16 rounded-2xl relative overflow-hidden animate-fade-in-up"
+        className="text-center py-16 rounded-2xl relative overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://thumbs.dreamstime.com/z/examining-impact-edge-computing-smart-home-security-systems-dusk-group-gathers-to-discuss-how-enhances-highlighting-356998640.jpg?ct=jpeg')`,
           backgroundSize: 'cover',
@@ -941,64 +651,94 @@ export default function Geofencing() {
         }}
       >
         <div className="relative z-10">
-          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg animate-slide-up">
+          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
             AI-Powered Geofencing Control
           </h1>
-          <p className="text-green-200 text-xl drop-shadow-md animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <p className="text-green-200 text-xl drop-shadow-md">
             Machine learning algorithms optimizing your location-based automation
           </p>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-        {[
-          { title: "Model Accuracy", value: mlMetrics.model_accuracy?.toFixed(1) || 0, icon: Brain, color: "green" },
-          { title: "Prediction Confidence", value: mlMetrics.prediction_confidence?.toFixed(1) || 0, icon: TrendingUp, color: "emerald" },
-          { title: "Zones Created", value: stats?.total_zones || 0, icon: MapIcon, color: "teal" },
-          { title: "Total Triggers", value: stats?.total_triggers || 0, icon: Target, color: "purple" },
-          { title: "Optimization Success", value: mlMetrics.optimization_success_count?.toFixed(1) || 0, icon: Brain, color: "lime" }
-        ].map((metric, idx) => (
-          <Card key={idx} className={`bg-gradient-to-br from-${metric.color}-600/20 to-${metric.color}-800/20 backdrop-blur-md border border-${metric.color}-400/30 animate-fade-in-up hover:scale-105 transition-transform duration-300`} style={{ animationDelay: `${idx * 0.1}s` }}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-${metric.color}-200 text-sm`}>{metric.title}</p>
-                  <p className="text-3xl font-bold text-white">
-                    <AnimatedCounter target={parseFloat(metric.value)} />
-                    {metric.title.includes('Accuracy') || metric.title.includes('Confidence') || metric.title.includes('Success') ? '%' : ''}
-                  </p>
-                </div>
-                <metric.icon className={`w-8 h-8 text-${metric.color}-400 animate-pulse`} />
+        <Card className="bg-gradient-to-br from-green-600/20 to-green-800/20 backdrop-blur-md border border-green-400/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-200 text-sm">Model Accuracy</p>
+                <p className="text-3xl font-bold text-white">{mlMetrics.model_accuracy?.toFixed(1) || 0}%</p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <Brain className="w-8 h-8 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 backdrop-blur-md border border-emerald-400/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-200 text-sm">Prediction Confidence</p>
+                <p className="text-3xl font-bold text-white">{mlMetrics.prediction_confidence?.toFixed(1) || 0}%</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-emerald-400" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-teal-600/20 to-teal-800/20 backdrop-blur-md border border-teal-400/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-teal-200 text-sm">Zones Created</p>
+                <p className="text-3xl font-bold text-white">{stats?.total_zones || 0}</p>
+              </div>
+              <MapIcon className="w-8 h-8 text-teal-400" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 backdrop-blur-md border border-purple-400/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-200 text-sm">Total Triggers</p>
+                <p className="text-3xl font-bold text-white">{stats?.total_triggers || 0}</p>
+              </div>
+              <Target className="w-8 h-8 text-purple-400" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-lime-600/20 to-lime-800/20 backdrop-blur-md border border-lime-400/30">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-lime-200 text-sm">Optimization Success</p>
+                <p className="text-3xl font-bold text-white">{mlMetrics.optimization_success_count?.toFixed(1) || 0}%</p>
+              </div>
+              <Brain className="w-8 h-8 text-lime-400" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
       <div className="flex space-x-4 mb-6">
         {['overview', 'analytics'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 transform hover:scale-105 ${activeTab === tab ? 'bg-green-600 text-white shadow-lg animate-pulse' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === tab ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
-
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20 animate-fade-in-up">
+          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-green-400 animate-pulse" />
+                <MapPin className="w-5 h-5 text-green-400" />
                 ML-Optimized Zones
               </CardTitle>
               <div className="flex gap-2">
                 <button
                   onClick={() => optimizeMutation.mutate()}
-                  className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5 transition-all duration-300 hover:scale-105"
+                  className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5"
                   disabled={optimizeMutation.isPending}
                 >
                   <Brain className="w-4 h-4" />
@@ -1006,7 +746,7 @@ export default function Geofencing() {
                 </button>
                 <button
                   onClick={() => setShowCreateForm(true)}
-                  className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-1.5 transition-all duration-300 hover:scale-105"
+                  className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
                   Add Zone
@@ -1015,8 +755,8 @@ export default function Geofencing() {
             </CardHeader>
             <CardContent className="space-y-4">
               {geofences?.length > 0 ? (
-                geofences.map((geofence, idx) => (
-                  <Card key={geofence.id} className="bg-green-900/20 border border-green-400/30 animate-fade-in-up hover:scale-102 transition-transform duration-300" style={{ animationDelay: `${idx * 0.1}s` }}>
+                geofences.map((geofence) => (
+                  <Card key={geofence.id} className="bg-green-900/20 border border-green-400/30">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -1034,32 +774,32 @@ export default function Geofencing() {
                   </Card>
                 ))
               ) : (
-                <p className="text-green-300 text-center animate-pulse">No geofences created yet. Click "Add Zone" to get started!</p>
+                <p className="text-green-300 text-center">No geofences created yet. Click "Add Zone" to get started!</p>
               )}
             </CardContent>
           </Card>
-
           <div className="flex flex-col gap-6">
-            <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
               <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing.
+                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. Whether you're optimizing your climate, streamlining your routines, or simply enjoying the peace of mind that comes with automation, every zone you create brings your home closer to effortless living.
               </p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
-                <li className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
-                <li className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>• Save energy without sacrificing convenience or style.</li>
+                <li>• Instantly adjust lighting and temperature as you move from room to room.</li>
+                <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
+                <li>• Save energy without sacrificing convenience or style.</li>
+                <li>• Every image below represents a real scenario powered by smart geofencing.</li>
               </ul>
             </div>
-            <div className="mt-2 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+            <div className="mt-2">
               <ImageCarousel />
             </div>
           </div>
         </div>
       )}
-
       {activeTab === 'analytics' && analytics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20 animate-fade-in-up">
+          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
             <CardHeader>
               <CardTitle className="text-white">24h Energy Optimization</CardTitle>
             </CardHeader>
@@ -1077,11 +817,11 @@ export default function Geofencing() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-green-300 text-center animate-pulse">No energy optimization data available.</p>
+                <p className="text-green-300 text-center">No energy optimization data available.</p>
               )}
             </CardContent>
           </Card>
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
             <CardHeader>
               <CardTitle className="text-white">Zone Efficiency</CardTitle>
             </CardHeader>
@@ -1097,81 +837,80 @@ export default function Geofencing() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-green-300 text-center animate-pulse">No zone efficiency data available.</p>
+                <p className="text-green-300 text-center">No zone efficiency data available.</p>
               )}
             </CardContent>
           </Card>
         </div>
       )}
-
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 animate-fade-in">
-          <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg animate-scale-in">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">
             <CardHeader>
               <CardTitle className="text-white text-xl">Create New ML-Optimized Zone</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="space-y-4">
                 <label className="block text-green-200 text-sm font-medium">Zone Name</label>
                 <input
-                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="Home, Work, etc."
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="space-y-4">
                 <label className="block text-green-200 text-sm font-medium">Address</label>
                 <input
-                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="123 Main St, City, Country"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Latitude</label>
                   <input
                     type="number"
                     step="0.0001"
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="37.7749"
                     value={formData.lat}
                     onChange={(e) => setFormData({ ...formData, lat: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
-                <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Longitude</label>
                   <input
                     type="number"
                     step="0.0001"
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder="-122.4194"
                     value={formData.lng}
                     onChange={(e) => setFormData({ ...formData, lng: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
               </div>
-              <div className="space-y-4 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+              <div className="space-y-4">
                 <label className="block text-green-200 text-sm font-medium">Radius (meters)</label>
                 <input
                   type="number"
-                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder="200"
                   value={formData.radius}
                   onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 200 })}
                 />
               </div>
-              <div className="flex justify-end gap-3 pt-4 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+              <div className="flex justify-end gap-3 pt-4">
                 <button
-                  className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-all duration-300 hover:scale-105"
+                  className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600"
                   onClick={() => setShowCreateForm(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-all duration-300 hover:scale-105"
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50"
                   onClick={handleCreateSubmit}
                   disabled={
                     createMutation.isPending || !formData.name.trim() || !formData.address.trim() ||
@@ -1185,17 +924,18 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-
       <style jsx>{`
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes scale-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-        @keyframes slide-down { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .animate-fade-in { animation: fade-in 0.5s ease-out; }
-        .animate-scale-in { animation: scale-in 0.3s ease-out; }
-        .animate-slide-down { animation: slide-down 0.5s ease-out; }
-        .hover\\:scale-102:hover { transform: scale(1.02); }
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
       `}</style>
-
     </div>
   );
 }
+
+
+

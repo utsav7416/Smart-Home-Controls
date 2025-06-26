@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, PieChart, Pie } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -107,6 +107,15 @@ const doYouKnowFacts = [
   "Did you know? Machine learning optimizes your home energy usage in real-time.",
 ];
 
+const activityFeed = [
+  "✓ Connected to analytics server",
+  "⚡ Loading your energy data",
+  "🧠 Random Forest model: Training...",
+  "🌲 Running Isolation Forest for Anomaly Detection",
+  "📊 Generating predictions...",
+  "💡 Calculating savings opportunities..."
+];
+
 const carouselImages = [
   {
     url: "https://img.freepik.com/premium-photo/realistic-3d-illustration-modern-bedroom-night-city-view-interior-design-apartment-luxury-home-architecture-bed-decor-urban_1088041-51665.jpg",
@@ -125,15 +134,23 @@ const carouselImages = [
 const loadingCarouselImages = [
   {
     url: "https://illustrarch.com/wp-content/uploads/2024/04/Sustainable_Architectural_Solutions_for_Smart_Homes_8.jpg",
-    alt: "Smart Home Architecture"
+    alt: "1"
   },
   {
     url: "https://64.media.tumblr.com/0ded6a5da5aa5db5f5a1764744fa132b/05266ec9d5a051e9-11/s1280x1920/d4a5020ae8cdd7309933e68c5260024a89346551.jpg",
-    alt: "Modern Interior Design"
+    alt: "2"
   },
   {
     url: "https://i.pinimg.com/736x/ac/50/b5/ac50b5d06af7b1ff559529c7a420490b.jpg",
-    alt: "Smart Home Technology"
+    alt: "3"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1514803400321-3ca29fc47334?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHNtYXJ0JTIwaG9tZXxlbnwwfHwwfHx8MA%3D%3D",
+    alt: "4"
+  },
+  {
+    url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT8uVtsN2Ynv6Y20ff0edcEQCUQGHjmHCtBvzEQSGWm3Wy9KgSx8IRrdmyF4s7G8A4Ypvs&usqp=CAU",
+    alt: "5"
   }
 ];
 
@@ -184,6 +201,42 @@ function Carousel({ images }) {
   );
 }
 
+function LiveActivityFeed() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [displayedItems, setDisplayedItems] = useState([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (currentIndex < activityFeed.length) {
+        setDisplayedItems(prev => [...prev, activityFeed[currentIndex]]);
+        setCurrentIndex(prev => prev + 1);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
+  return (
+    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 max-w-md">
+      <h3 className="text-lg font-semibold text-blue-400 mb-3 flex items-center gap-2">
+        <Activity className="w-5 h-5 animate-pulse" />
+        Processing Status
+      </h3>
+      <div className="space-y-2 max-h-48 overflow-y-auto">
+        {displayedItems.map((item, index) => (
+          <div 
+            key={index} 
+            className="text-sm text-gray-300 animate-fade-in flex items-center gap-2 p-2 bg-gray-800/50 rounded"
+          >
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Analytics() {
   const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
@@ -197,14 +250,8 @@ export default function Analytics() {
       hasInitiatedAnalytics = true;
       setViewState('loading');
       prefetchAnalytics()
-        .then(data => {
-          setAnalyticsData(data);
-          setViewState('dashboard');
-        })
-        .catch(e => {
-          setError(e.message);
-          setViewState('error');
-        });
+        .then(data => { setAnalyticsData(data); setViewState('dashboard'); })
+        .catch(e => { setError(e.message); setViewState('error'); });
     }
   };
 
@@ -212,18 +259,13 @@ export default function Analytics() {
     if (hasInitiatedAnalytics && !analyticsData) {
       setViewState('loading');
       prefetchAnalytics()
-        .then(data => {
-          setAnalyticsData(data);
-          setViewState('dashboard');
-        })
-        .catch(e => {
-          setError(e.message);
-          setViewState('error');
-        });
+        .then(data => { setAnalyticsData(data); setViewState('dashboard'); })
+        .catch(e => { setError(e.message); setViewState('error'); });
     } else if (analyticsData) {
       setViewState('dashboard');
     }
   }, [analyticsData]);
+
 
   useEffect(() => {
     const factInterval = setInterval(() => {
@@ -272,6 +314,7 @@ export default function Analytics() {
             </div>
             <div style={{ width: 40 }} />
           </div>
+          
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
             {viewState === 'loading' ? (
               <div className="flex items-center space-x-4">
@@ -288,19 +331,29 @@ export default function Analytics() {
               </div>
             ) : (
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg blur opacity-50 group-hover:opacity-75 transition duration-1000 animate-tilt" />
+                
                 <Button
                   onClick={handleInitiate}
-                  className="relative bg-gray-900 hover:bg-gray-800 border border-blue-400/50 transform hover:scale-105 transition-all duration-300"
+                  className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-2 border-blue-400/50 transform hover:scale-110 transition-all duration-300 text-2xl px-16 py-8 shadow-2xl shadow-blue-500/50 font-black tracking-wide"
                   style={{ marginBottom: '1.5rem' }}
                 >
-                  <Brain className="w-6 h-6 mr-3 animate-pulse" />
-                  Initiate Anomaly/Tariff Analysis
-                  <span className="ml-3 text-base font-normal text-blue-200">Quick scan for savings</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-md" />
+                  <Brain className="w-8 h-8 mr-4 animate-pulse" />
+                  <span className="relative z-10">Initiate Anomaly/Tariff Analysis</span>
+                  <span className="ml-4 text-lg font-normal text-blue-200 relative z-10">⚡ Quick scan for savings</span>
                 </Button>
               </div>
             )}
           </div>
+
+          {viewState === 'loading' && (
+            <div className="mb-8">
+              <LiveActivityFeed />
+            </div>
+          )}
+
           <div className="w-full max-w-4xl mb-8">
             <Carousel images={loadingCarouselImages} />
           </div>
@@ -413,40 +466,15 @@ export default function Analytics() {
     );
   }
 
-  if (viewState === 'error') {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to load analytics data: {error}
-        </div>
-      </div>
-    );
-  }
-
   if (viewState !== 'dashboard' || !analyticsData) {
     return null;
   }
 
-  const {
-    weeklyData = [],
-    anomalyData = [],
-    costOptimization = [],
-    mlPerformance = {},
-    hourlyPatterns = [],
-    mlAlgorithms = {}
-  } = analyticsData;
+  const { weeklyData = [], anomalyData = [], costOptimization = [], mlPerformance = {}, hourlyPatterns = [], mlAlgorithms = {} } = analyticsData;
 
-  const adjustedWeeklyData = weeklyData.map((item) => ({
-    ...item,
-    consumption: item.consumption + (totalDevicePower * 0.001),
-    prediction: item.prediction + (totalDevicePower * 0.0009)
-  }));
+  const adjustedWeeklyData = weeklyData.map(item => ({ ...item, consumption: item.consumption + (totalDevicePower * 0.001), prediction: item.prediction + (totalDevicePower * 0.0009) }));
 
-  const adjustedHourlyPatterns = hourlyPatterns.map((item) => ({
-    ...item,
-    avg_consumption: item.avg_consumption + (totalDevicePower * 0.001),
-    device_contribution: totalDevicePower * 0.001
-  }));
+  const adjustedHourlyPatterns = hourlyPatterns.map(item => ({ ...item, avg_consumption: item.avg_consumption + (totalDevicePower * 0.001), device_contribution: totalDevicePower * 0.001 }));
 
   const predictionAccuracy = adjustedWeeklyData.length > 0
     ? adjustedWeeklyData.reduce((sum, item) => {
@@ -457,6 +485,12 @@ export default function Analytics() {
 
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
+
+  const pieChartData = [
+    { name: 'Total Savings ($)', value: totalSavings, fill: '#22c55e' },
+    { name: 'Anomalies Detected', value: anomaliesDetected, fill: '#ef4444' },
+    { name: 'Device Load (kW)', value: totalDevicePower / 1000, fill: '#3b82f6' }
+  ];
 
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
     const algorithmKey = algorithm?.name || 'unknown';
@@ -811,6 +845,44 @@ export default function Analytics() {
                 alt="Smart Home Interior"
                 className="w-full h-[350px] object-cover rounded-lg"
               />
+            </div>
+          </div>
+          <div className="mt-6">
+            <div className="bg-gray-800 rounded-lg p-4 flex flex-col md:flex-row items-center gap-4">
+              <div className="w-full md:w-1/2">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={pieChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: 'white'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="w-full md:w-1/2">
+                <img
+                  src="https://cdn.greenmatch.co.uk/cdn-cgi/image/format=auto/2/2024/06/15-Tips-on-how-to-save-energy-at-home.png"
+                  alt="Energy Saving Tips"
+                  className="w-full h-40 object-contain rounded"
+                />
+              </div>
             </div>
           </div>
         </CardContent>

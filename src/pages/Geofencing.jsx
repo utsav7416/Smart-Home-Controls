@@ -411,7 +411,7 @@ export default function Geofencing() {
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
           <div className="flex items-center justify-between w-full max-w-7xl">
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-8">
               <div className="carousel-image-container">
                 <img
                   src={loadingCarouselImages[carouselIndex].url}
@@ -428,7 +428,7 @@ export default function Geofencing() {
               </div>
             </div>
 
-            <div className="flex flex-col items-center space-y-6 mx-16">
+            <div className="flex flex-col items-center space-y-8 mx-16">
               <div className="flex flex-row items-center justify-center w-full mb-8">
                 <img
                   src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
@@ -451,16 +451,7 @@ export default function Geofencing() {
                 </div>
               </div>
               
-              <div className="w-80 h-80 relative mb-4">
-                <div className="absolute inset-0 rounded-full border-4 border-green-500/30 animate-spin" style={{ animationDuration: '8s' }}>
-                  <div className="absolute w-6 h-6 bg-green-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-green-400/50" />
-                </div>
-                <div className="absolute inset-4 rounded-full border-2 border-emerald-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
-                  <div className="absolute w-4 h-4 bg-emerald-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
-                </div>
-                <div className="absolute inset-8 rounded-full border border-teal-300/50 animate-spin" style={{ animationDuration: '4s' }}>
-                  <div className="absolute w-3 h-3 bg-teal-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
-                </div>
+              <div className="w-80 h-80 relative mb-8">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-32 h-32 bg-gradient-to-br from-green-500/30 to-emerald-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
                     <Brain className="w-16 h-16 text-green-400 animate-pulse" />
@@ -472,7 +463,7 @@ export default function Geofencing() {
                 <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
               </div>
 
-              <div className="flex flex-col items-center space-y-6 mt-8 mb-6">
+              <div className="flex flex-col items-center space-y-6 mt-4 mb-6">
                 {viewState === 'loading' ? (
                   <div className="flex items-center space-x-4">
                     <div className="flex space-x-2">
@@ -529,7 +520,7 @@ export default function Geofencing() {
               </div>
             </div>
 
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-8">
               <div className="carousel-image-container">
                 <img
                   src={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].url}
@@ -555,57 +546,17 @@ export default function Geofencing() {
           </div>
         </div>
         <style jsx>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes tilt {
-            0%, 50%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(1deg); }
-            75% { transform: rotate(-1deg); }
-          }
-          @keyframes triangleBubble {
-            0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; }
-            10% { opacity: 0.7; }
-            90% { opacity: 0.3; }
-            100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; }
-          }
-          @keyframes rotateSubtle {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.8s ease-out;
-          }
-          .animate-tilt {
-            animation: tilt 10s infinite linear;
-          }
-          .triangle-bubble {
-            width: 0;
-            height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-bottom: 14px solid rgba(34, 197, 94, 0.4);
-            animation: triangleBubble 7s infinite linear;
-          }
-          .carousel-image-container {
-            width: 200px;
-            height: 150px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);
-            animation: rotateSubtle 20s infinite linear;
-          }
-          .carousel-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-          }
-          .carousel-image:hover {
-            transform: scale(1.05);
-          }
-        `}</style>
+          @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
+          @keyframes triangleBubble { 0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.3; } 100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; } }
+          @keyframes rotateSubtle { 0% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } 100% { transform: rotate(-20deg); } }
+          .animate-fade-in { animation: fade-in 0.8s ease-out; }
+          .animate-tilt { animation: tilt 10s infinite linear; }
+          .triangle-bubble { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid rgba(34, 197, 94, 0.4); animation: triangleBubble 7s infinite linear; }
+          .carousel-image-container { width: 280px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2); animation: rotateSubtle 8s infinite ease-in-out; }
+          .carousel-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+          .carousel-image:hover { transform: scale(1.05); }
+          `}</style>
       </div>
     );
   }

@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, Shield, AlertTriangle, Lightbulb, Clock, Zap, Activity, Eye, Home } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import EnergyStats from '../components/EnergyStats';
+import EnergyStats from './EnergyStats';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -186,17 +186,29 @@ const useSmartSuggestions = (energyData, deviceStates, setSecurityAlerts) => {
       const energyChange = energyData.totalEnergyUsage - previousEnergyUsage;
       const deviceUtilization = energyData.totalDevices > 0 ? energyData.activeDevices / energyData.totalDevices : 0;
 
-      if (energyData.totalEnergyUsage > 5.0) {
+      if (energyData.activeDevices >= 10) {
         newSuggestions.push({
-          id: `energy-high-${Date.now()}`,
-          type: 'energy_optimization',
+          id: `high-device-usage-${Date.now()}`,
+          type: 'high_device_usage',
           priority: 'high',
-          title: 'High Energy Usage Detected',
-          message: `Current usage: ${energyData.totalEnergyUsage} kWh. Consider reducing high-power devices.`,
-          action: 'optimize_energy',
+          title: 'High Device Usage Detected',
+          message: `${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh). Consider reducing usage.`,
+          action: 'optimize_devices',
           confidence: 95,
           potentialSaving: Math.round(energyData.totalEnergyUsage * 0.20 * 100) / 100,
           icon: Zap
+        });
+      } else if (energyData.activeDevices >= 5) {
+        newSuggestions.push({
+          id: `medium-device-usage-${Date.now()}`,
+          type: 'medium_device_usage',
+          priority: 'medium',
+          title: 'Medium Device Usage',
+          message: `${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh). Monitor for optimization.`,
+          action: 'monitor_devices',
+          confidence: 80,
+          potentialSaving: Math.round(energyData.totalEnergyUsage * 0.10 * 100) / 100,
+          icon: Activity
         });
       }
 
@@ -254,6 +266,24 @@ const useSmartSuggestions = (energyData, deviceStates, setSecurityAlerts) => {
       const currentHour = new Date().getHours();
       const isNightTime = currentHour >= 22 || currentHour <= 6;
       
+      if (energyData.activeDevices >= 10) {
+        alerts.push({
+          type: 'high_device_activity',
+          severity: 'high',
+          message: `High device activity: ${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh)`,
+          timestamp: Date.now(),
+          recommendation: 'Review active devices for optimization'
+        });
+      } else if (energyData.activeDevices >= 5) {
+        alerts.push({
+          type: 'medium_device_activity',
+          severity: 'medium',
+          message: `Medium device activity: ${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh)`,
+          timestamp: Date.now(),
+          recommendation: 'Monitor device usage patterns'
+        });
+      }
+
       if (isNightTime && energyData.totalEnergyUsage > 4.0) {
         alerts.push({
           type: 'unusual_night_activity',
@@ -261,16 +291,6 @@ const useSmartSuggestions = (energyData, deviceStates, setSecurityAlerts) => {
           message: `High energy usage at night: ${energyData.totalEnergyUsage} kWh`,
           timestamp: Date.now(),
           recommendation: 'Review active devices for unexpected usage'
-        });
-      }
-
-      if (energyData.totalEnergyUsage > 8.0) {
-        alerts.push({
-          type: 'energy_anomaly',
-          severity: 'high',
-          message: `Very high energy usage: ${energyData.totalEnergyUsage} kWh`,
-          timestamp: Date.now(),
-          recommendation: 'Check for device malfunctions'
         });
       }
 
@@ -661,21 +681,21 @@ export default function Geofencing() {
           {securityAlerts.length > 0 && (
             <Card className="bg-red-900/20 backdrop-blur-md border border-red-400/30">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-white flex items-center gap-2 text-lg">
                   <AlertTriangle className="w-5 h-5 text-red-400" />
                   Security Alerts ({securityAlerts.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-4">
                 {securityAlerts.map((alert) => (
-                  <div key={alert.timestamp} className={`p-4 rounded-lg border ${alert.severity === 'high' ? 'bg-red-900/40 border-red-500' : 'bg-yellow-900/40 border-yellow-500'}`}>
+                  <div key={alert.timestamp} className={`p-5 rounded-lg border ${alert.severity === 'high' ? 'bg-red-900/40 border-red-500' : 'bg-yellow-900/40 border-yellow-500'}`}>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <p className="text-white font-medium">{alert.message}</p>
-                        <p className="text-gray-300 text-sm mt-1">{alert.recommendation}</p>
-                        <p className="text-gray-400 text-xs mt-2">{new Date(alert.timestamp).toLocaleTimeString()}</p>
+                        <p className="text-white font-medium text-base">{alert.message}</p>
+                        <p className="text-gray-300 text-sm mt-2">{alert.recommendation}</p>
+                        <p className="text-gray-400 text-xs mt-3">{new Date(alert.timestamp).toLocaleTimeString()}</p>
                       </div>
-                      <button onClick={() => dismissAlert(alert.timestamp)} className="text-gray-400 hover:text-white ml-4">
+                      <button onClick={() => dismissAlert(alert.timestamp)} className="text-gray-400 hover:text-white ml-4 p-1">
                         <XCircle className="w-5 h-5" />
                       </button>
                     </div>
@@ -687,20 +707,20 @@ export default function Geofencing() {
 
           <Card className="bg-blue-900/20 backdrop-blur-md border border-blue-400/30">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-white flex items-center gap-2 text-lg">
                 <Lightbulb className="w-5 h-5 text-blue-400" />
                 AI Suggestions ({suggestions.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {suggestions.length > 0 ? suggestions.map((suggestion) => (
-                <div key={suggestion.id} className={`p-4 rounded-lg border ${suggestion.priority === 'high' ? 'bg-orange-900/40 border-orange-500' : suggestion.priority === 'medium' ? 'bg-blue-900/40 border-blue-500' : 'bg-green-900/40 border-green-500'}`}>
+                <div key={suggestion.id} className={`p-5 rounded-lg border ${suggestion.priority === 'high' ? 'bg-orange-900/40 border-orange-500' : suggestion.priority === 'medium' ? 'bg-blue-900/40 border-blue-500' : 'bg-green-900/40 border-green-500'}`}>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
                       <suggestion.icon className="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" />
                       <div className="flex-1">
-                        <h4 className="text-white font-semibold">{suggestion.title}</h4>
-                        <p className="text-gray-300 text-sm mt-1">{suggestion.message}</p>
+                        <h4 className="text-white font-semibold text-base">{suggestion.title}</h4>
+                        <p className="text-gray-300 text-sm mt-2">{suggestion.message}</p>
                         <div className="flex items-center gap-4 mt-3 text-xs">
                           <span className="text-blue-300">Confidence: {suggestion.confidence}%</span>
                           {suggestion.potentialSaving && (
@@ -715,7 +735,7 @@ export default function Geofencing() {
                   </div>
                 </div>
               )) : (
-                <p className="text-gray-300 text-center py-4">No suggestions available. Your energy usage is optimal!</p>
+                <p className="text-gray-300 text-center py-6">No suggestions available. Your energy usage is optimal!</p>
               )}
             </CardContent>
           </Card>
@@ -728,33 +748,24 @@ export default function Geofencing() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+              <div className="flex flex-wrap gap-2">
                 {Object.values(deviceStates).flat().map((device, i) => {
                   const devicePowerConsumption = {
                     'Main Light': 60, 'Fan': 75, 'AC': 3500, 'TV': 150, 'Microwave': 1000,
                     'Refrigerator': 150, 'Shower': 500, 'Water Heater': 4000, 'Dryer': 3000
                   };
                   return (
-                    <div key={i} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${device.isOn ? 'bg-green-400' : 'bg-gray-600'}`} />
-                        <span className="text-white font-medium">{device.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className={`px-2 py-1 rounded text-xs ${device.isOn ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'}`}>
-                          {device.isOn ? `ON (${device.value || 100}%)` : 'OFF'}
-                        </span>
-                        {device.isOn && (
-                          <div className="text-xs text-gray-400 mt-1">
-                            {((devicePowerConsumption[device.name] || 100) * (device.value || 100) / 100 / 1000).toFixed(2)} kW
-                          </div>
-                        )}
-                      </div>
+                    <div key={i} className="flex items-center gap-2 p-2 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                      <div className={`w-2 h-2 rounded-full ${device.isOn ? 'bg-green-400' : 'bg-gray-600'}`} />
+                      <span className="text-white text-xs font-medium">{device.name}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-xs ${device.isOn ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'}`}>
+                        {device.isOn ? `${device.value || 100}%` : 'OFF'}
+                      </span>
                     </div>
                   );
                 })}
                 {Object.values(deviceStates).flat().length === 0 && (
-                  <p className="text-gray-400 text-center py-4">No device data available</p>
+                  <p className="text-gray-400 text-center py-4 w-full">No device data available</p>
                 )}
               </div>
             </CardContent>
@@ -770,7 +781,7 @@ export default function Geofencing() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
+          <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={energyHistory}>
               <defs>
                 <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">

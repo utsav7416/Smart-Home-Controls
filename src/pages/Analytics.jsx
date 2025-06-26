@@ -217,12 +217,12 @@ function LiveActivityFeed() {
   }, [currentIndex]);
 
   return (
-    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 max-w-md">
+    <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 max-w-md overflow-hidden">
       <h3 className="text-lg font-semibold text-blue-400 mb-3 flex items-center gap-2">
         <Activity className="w-5 h-5 animate-pulse" />
         Processing Status
       </h3>
-      <div className="space-y-2 max-h-48 overflow-y-auto">
+      <div className="space-y-2 max-h-48">
         {displayedItems.map((item, index) => (
           <div 
             key={index} 
@@ -353,11 +353,11 @@ export default function Analytics() {
           )}
 
           <div className="w-full max-w-6xl mb-8">
-            <div className="flex justify-center items-center gap-6">
+            <div className="flex justify-center items-center gap-8">
               {loadingCarouselImages.map((image, index) => (
                 <div
                   key={index}
-                  className="w-48 h-32 overflow-hidden rounded-lg shadow-lg animate-subtle-rotate"
+                  className="w-56 h-40 overflow-hidden rounded-lg shadow-lg animate-subtle-rotate"
                   style={{
                     animationDelay: `${index * 0.5}s`,
                     transform: `rotate(${(Math.random() - 0.5) * 20}deg)`
@@ -384,7 +384,6 @@ export default function Analytics() {
                 <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
                 <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
                 <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
-                <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
               </div>
               <div className="absolute w-48 h-48 border-2 border-cyan-400/50 animate-spin-reverse" style={{
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
@@ -395,7 +394,6 @@ export default function Analytics() {
                 <div className="absolute w-3 h-3 bg-indigo-400 rounded-full top-3/4 -right-1.5" />
                 <div className="absolute w-3 h-3 bg-purple-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
                 <div className="absolute w-3 h-3 bg-pink-400 rounded-full top-3/4 -left-1.5" />
-                <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-1/4 -left-1.5" />
               </div>
               <div className="absolute w-24 h-24 border border-indigo-300/60 animate-spin" style={{
                 clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
@@ -406,7 +404,6 @@ export default function Analytics() {
                 <div className="absolute w-2 h-2 bg-cyan-300 rounded-full top-3/4 -right-1" />
                 <div className="absolute w-2 h-2 bg-purple-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
                 <div className="absolute w-2 h-2 bg-pink-300 rounded-full top-3/4 -left-1" />
-                <div className="absolute w-2 h-2 bg-teal-300 rounded-full top-1/4 -left-1" />
               </div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-blue-400/30">
@@ -414,7 +411,7 @@ export default function Analytics() {
                 </div>
               </div>
               <div className="absolute inset-0">
-                {[...Array(6)].map((_, i) => (
+                {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
                     className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-blue-400/30 to-transparent"
@@ -422,8 +419,8 @@ export default function Analytics() {
                       top: '50%',
                       left: '50%',
                       transformOrigin: 'bottom center',
-                      transform: `translate(-50%, -100%) rotate(${i * 60}deg)`,
-                      animation: `pulse 2s infinite ${i * 0.3}s`
+                      transform: `translate(-50%, -100%) rotate(${i * 72}deg)`,
+                      animation: `pulse 2s infinite ${i * 0.4}s`
                     }}
                   />
                 ))}
@@ -433,7 +430,6 @@ export default function Analytics() {
               <div className="absolute w-4 h-4 bg-indigo-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
               <div className="absolute w-2 h-2 bg-purple-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
               <div className="absolute w-3 h-3 bg-pink-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
-              <div className="absolute w-2 h-2 bg-teal-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">

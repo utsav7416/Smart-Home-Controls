@@ -156,9 +156,7 @@ const useMutation = (mutationFn, options = {}) => {
 };
 
 const doYouKnowFacts = [
-  "Did you know? Geofencing can automate your lights and AC based on your location.",
   "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
-  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
   "Did you know? Your smart home learns and optimizes your energy usage over time."
 ];
 
@@ -480,7 +478,45 @@ export default function Geofencing() {
                 )}
               </div>
 
-              <div className="w-80 h-80 relative mb-8">
+              {viewState === 'loading' && (
+                <div className="grid grid-cols-3 gap-8 mb-8 w-full max-w-md">
+                  {[
+                    { icon: MapPin, label: "Mapping Zones", delay: "0s" },
+                    { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
+                    { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col items-center space-y-3">
+                      <div
+                        className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
+                        style={{ animationDelay: item.delay }}
+                      >
+                        <item.icon className="w-8 h-8 text-green-400" />
+                      </div>
+                      <span className="text-sm text-green-300 font-medium">{item.label}</span>
+                      <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                          style={{
+                            animationDelay: item.delay,
+                            width: '100%'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col space-y-8">
+              <div className="carousel-image-container">
+                <img
+                  src={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].url}
+                  alt={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].alt}
+                  className="carousel-image"
+                />
+              </div>
+              <div className="w-80 h-80 relative">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow" style={{
                     clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
@@ -535,6 +571,16 @@ export default function Geofencing() {
                       />
                     ))}
                   </div>
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={`electron-${i}`}
+                      className="absolute w-3 h-3 bg-green-400 rounded-full electron-orbit"
+                      style={{
+                        animationDelay: `${i * 0.5}s`,
+                        animationDuration: '3s'
+                      }}
+                    />
+                  ))}
                   <div className="absolute w-3 h-3 bg-green-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
                   <div className="absolute w-2 h-2 bg-emerald-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
                   <div className="absolute w-4 h-4 bg-teal-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
@@ -542,50 +588,6 @@ export default function Geofencing() {
                   <div className="absolute w-3 h-3 bg-lime-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
                   <div className="absolute w-2 h-2 bg-mint-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-8 mb-8 w-full max-w-md">
-                {[
-                  { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-                  { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-                  { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex flex-col items-center space-y-3">
-                    <div
-                      className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
-                      style={{ animationDelay: item.delay }}
-                    >
-                      <item.icon className="w-8 h-8 text-green-400" />
-                    </div>
-                    <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                    <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
-                        style={{
-                          animationDelay: item.delay,
-                          width: '100%'
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col space-y-8">
-              <div className="carousel-image-container">
-                <img
-                  src={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].url}
-                  alt={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].alt}
-                  className="carousel-image"
-                />
-              </div>
-              <div className="carousel-image-container">
-                <img
-                  src={loadingCarouselImages[(carouselIndex + 3) % loadingCarouselImages.length].url}
-                  alt={loadingCarouselImages[(carouselIndex + 3) % loadingCarouselImages.length].alt}
-                  className="carousel-image"
-                />
               </div>
             </div>
           </div>
@@ -607,12 +609,27 @@ export default function Geofencing() {
           @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
           @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
           @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+          @keyframes electron-orbit { 
+            0% { 
+              transform: translate(-50%, -50%) rotate(0deg) translateX(120px) rotate(0deg);
+              opacity: 1;
+            }
+            100% { 
+              transform: translate(-50%, -50%) rotate(360deg) translateX(120px) rotate(-360deg);
+              opacity: 1;
+            }
+          }
           .animate-fade-in { animation: fade-in 0.8s ease-out; }
           .animate-tilt { animation: tilt 10s infinite linear; }
           .triangle-bubble { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid rgba(34, 197, 94, 0.4); animation: triangleBubble 7s infinite linear; }
           .carousel-image-container { width: 280px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2); animation: rotateSubtle 8s infinite ease-in-out; }
           .carousel-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
           .carousel-image:hover { transform: scale(1.05); }
+          .electron-orbit { 
+            animation: electron-orbit linear infinite;
+            top: 50%;
+            left: 50%;
+          }
           `}</style>
       </div>
     );
@@ -783,13 +800,11 @@ export default function Geofencing() {
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
               <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. On the right, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. Whether you're optimizing your climate, streamlining your routines, or simply enjoying the peace of mind that comes with automation, every zone you create brings your home closer to effortless living.
+                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. 
               </p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
-                <li>• Instantly adjust lighting and temperature as you move from room to room.</li>
                 <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
                 <li>• Save energy without sacrificing convenience or style.</li>
-                <li>• Every image below represents a real scenario powered by smart geofencing.</li>
               </ul>
             </div>
             <div className="mt-2">

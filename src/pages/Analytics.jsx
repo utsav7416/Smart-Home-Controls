@@ -122,6 +122,21 @@ const carouselImages = [
   }
 ];
 
+const loadingCarouselImages = [
+  {
+    url: "https://illustrarch.com/wp-content/uploads/2024/04/Sustainable_Architectural_Solutions_for_Smart_Homes_8.jpg",
+    alt: "Smart Home Architecture"
+  },
+  {
+    url: "https://64.media.tumblr.com/0ded6a5da5aa5db5f5a1764744fa132b/05266ec9d5a051e9-11/s1280x1920/d4a5020ae8cdd7309933e68c5260024a89346551.jpg",
+    alt: "Modern Interior Design"
+  },
+  {
+    url: "https://i.pinimg.com/736x/ac/50/b5/ac50b5d06af7b1ff559529c7a420490b.jpg",
+    alt: "Smart Home Technology"
+  }
+];
+
 function Carousel({ images }) {
   const [index, setIndex] = useState(0);
   useEffect(() => {
@@ -217,7 +232,6 @@ export default function Analytics() {
     return () => clearInterval(factInterval);
   }, []);
 
-
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -286,6 +300,9 @@ export default function Analytics() {
                 </Button>
               </div>
             )}
+          </div>
+          <div className="w-full max-w-4xl mb-8">
+            <Carousel images={loadingCarouselImages} />
           </div>
           <div className="w-80 h-80 relative mb-12">
             <div className="absolute inset-0 flex items-center justify-center">
@@ -510,7 +527,7 @@ export default function Analytics() {
                 <>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.parameters.alpha}</div>
-                    <div className="text-xs text-gray-400">Alpha (Î±)</div>
+                    <div className="text-xs text-gray-400">Alpha (α)</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-white">{algorithm.weight_in_ensemble}</div>
@@ -553,8 +570,8 @@ export default function Analytics() {
                     <div className="text-blue-400 font-mono text-sm">
                       {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
                         algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, Î± = ${algorithm?.parameters?.alpha}` :
-                        `Î± = ${algorithm?.parameters?.alpha}`}
+                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
+                        `α = ${algorithm?.parameters?.alpha}`}
                     </div>
                   </div>
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">

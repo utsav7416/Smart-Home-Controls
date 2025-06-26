@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, Home, Wifi, Thermometer, Camera, Lightbulb } from 'lucide-react';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -155,13 +155,11 @@ const useMutation = (mutationFn, options = {}) => {
   return { mutate, isPending, error };
 };
 
-const smartHomeFacts = [
-  "Smart geofencing reduces home energy consumption by 34% on average",
-  "Automated lighting systems save up to $200 annually per household",
-  "Geofencing security systems reduce false alarms by 89%",
-  "Smart thermostats adapt to your schedule within 3 days of installation",
-  "IoT devices create 127 optimization opportunities daily in modern homes",
-  "Geofence automation increases home security response time by 400%"
+const doYouKnowFacts = [
+  "Did you know? Geofencing can automate your lights and AC based on your location.",
+  "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
+  "Did you know? AI geofencing adapts to your daily routines for comfort and savings.",
+  "Did you know? Your smart home learns and optimizes your energy usage over time."
 ];
 
 const carouselImages = [
@@ -184,6 +182,25 @@ const carouselImages = [
   {
     url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg",
     alt: "Smart lighting setup in a cozy room"
+  }
+];
+
+const loadingCarouselImages = [
+  {
+    url: "https://i.pinimg.com/736x/2f/6c/92/2f6c925f049eb916866d983cd3fca54d.jpg",
+    alt: "Smart Home Interior 1"
+  },
+  {
+    url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLvOde-b4NSV-1FfKVCOdbwFZpVh83W7YUrjT7wXSy23T2qMnN_Wx4p5_aZHM8zicHfak&usqp=CAU",
+    alt: "Smart Home Interior 2"
+  },
+  {
+    url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg",
+    alt: "Smart Home Interior 3"
+  },
+  {
+    url: "https://images.stockcake.com/public/c/b/5/cb505e46-ce71-46e7-b8b6-a9c2ba06701e_large/luxurious-living-room-stockcake.jpg",
+    alt: "Smart Home Interior 4"
   }
 ];
 
@@ -270,8 +287,7 @@ export default function Geofencing() {
   const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
-  const [buildingStage, setBuildingStage] = useState(0);
-  const [devicesVisible, setDevicesVisible] = useState([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
@@ -348,30 +364,17 @@ export default function Geofencing() {
 
   useEffect(() => {
     const factInterval = setInterval(() => {
-      setFactIndex((prev) => (prev + 1) % smartHomeFacts.length);
+      setFactIndex((prev) => (prev + 1) % doYouKnowFacts.length);
     }, 4000);
     return () => clearInterval(factInterval);
   }, []);
 
   useEffect(() => {
     if (viewState === 'initial' || viewState === 'loading') {
-      const buildingInterval = setInterval(() => {
-        setBuildingStage(prev => (prev + 1) % 5);
-      }, 1200);
-      
-      const deviceInterval = setInterval(() => {
-        setDevicesVisible(prev => {
-          if (prev.length < 6) {
-            return [...prev, prev.length];
-          }
-          return [];
-        });
-      }, 800);
-
-      return () => {
-        clearInterval(buildingInterval);
-        clearInterval(deviceInterval);
-      };
+      const carouselInterval = setInterval(() => {
+        setCarouselIndex((prev) => (prev + 1) % loadingCarouselImages.length);
+      }, 3000);
+      return () => clearInterval(carouselInterval);
     }
   }, [viewState]);
 
@@ -379,238 +382,228 @@ export default function Geofencing() {
   
   if (viewState === 'initial' || viewState === 'loading') {
     return (
-      <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 select-none">
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(80)].map((_, i) => (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-emerald-400/30 rounded-full animate-pulse"
+              className="absolute w-2 h-2 bg-green-400/20 rounded-full animate-pulse"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 3}s`
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={`triangle-${i}`}
+              className="absolute triangle-bubble"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${4 + Math.random() * 3}s`
               }}
             />
           ))}
         </div>
-
-        <div className="relative flex flex-col items-center space-y-12 z-10 max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-300 to-green-300 mb-4 smart-home-title">
-              Smart Home Geofencing
-            </h1>
-            <div className="h-16 flex items-center justify-center mb-6">
-              <p className="text-2xl text-emerald-200 animate-fade font-medium">
-                {smartHomeFacts[factIndex]}
-              </p>
+        <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
+          <div className="flex items-center justify-between w-full max-w-7xl">
+            <div className="flex flex-col space-y-6">
+              <div className="carousel-image-container">
+                <img
+                  src={loadingCarouselImages[carouselIndex].url}
+                  alt={loadingCarouselImages[carouselIndex].alt}
+                  className="carousel-image"
+                />
+              </div>
+              <div className="carousel-image-container">
+                <img
+                  src={loadingCarouselImages[(carouselIndex + 1) % loadingCarouselImages.length].url}
+                  alt={loadingCarouselImages[(carouselIndex + 1) % loadingCarouselImages.length].alt}
+                  className="carousel-image"
+                />
+              </div>
             </div>
-            <div className="w-32 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 mx-auto rounded-full pulse-bar"></div>
-          </div>
 
-          <div className="flex items-center justify-center gap-16 w-full">
-            <div className="relative">
-              <svg width="300" height="240" viewBox="0 0 300 240" className="house-svg">
-                <defs>
-                  <linearGradient id="houseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#059669" />
-                  </linearGradient>
-                </defs>
-                
-                <path d="M50 180 L150 80 L250 180 Z" 
-                      className={`house-roof ${buildingStage >= 1 ? 'animate-draw' : 'opacity-0'}`}
-                      fill="none" stroke="url(#houseGrad)" strokeWidth="3" />
-                
-                <rect x="70" y="140" width="160" height="80" 
-                      className={`house-walls ${buildingStage >= 2 ? 'animate-draw' : 'opacity-0'}`}
-                      fill="none" stroke="url(#houseGrad)" strokeWidth="3" />
-                
-                <rect x="90" y="160" width="30" height="40" 
-                      className={`house-door ${buildingStage >= 3 ? 'animate-draw' : 'opacity-0'}`}
-                      fill="none" stroke="url(#houseGrad)" strokeWidth="2" />
-                
-                <rect x="140" y="160" width="25" height="25" 
-                      className={`house-window ${buildingStage >= 4 ? 'animate-draw' : 'opacity-0'}`}
-                      fill="none" stroke="url(#houseGrad)" strokeWidth="2" />
-                
-                <rect x="180" y="160" width="25" height="25" 
-                      className={`house-window ${buildingStage >= 4 ? 'animate-draw' : 'opacity-0'}`}
-                      fill="none" stroke="url(#houseGrad)" strokeWidth="2" />
-
-                <circle cx="150" cy="120" r="60" 
-                        className="geofence-zone-1" 
-                        fill="none" stroke="rgba(16, 185, 129, 0.4)" strokeWidth="2" strokeDasharray="5,5" />
-                <circle cx="150" cy="120" r="90" 
-                        className="geofence-zone-2" 
-                        fill="none" stroke="rgba(16, 185, 129, 0.2)" strokeWidth="1" strokeDasharray="8,4" />
-              </svg>
-
-              {[
-                { icon: Thermometer, x: 60, y: 40, delay: 0 },
-                { icon: Lightbulb, x: 240, y: 60, delay: 200 },
-                { icon: Camera, x: 280, y: 140, delay: 400 },
-                { icon: Wifi, x: 20, y: 140, delay: 600 },
-                { icon: Home, x: 150, y: 20, delay: 800 },
-                { icon: MapPin, x: 150, y: 280, delay: 1000 }
-              ].map((device, index) => (
-                <div
-                  key={index}
-                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ${
-                    devicesVisible.includes(index) ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
-                  }`}
-                  style={{ left: device.x, top: device.y }}
-                >
-                  <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center border-2 border-emerald-400/50 smart-device">
-                    <device.icon className="w-6 h-6 text-emerald-300" />
+            <div className="flex flex-col items-center space-y-6 mx-16">
+              <div className="flex flex-row items-center justify-center w-full mb-8">
+                <img
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU"
+                  alt="Geofencing Icon"
+                  className="w-12 h-12 mr-6"
+                  style={{ objectFit: 'contain' }}
+                />
+                <div className="text-center max-w-2xl flex-1">
+                  <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                    Initializing Geofencing Engine
+                  </h1>
+                  <div className="h-16 flex items-center justify-center">
+                    <p className="text-xl text-green-200 animate-fade-in">
+                      {doYouKnowFacts[factIndex]}
+                    </p>
                   </div>
-                  <div className="absolute inset-0 w-12 h-12 rounded-full border border-emerald-400/30 animate-ping"></div>
+                  <p className="text-green-300 mt-2 text-lg">
+                    Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
+                  </p>
                 </div>
-              ))}
-            </div>
+              </div>
+              
+              <div className="w-80 h-80 relative mb-4">
+                <div className="absolute inset-0 rounded-full border-4 border-green-500/30 animate-spin" style={{ animationDuration: '8s' }}>
+                  <div className="absolute w-6 h-6 bg-green-400 rounded-full -top-3 left-1/2 transform -translate-x-1/2 shadow-lg shadow-green-400/50" />
+                </div>
+                <div className="absolute inset-4 rounded-full border-2 border-emerald-400/40 animate-spin" style={{ animationDuration: '6s', animationDirection: 'reverse' }}>
+                  <div className="absolute w-4 h-4 bg-emerald-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2" />
+                </div>
+                <div className="absolute inset-8 rounded-full border border-teal-300/50 animate-spin" style={{ animationDuration: '4s' }}>
+                  <div className="absolute w-3 h-3 bg-teal-300 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-green-500/30 to-emerald-600/30 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse">
+                    <Brain className="w-16 h-16 text-green-400 animate-pulse" />
+                  </div>
+                </div>
+                <div className="absolute top-0 left-0 w-8 h-8 bg-green-400/80 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <div className="absolute top-0 right-0 w-6 h-6 bg-emerald-400/80 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }} />
+                <div className="absolute bottom-0 left-0 w-7 h-7 bg-teal-400/80 rounded-full animate-bounce" style={{ animationDelay: '1s' }} />
+                <div className="absolute bottom-0 right-0 w-5 h-5 bg-cyan-400/80 rounded-full animate-bounce" style={{ animationDelay: '1.5s' }} />
+              </div>
 
-            <div className="flex flex-col space-y-8">
-              <div className="grid grid-cols-1 gap-6">
+              <div className="flex flex-col items-center space-y-6 mt-8 mb-6">
+                {viewState === 'loading' ? (
+                  <div className="flex items-center space-x-4">
+                    <div className="flex space-x-2">
+                      {[...Array(3)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-3 h-3 bg-green-400 rounded-full animate-bounce"
+                          style={{ animationDelay: `${i * 0.2}s` }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-lg font-semibold text-green-300">Processing request, this may take a while...</span>
+                  </div>
+                ) : (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt" />
+                    <Button
+                      onClick={handleInitiate}
+                      className="relative bg-gray-900 hover:bg-gray-800 border border-green-400/50 transform hover:scale-105 transition-all duration-300 px-16 py-8 text-2xl"
+                    >
+                      <Brain className="w-8 h-8 mr-4 animate-pulse" />
+                      Initiate Geofencing
+                      <span className="ml-4 text-lg font-normal text-green-200">Smart zone setup</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 gap-8 mb-8 w-full max-w-md">
                 {[
-                  { icon: Brain, label: "AI Learning Patterns", desc: "Analyzing daily routines" },
-                  { icon: Target, label: "Zone Optimization", desc: "Maximizing efficiency" },
-                  { icon: TrendingUp, label: "Energy Monitoring", desc: "Real-time insights" }
+                  { icon: MapPin, label: "Mapping Zones", delay: "0s" },
+                  { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
+                  { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
                 ].map((item, idx) => (
-                  <div key={idx} className="flex items-center space-x-4 bg-emerald-900/20 p-4 rounded-xl border border-emerald-400/20 home-feature">
-                    <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <item.icon className="w-6 h-6 text-emerald-400" />
+                  <div key={idx} className="flex flex-col items-center space-y-3">
+                    <div
+                      className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
+                      style={{ animationDelay: item.delay }}
+                    >
+                      <item.icon className="w-8 h-8 text-green-400" />
                     </div>
-                    <div>
-                      <h3 className="text-emerald-200 font-semibold">{item.label}</h3>
-                      <p className="text-emerald-300/70 text-sm">{item.desc}</p>
-                    </div>
-                    <div className="w-16 h-2 bg-emerald-900/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full progress-bar"></div>
+                    <span className="text-sm text-green-300 font-medium">{item.label}</span>
+                    <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                        style={{
+                          animationDelay: item.delay,
+                          width: '100%'
+                        }}
+                      />
                     </div>
                   </div>
                 ))}
               </div>
+            </div>
 
-              {viewState === 'loading' ? (
-                <div className="flex flex-col items-center space-y-4 mt-8">
-                  <div className="flex space-x-2">
-                    {[...Array(4)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-3 h-3 bg-emerald-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s` }}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-lg font-semibold text-emerald-300">Initializing smart zones...</span>
-                </div>
-              ) : (
-                <div className="relative group mt-8">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000"></div>
-                  <button 
-                    onClick={handleInitiate} 
-                    className="relative px-12 py-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xl tracking-wide transform hover:scale-105 transition-all duration-300 w-full"
-                  >
-                    <Home className="inline-block w-6 h-6 mr-3"/>
-                    Initialize Smart Zones
-                    <span className="block text-sm font-normal text-emerald-200 mt-1">Begin home automation setup</span>
-                  </button>
-                </div>
-              )}
+            <div className="flex flex-col space-y-6">
+              <div className="carousel-image-container">
+                <img
+                  src={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].url}
+                  alt={loadingCarouselImages[(carouselIndex + 2) % loadingCarouselImages.length].alt}
+                  className="carousel-image"
+                />
+              </div>
+              <div className="carousel-image-container">
+                <img
+                  src={loadingCarouselImages[(carouselIndex + 3) % loadingCarouselImages.length].url}
+                  alt={loadingCarouselImages[(carouselIndex + 3) % loadingCarouselImages.length].alt}
+                  className="carousel-image"
+                />
+              </div>
             </div>
           </div>
-
-          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-3 text-emerald-400/60">
-              <div className="w-2 h-2 bg-emerald-400/60 rounded-full animate-ping"></div>
-              <span className="text-sm">Connecting to home automation network...</span>
+          
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center space-x-2 text-green-400/60">
+              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
+              <span className="text-sm">Connecting to smart home network...</span>
             </div>
           </div>
         </div>
-
-        <style jsx="true">{`
-          .smart-home-title {
-            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-            animation: titleGlow 3s ease-in-out infinite alternate;
+        <style jsx>{`
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
           }
-          
-          @keyframes titleGlow {
-            from { filter: brightness(1); }
-            to { filter: brightness(1.2); }
+          @keyframes tilt {
+            0%, 50%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(1deg); }
+            75% { transform: rotate(-1deg); }
           }
-          
-          .animate-draw {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            animation: draw 1.5s ease-in-out forwards;
+          @keyframes triangleBubble {
+            0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; }
+            10% { opacity: 0.7; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; }
           }
-          
-          @keyframes draw {
-            to { stroke-dashoffset: 0; }
+          @keyframes rotateSubtle {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
           }
-          
-          .geofence-zone-1 {
-            animation: expandZone 2s ease-in-out infinite;
+          .animate-fade-in {
+            animation: fade-in 0.8s ease-out;
           }
-          
-          .geofence-zone-2 {
-            animation: expandZone 2s ease-in-out infinite 0.5s;
+          .animate-tilt {
+            animation: tilt 10s infinite linear;
           }
-          
-          @keyframes expandZone {
-            0%, 100% { transform: scale(1); opacity: 0.4; }
-            50% { transform: scale(1.1); opacity: 0.8; }
+          .triangle-bubble {
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 14px solid rgba(34, 197, 94, 0.4);
+            animation: triangleBubble 7s infinite linear;
           }
-          
-          .smart-device {
-            animation: devicePulse 2s ease-in-out infinite;
+          .carousel-image-container {
+            width: 200px;
+            height: 150px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2);
+            animation: rotateSubtle 20s infinite linear;
           }
-          
-          @keyframes devicePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+          .carousel-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
           }
-          
-          .home-feature {
-            animation: slideIn 0.8s ease-out forwards;
-            transform: translateX(20px);
-            opacity: 0;
-          }
-          
-          .home-feature:nth-child(1) { animation-delay: 0.2s; }
-          .home-feature:nth-child(2) { animation-delay: 0.4s; }
-          .home-feature:nth-child(3) { animation-delay: 0.6s; }
-          
-          @keyframes slideIn {
-            to { transform: translateX(0); opacity: 1; }
-          }
-          
-          .progress-bar {
-            animation: fillProgress 2s ease-in-out infinite;
-          }
-          
-          @keyframes fillProgress {
-            0% { width: 0%; }
-            50% { width: 100%; }
-            100% { width: 0%; }
-          }
-          
-          .pulse-bar {
-            animation: pulseWidth 3s ease-in-out infinite;
-          }
-          
-          @keyframes pulseWidth {
-            0%, 100% { width: 8rem; }
-            50% { width: 12rem; }
-          }
-          
-          .animate-fade {
-            animation: fadeContent 1s ease-out;
-          }
-          
-          @keyframes fadeContent {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
+          .carousel-image:hover {
+            transform: scale(1.05);
           }
         `}</style>
       </div>
@@ -936,6 +929,3 @@ export default function Geofencing() {
     </div>
   );
 }
-
-
-

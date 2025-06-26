@@ -478,34 +478,110 @@ export default function Geofencing() {
                 )}
               </div>
 
-              {viewState === 'loading' && (
-                <div className="grid grid-cols-3 gap-8 mb-8 w-full max-w-md">
-                  {[
-                    { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-                    { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-                    { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex flex-col items-center space-y-3">
-                      <div
-                        className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
-                        style={{ animationDelay: item.delay }}
-                      >
-                        <item.icon className="w-8 h-8 text-green-400" />
-                      </div>
-                      <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                      <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+              <div className="flex items-center justify-between w-full max-w-4xl">
+                {viewState === 'loading' && (
+                  <div className="grid grid-cols-3 gap-8 w-full max-w-md">
+                    {[
+                      { icon: MapPin, label: "Mapping Zones", delay: "0s" },
+                      { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
+                      { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex flex-col items-center space-y-3">
                         <div
-                          className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
-                          style={{
-                            animationDelay: item.delay,
-                            width: '100%'
-                          }}
-                        />
+                          className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse"
+                          style={{ animationDelay: item.delay }}
+                        >
+                          <item.icon className="w-8 h-8 text-green-400" />
+                        </div>
+                        <span className="text-sm text-green-300 font-medium">{item.label}</span>
+                        <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse"
+                            style={{
+                              animationDelay: item.delay,
+                              width: '100%'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="w-80 h-80 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow" style={{
+                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                      animationDuration: '20s'
+                    }}>
+                      <div className="absolute w-4 h-4 bg-green-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
+                      <div className="absolute w-4 h-4 bg-emerald-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                      <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
+                      <div className="absolute w-4 h-4 bg-cyan-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
+                      <div className="absolute w-4 h-4 bg-lime-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
+                      <div className="absolute w-4 h-4 bg-mint-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
+                    </div>
+                    <div className="absolute w-48 h-48 border-2 border-emerald-400/50 animate-spin-reverse" style={{
+                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                      animationDuration: '15s'
+                    }}>
+                      <div className="absolute w-3 h-3 bg-emerald-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
+                      <div className="absolute w-3 h-3 bg-green-400 rounded-full top-1/4 -right-1.5" />
+                      <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-3/4 -right-1.5" />
+                      <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
+                      <div className="absolute w-3 h-3 bg-lime-400 rounded-full top-3/4 -left-1.5" />
+                      <div className="absolute w-3 h-3 bg-mint-400 rounded-full top-1/4 -left-1.5" />
+                    </div>
+                    <div className="absolute w-24 h-24 border border-teal-300/60 animate-spin" style={{
+                      clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
+                      animationDuration: '10s'
+                    }}>
+                      <div className="absolute w-2 h-2 bg-teal-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
+                      <div className="absolute w-2 h-2 bg-green-300 rounded-full top-1/4 -right-1" />
+                      <div className="absolute w-2 h-2 bg-emerald-300 rounded-full top-3/4 -right-1" />
+                      <div className="absolute w-2 h-2 bg-cyan-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
+                      <div className="absolute w-2 h-2 bg-lime-300 rounded-full top-3/4 -left-1" />
+                      <div className="absolute w-2 h-2 bg-mint-300 rounded-full top-1/4 -left-1" />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-emerald-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-green-400/30">
+                        <Brain className="w-10 h-10 text-green-400 animate-pulse" />
                       </div>
                     </div>
-                  ))}
+                    <div className="absolute inset-0">
+                      {[...Array(6)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-green-400/30 to-transparent"
+                          style={{
+                            top: '50%',
+                            left: '50%',
+                            transformOrigin: 'bottom center',
+                            transform: `translate(-50%, -100%) rotate(${i * 60}deg)`,
+                            animation: `pulse 2s infinite ${i * 0.3}s`
+                          }}
+                        />
+                      ))}
+                    </div>
+                    {[...Array(8)].map((_, i) => (
+                      <div
+                        key={`electron-${i}`}
+                        className="absolute w-3 h-3 bg-green-400 rounded-full electron-orbit"
+                        style={{
+                          animationDelay: `${i * 0.5}s`,
+                          animationDuration: '3s'
+                        }}
+                      />
+                    ))}
+                    <div className="absolute w-3 h-3 bg-green-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
+                    <div className="absolute w-2 h-2 bg-emerald-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
+                    <div className="absolute w-4 h-4 bg-teal-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
+                    <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
+                    <div className="absolute w-3 h-3 bg-lime-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
+                    <div className="absolute w-2 h-2 bg-mint-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="flex flex-col space-y-8">
@@ -516,78 +592,12 @@ export default function Geofencing() {
                   className="carousel-image"
                 />
               </div>
-              <div className="w-80 h-80 relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow" style={{
-                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    animationDuration: '20s'
-                  }}>
-                    <div className="absolute w-4 h-4 bg-green-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
-                    <div className="absolute w-4 h-4 bg-emerald-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                    <div className="absolute w-4 h-4 bg-teal-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
-                    <div className="absolute w-4 h-4 bg-cyan-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
-                    <div className="absolute w-4 h-4 bg-lime-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
-                    <div className="absolute w-4 h-4 bg-mint-400 rounded-full top-1/4 -left-2 animate-pulse" style={{ animationDelay: '2.5s' }} />
-                  </div>
-                  <div className="absolute w-48 h-48 border-2 border-emerald-400/50 animate-spin-reverse" style={{
-                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    animationDuration: '15s'
-                  }}>
-                    <div className="absolute w-3 h-3 bg-emerald-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
-                    <div className="absolute w-3 h-3 bg-green-400 rounded-full top-1/4 -right-1.5" />
-                    <div className="absolute w-3 h-3 bg-teal-400 rounded-full top-3/4 -right-1.5" />
-                    <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
-                    <div className="absolute w-3 h-3 bg-lime-400 rounded-full top-3/4 -left-1.5" />
-                    <div className="absolute w-3 h-3 bg-mint-400 rounded-full top-1/4 -left-1.5" />
-                  </div>
-                  <div className="absolute w-24 h-24 border border-teal-300/60 animate-spin" style={{
-                    clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                    animationDuration: '10s'
-                  }}>
-                    <div className="absolute w-2 h-2 bg-teal-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
-                    <div className="absolute w-2 h-2 bg-green-300 rounded-full top-1/4 -right-1" />
-                    <div className="absolute w-2 h-2 bg-emerald-300 rounded-full top-3/4 -right-1" />
-                    <div className="absolute w-2 h-2 bg-cyan-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
-                    <div className="absolute w-2 h-2 bg-lime-300 rounded-full top-3/4 -left-1" />
-                    <div className="absolute w-2 h-2 bg-mint-300 rounded-full top-1/4 -left-1" />
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-emerald-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-green-400/30">
-                      <Brain className="w-10 h-10 text-green-400 animate-pulse" />
-                    </div>
-                  </div>
-                  <div className="absolute inset-0">
-                    {[...Array(6)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-green-400/30 to-transparent"
-                        style={{
-                          top: '50%',
-                          left: '50%',
-                          transformOrigin: 'bottom center',
-                          transform: `translate(-50%, -100%) rotate(${i * 60}deg)`,
-                          animation: `pulse 2s infinite ${i * 0.3}s`
-                        }}
-                      />
-                    ))}
-                  </div>
-                  {[...Array(8)].map((_, i) => (
-                    <div
-                      key={`electron-${i}`}
-                      className="absolute w-3 h-3 bg-green-400 rounded-full electron-orbit"
-                      style={{
-                        animationDelay: `${i * 0.5}s`,
-                        animationDuration: '3s'
-                      }}
-                    />
-                  ))}
-                  <div className="absolute w-3 h-3 bg-green-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
-                  <div className="absolute w-2 h-2 bg-emerald-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
-                  <div className="absolute w-4 h-4 bg-teal-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
-                  <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
-                  <div className="absolute w-3 h-3 bg-lime-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
-                  <div className="absolute w-2 h-2 bg-mint-400/80 rounded-full animate-float-delay" style={{ top: '40%', right: '8%', animationDelay: '0.8s' }} />
-                </div>
+              <div className="carousel-image-container">
+                <img
+                  src={loadingCarouselImages[(carouselIndex + 3) % loadingCarouselImages.length].url}
+                  alt={loadingCarouselImages[(carouselIndex + 3) % loadingCarouselImages.length].alt}
+                  className="carousel-image"
+                />
               </div>
             </div>
           </div>
@@ -800,7 +810,7 @@ export default function Geofencing() {
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
               <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. From seamless lighting control to energy-efficient comfort, these visuals offer a glimpse into the possibilities unlocked by geofencing. 
+                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living. 
               </p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
                 <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>

@@ -244,6 +244,7 @@ export default function Analytics() {
   const [factIndex, setFactIndex] = useState(0);
   const [viewState, setViewState] = useState(hasInitiatedAnalytics ? 'loading' : 'initial');
   const expandedStatesRef = useRef({});
+  const [curtain, setCurtain] = useState({title:false, subtitle:false, desc:false});
 
   const handleInitiate = () => {
     if (viewState === 'initial') {
@@ -273,6 +274,15 @@ export default function Analytics() {
     return () => clearInterval(factInterval);
   }, []);
 
+  useEffect(() => {
+    if (viewState === 'initial' || viewState === 'loading') {
+      const t1 = setTimeout(()=>setCurtain(v=>({...v,title:true})), 300);
+      const t2 = setTimeout(()=>setCurtain(v=>({...v,subtitle:true})), 800);
+      const t3 = setTimeout(()=>setCurtain(v=>({...v,desc:true})), 1300);
+      return ()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);}
+    }
+  }, [viewState]);
+
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -299,15 +309,15 @@ export default function Analytics() {
               style={{ objectFit: 'contain' }}
             />
             <div className="text-center max-w-2xl flex-1">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className={`text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent transition-all duration-1000 ${curtain.title?'curtain-reveal':'curtain-hidden'}`}>
                 Initializing ML Analytics Engine
               </h1>
               <div className="h-16 flex items-center justify-center">
-                <p className="text-xl text-blue-200 animate-fade-in">
+                <p className={`text-xl text-blue-200 transition-all duration-800 ${curtain.subtitle?'curtain-reveal-delayed':'curtain-hidden'}`}>
                   {doYouKnowFacts[factIndex]}
                 </p>
               </div>
-              <p className="text-blue-300 mt-2 text-lg">
+              <p className={`text-blue-300 mt-2 text-lg transition-all duration-1000 ${curtain.desc?'curtain-reveal-slow':'curtain-hidden'}`}>
                 Our AI is diving deep into your energy data, searching for hidden patterns and savings opportunities. Prepare for a detailed breakdown of your home's energy DNA.
               </p>
             </div>
@@ -466,6 +476,10 @@ export default function Analytics() {
           </div>
         </div>
         <style jsx>{`
+          .curtain-hidden { opacity: 0; transform: translateY(30px) scale(0.95); clip-path: inset(0 100% 0 0); }
+          .curtain-reveal { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); }
+          .curtain-reveal-delayed { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); transition-delay: 0.3s; }
+          .curtain-reveal-slow { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); transition-delay: 0.6s; }
           @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
           @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

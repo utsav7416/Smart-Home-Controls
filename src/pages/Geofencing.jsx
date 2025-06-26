@@ -125,84 +125,34 @@ const useRealTimeEnergyData = () => {
           setDeviceStates(parsedDevices);
           
           const devicePowerConsumption = {
-            'Main Light': 60,
-            'Fan': 75,
-            'AC': 3500,
-            'TV': 150,
-            'Microwave': 1000,
-            'Refrigerator': 150,
-            'Shower': 500, 
-            'Water Heater': 4000,
-            'Dryer': 3000
+            'Main Light': 60, 'Fan': 75, 'AC': 3500, 'TV': 150, 'Microwave': 1000,
+            'Refrigerator': 150, 'Shower': 500, 'Water Heater': 4000, 'Dryer': 3000
           };
 
           const calculateDeviceEnergy = (device) => {
             if (!device.isOn) return 0;
-            
             const basePower = devicePowerConsumption[device.name] || 100;
             let powerMultiplier = 1;
-
             switch (device.property) {
-              case 'brightness':
-                powerMultiplier = device.value / 100;
-                break;
-              case 'speed':
-                powerMultiplier = device.value / 100;
-                break;
-              case 'temp':
-              case 'temperature':
-                if (device.name === 'AC') {
-                  powerMultiplier = Math.abs(72 - device.value) / 20 + 0.5;
-                } else {
-                  powerMultiplier = device.value / 100;
-                }
-                break;
-              case 'volume':
-                powerMultiplier = 0.8 + (device.value / 100) * 0.4; 
-                break;
-              case 'pressure':
-                powerMultiplier = device.value / 100;
-                break;
-              case 'power':
-                powerMultiplier = device.value / 100;
-                break;
-              default:
-                powerMultiplier = 1;
+              case 'brightness': case 'speed': case 'pressure': case 'power': powerMultiplier = device.value / 100; break;
+              case 'temp': case 'temperature': powerMultiplier = device.name === 'AC' ? Math.abs(72 - device.value) / 20 + 0.5 : device.value / 100; break;
+              case 'volume': powerMultiplier = 0.8 + (device.value / 100) * 0.4; break;
+              default: powerMultiplier = 1;
             }
-
             return (basePower * powerMultiplier) / 1000;
           };
           
-          let totalEnergy = 0;
-          let activeCount = 0;
-          let totalCount = 0;
-
+          let totalEnergy = 0, activeCount = 0, totalCount = 0;
           Object.values(parsedDevices).forEach(roomDevices => {
             roomDevices.forEach(device => {
               totalCount++;
-              if (device.isOn) {
-                activeCount++;
-                totalEnergy += calculateDeviceEnergy(device);
-              }
+              if (device.isOn) { activeCount++; totalEnergy += calculateDeviceEnergy(device); }
             });
           });
 
-          const newEnergyData = {
-            totalEnergyUsage: Math.round(totalEnergy * 100) / 100,
-            activeDevices: activeCount,
-            totalDevices: totalCount
-          };
-
+          const newEnergyData = { totalEnergyUsage: Math.round(totalEnergy * 100) / 100, activeDevices: activeCount, totalDevices: totalCount };
           setEnergyData(newEnergyData);
-          
-          setEnergyHistory(prev => {
-            const newHistory = [...prev, { 
-              ...newEnergyData, 
-              timestamp: Date.now(),
-              hour: new Date().getHours()
-            }];
-            return newHistory.slice(-24);
-          });
+          setEnergyHistory(prev => [...prev, { ...newEnergyData, timestamp: Date.now(), hour: new Date().getHours() }].slice(-24));
         }
       } catch (error) {
         console.error('Error calculating energy data:', error);
@@ -210,11 +160,9 @@ const useRealTimeEnergyData = () => {
     };
 
     updateEnergyData();
-
     const handleStorageChange = () => updateEnergyData();
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('deviceStateChange', handleStorageChange);
-    
     const interval = setInterval(updateEnergyData, 1000);
     
     return () => {
@@ -227,9 +175,8 @@ const useRealTimeEnergyData = () => {
   return { energyData, deviceStates, energyHistory };
 };
 
-const useSmartSuggestions = (energyData, deviceStates) => {
+const useSmartSuggestions = (energyData, deviceStates, setSecurityAlerts) => {
   const [suggestions, setSuggestions] = useState([]);
-  const [securityAlerts, setSecurityAlerts] = useState([]);
   const [previousEnergyUsage, setPreviousEnergyUsage] = useState(0);
 
   useEffect(() => {
@@ -245,7 +192,7 @@ const useSmartSuggestions = (energyData, deviceStates) => {
           type: 'energy_optimization',
           priority: 'high',
           title: 'High Energy Usage Detected',
-          message: `Current usage: ${energyData.totalEnergyUsage} kWh. Consider reducing high-power devices like AC, Water Heater, or Dryer.`,
+          message: `Current usage: ${energyData.totalEnergyUsage} kWh. Consider reducing high-power devices.`,
           action: 'optimize_energy',
           confidence: 95,
           potentialSaving: Math.round(energyData.totalEnergyUsage * 0.20 * 100) / 100,
@@ -254,16 +201,14 @@ const useSmartSuggestions = (energyData, deviceStates) => {
       }
 
       if (energyChange > 1.0 && energyData.totalEnergyUsage > 3.0) {
-        const highPowerDevices = Object.values(deviceStates).flat()
-          .filter(d => d.isOn && ['AC', 'Water Heater', 'Dryer', 'Microwave'].includes(d.name));
-        
+        const highPowerDevices = Object.values(deviceStates).flat().filter(d => d.isOn && ['AC', 'Water Heater', 'Dryer', 'Microwave'].includes(d.name));
         if (highPowerDevices.length > 0) {
           newSuggestions.push({
             id: `energy-spike-${Date.now()}`,
             type: 'energy_spike',
             priority: 'high',
             title: 'Energy Spike Detected',
-            message: `Energy increased by ${energyChange.toFixed(2)} kWh. High-power devices active: ${highPowerDevices.map(d => d.name).join(', ')}.`,
+            message: `Energy increased by ${energyChange.toFixed(2)} kWh. High-power devices: ${highPowerDevices.map(d => d.name).join(', ')}.`,
             action: 'review_devices',
             confidence: 90,
             devices: highPowerDevices.map(d => d.name),
@@ -278,7 +223,7 @@ const useSmartSuggestions = (energyData, deviceStates) => {
           type: 'night_optimization',
           priority: 'medium',
           title: 'Night Mode Recommendation',
-          message: `${energyData.activeDevices} of ${energyData.totalDevices} devices active during night hours. Enable automated night mode for ${energyData.totalEnergyUsage} kWh usage?`,
+          message: `${energyData.activeDevices} devices active during night hours. Enable night mode?`,
           action: 'enable_night_mode',
           confidence: 85,
           potentialSaving: Math.round(energyData.totalEnergyUsage * 0.30 * 100) / 100,
@@ -292,26 +237,11 @@ const useSmartSuggestions = (energyData, deviceStates) => {
           type: 'away_mode',
           priority: 'low',
           title: 'Away Mode Opportunity',
-          message: `Low activity detected: ${energyData.totalEnergyUsage} kWh, ${energyData.activeDevices} devices. Enable away mode?`,
+          message: `Low activity detected: ${energyData.totalEnergyUsage} kWh. Enable away mode?`,
           action: 'enable_away_mode',
           confidence: 95,
           potentialSaving: Math.round(energyData.totalEnergyUsage * 0.80 * 100) / 100,
           icon: Eye
-        });
-      }
-
-      const acDevices = Object.values(deviceStates).flat().filter(d => d.isOn && d.name === 'AC');
-      if (acDevices.length > 0 && acDevices[0].value > 75) {
-        newSuggestions.push({
-          id: `ac-optimization-${Date.now()}`,
-          type: 'device_optimization',
-          priority: 'medium',
-          title: 'AC Optimization Suggestion',
-          message: `AC running at ${acDevices[0].value}% intensity. Consider reducing to 70% for energy savings.`,
-          action: 'optimize_ac',
-          confidence: 80,
-          potentialSaving: Math.round((energyData.totalEnergyUsage * 0.15) * 100) / 100,
-          icon: Lightbulb
         });
       }
 
@@ -328,7 +258,7 @@ const useSmartSuggestions = (energyData, deviceStates) => {
         alerts.push({
           type: 'unusual_night_activity',
           severity: 'medium',
-          message: `Unusual high energy usage at night: ${energyData.totalEnergyUsage} kWh with ${energyData.activeDevices} devices active`,
+          message: `High energy usage at night: ${energyData.totalEnergyUsage} kWh`,
           timestamp: Date.now(),
           recommendation: 'Review active devices for unexpected usage'
         });
@@ -338,20 +268,20 @@ const useSmartSuggestions = (energyData, deviceStates) => {
         alerts.push({
           type: 'energy_anomaly',
           severity: 'high',
-          message: `Very high energy usage detected: ${energyData.totalEnergyUsage} kWh`,
+          message: `Very high energy usage: ${energyData.totalEnergyUsage} kWh`,
           timestamp: Date.now(),
-          recommendation: 'Check for device malfunctions or unauthorized usage'
+          recommendation: 'Check for device malfunctions'
         });
       }
 
-      setSecurityAlerts(alerts.slice(-3));
+      setSecurityAlerts(alerts.slice(-2));
     };
 
     generateSuggestions();
     generateSecurityAlerts();
-  }, [energyData.totalEnergyUsage, energyData.activeDevices, deviceStates, previousEnergyUsage]);
+  }, [energyData.totalEnergyUsage, energyData.activeDevices, deviceStates, previousEnergyUsage, setSecurityAlerts]);
 
-  return { suggestions, securityAlerts };
+  return { suggestions };
 };
 
 const doYouKnowFacts = [
@@ -363,15 +293,13 @@ const carouselImages = [
   { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "Modern living room with smart home controls" },
   { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "Smart lighting and climate control" },
   { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "Smart home dashboard interface" },
-  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "Connected devices in a smart home" },
-  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "Smart lighting setup in a cozy room" }
+  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "Connected devices in a smart home" }
 ];
 
 const loadingCarouselImages = [
   { url: "https://i.pinimg.com/736x/2f/6c/92/2f6c925f049eb916866d983cd3fca54d.jpg", alt: "Smart Home Interior 1" },
   { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLvOde-b4NSV-1FfKVCOdbwFZpVh83W7YUrjT7wXSy23T2qMnN_Wx4p5_aZHM8zicHfak&usqp=CAU", alt: "Smart Home Interior 2" },
-  { url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg", alt: "Smart Home Interior 3" },
-  { url: "https://images.stockcake.com/public/c/b/5/cb505e46-ce71-46e7-b8b6-a9c2ba06701e_large/luxurious-living-room-stockcake.jpg", alt: "Smart Home Interior 4" }
+  { url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg", alt: "Smart Home Interior 3" }
 ];
 
 function ImageCarousel() {
@@ -389,22 +317,22 @@ function ImageCarousel() {
   const goNext = () => { setFade(false); setTimeout(() => { setIndex((prev) => (prev + 1) % carouselImages.length); setFade(true); }, 100); };
 
   return (
-    <div className="relative w-full h-64 flex items-center justify-center group overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30">
-      <button onClick={goPrev} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all" aria-label="Previous" tabIndex={0}>
-        <ChevronLeft className="w-7 h-7 text-green-200" />
+    <div className="relative w-full h-80 flex items-center justify-center group overflow-hidden rounded-xl shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30 border border-green-400/20">
+      <button onClick={goPrev} className="absolute left-3 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-green-700/60 rounded-full p-3 transition-all duration-300 hover:scale-110" aria-label="Previous">
+        <ChevronLeft className="w-8 h-8 text-green-200" />
       </button>
       <div className={`transition-all duration-700 ease-in-out w-full h-full ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-        <img src={carouselImages[index].url} alt={carouselImages[index].alt} className="w-full h-64 object-cover rounded-lg shadow-xl" style={{ boxShadow: '0 6px 32px 0 rgba(34,197,94,0.15), 0 1.5px 7px 0 rgba(16,185,129,0.09)' }} />
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 px-4 py-2 rounded-full text-green-100 text-sm shadow-lg backdrop-blur">
+        <img src={carouselImages[index].url} alt={carouselImages[index].alt} className="w-full h-80 object-cover rounded-xl shadow-xl" />
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/70 px-6 py-3 rounded-full text-green-100 text-base shadow-lg backdrop-blur-sm border border-green-400/30">
           {carouselImages[index].alt}
         </div>
       </div>
-      <button onClick={goNext} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-green-700/50 rounded-full p-2 transition-all" aria-label="Next" tabIndex={0}>
-        <ChevronRight className="w-7 h-7 text-green-200" />
+      <button onClick={goNext} className="absolute right-3 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-green-700/60 rounded-full p-3 transition-all duration-300 hover:scale-110" aria-label="Next">
+        <ChevronRight className="w-8 h-8 text-green-200" />
       </button>
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-2">
+      <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-3">
         {carouselImages.map((_, i) => (
-          <span key={i} className={`block w-3 h-3 rounded-full transition-all duration-300 ${i === index ? 'bg-green-400' : 'bg-green-900/40'}`} />
+          <span key={i} className={`block w-4 h-4 rounded-full transition-all duration-300 ${i === index ? 'bg-green-400 scale-125' : 'bg-green-900/40'}`} />
         ))}
       </div>
     </div>
@@ -423,9 +351,10 @@ export default function Geofencing() {
   const [textVisible, setTextVisible] = useState(false);
   const [titleVisible, setTitleVisible] = useState(false);
   const [subtitleVisible, setSubtitleVisible] = useState(false);
+  const [securityAlerts, setSecurityAlerts] = useState([]);
 
   const { energyData, deviceStates, energyHistory } = useRealTimeEnergyData();
-  const { suggestions, securityAlerts } = useSmartSuggestions(energyData, deviceStates);
+  const { suggestions } = useSmartSuggestions(energyData, deviceStates, setSecurityAlerts);
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
 
@@ -439,9 +368,7 @@ export default function Geofencing() {
     }
   };
 
-  const refetchGeofencesData = () => {
-    prefetchGeofences().then(data => setGeofences(data)).catch(e => setError(e.message));
-  };
+  const refetchGeofencesData = () => prefetchGeofences().then(data => setGeofences(data)).catch(e => setError(e.message));
   
   const createMutation = useMutation(createGeofence, {
     onSuccess: () => {
@@ -460,7 +387,7 @@ export default function Geofencing() {
     if (formData.name.trim() && formData.address.trim() && !isNaN(formData.lat) && !isNaN(formData.lng) && !isNaN(formData.radius)) {
       createMutation.mutate(formData);
     } else {
-      alert('Please fill all required fields correctly (Name, Address, Lat, Lng, Radius).');
+      alert('Please fill all required fields correctly.');
     }
   };
 
@@ -512,9 +439,6 @@ export default function Geofencing() {
           {[...Array(20)].map((_, i) => (
             <div key={i} className="absolute w-2 h-2 bg-green-400/20 rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 3}s`, animationDuration: `${2 + Math.random() * 2}s` }} />
           ))}
-          {[...Array(15)].map((_, i) => (
-            <div key={`triangle-${i}`} className="absolute triangle-bubble" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 5}s`, animationDuration: `${4 + Math.random() * 3}s` }} />
-          ))}
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
           <div className="flex items-center justify-between w-full max-w-7xl">
@@ -539,7 +463,7 @@ export default function Geofencing() {
                     </p>
                   </div>
                   <p className={`text-green-300 mt-2 text-lg transition-all duration-1000 ${textVisible ? 'curtain-reveal-slow' : 'curtain-hidden'}`}>
-                    Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move. Get ready for a dashboard that puts true, hands-free automation at your fingertips.
+                    Our system is calibrating your smart zones and learning your routines to create a home that anticipates your every move.
                   </p>
                 </div>
               </div>
@@ -566,78 +490,38 @@ export default function Geofencing() {
                 )}
               </div>
 
-              <div className="flex items-center justify-between w-full max-w-4xl">
-                {viewState === 'loading' && (
-                  <div className="grid grid-cols-3 gap-8 w-full max-w-md">
-                    {[
-                      { icon: MapPin, label: "Mapping Zones", delay: "0s" },
-                      { icon: Target, label: "Optimizing Routes", delay: "0.5s" },
-                      { icon: TrendingUp, label: "Learning Patterns", delay: "1s" }
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex flex-col items-center space-y-3">
-                        <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-2xl flex items-center justify-center border border-green-400/30 animate-pulse" style={{ animationDelay: item.delay }}>
-                          <item.icon className="w-8 h-8 text-green-400" />
-                        </div>
-                        <span className="text-sm text-green-300 font-medium">{item.label}</span>
-                        <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse" style={{ animationDelay: item.delay, width: '100%' }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="w-80 h-80 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    {[
-                      { size: 'w-72 h-72', duration: '20s', dots: 6, dotSize: 'w-4 h-4' },
-                      { size: 'w-48 h-48', duration: '15s', dots: 6, dotSize: 'w-3 h-3' },
-                      { size: 'w-24 h-24', duration: '10s', dots: 6, dotSize: 'w-2 h-2' }
-                    ].map((ring, idx) => (
-                      <div key={idx} className={`absolute ${ring.size} border-2 ${idx === 0 ? 'border-green-400/40 animate-spin-slow' : idx === 1 ? 'border-emerald-400/50 animate-spin-reverse' : 'border-teal-300/60 animate-spin'}`} style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)', animationDuration: ring.duration }}>
-                        {[...Array(ring.dots)].map((_, i) => (
-                          <div key={i} className={`absolute ${ring.dotSize} bg-green-400 rounded-full`} style={{
-                            top: i === 0 ? '-8px' : i === 1 || i === 2 ? '25%' : i === 3 ? '100%' : '75%',
-                            left: i === 0 || i === 3 ? '50%' : i === 1 || i === 4 ? '100%' : '-8px',
-                            transform: (i === 0 || i === 3) ? 'translateX(-50%)' : ''
-                          }} />
-                        ))}
-                      </div>
-                    ))}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-emerald-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-green-400/30">
-                        <Brain className="w-10 h-10 text-green-400 animate-pulse" />
-                      </div>
+              <div className="w-80 h-80 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {[
+                    { size: 'w-72 h-72', duration: '20s', dots: 6, dotSize: 'w-4 h-4' },
+                    { size: 'w-48 h-48', duration: '15s', dots: 6, dotSize: 'w-3 h-3' },
+                    { size: 'w-24 h-24', duration: '10s', dots: 6, dotSize: 'w-2 h-2' }
+                  ].map((ring, idx) => (
+                    <div key={idx} className={`absolute ${ring.size} border-2 ${idx === 0 ? 'border-green-400/40 animate-spin-slow' : idx === 1 ? 'border-emerald-400/50 animate-spin-reverse' : 'border-teal-300/60 animate-spin'}`} style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)', animationDuration: ring.duration }}>
+                      {[...Array(ring.dots)].map((_, i) => (
+                        <div key={i} className={`absolute ${ring.dotSize} bg-green-400 rounded-full`} style={{
+                          top: i === 0 ? '-8px' : i === 1 || i === 2 ? '25%' : i === 3 ? '100%' : '75%',
+                          left: i === 0 || i === 3 ? '50%' : i === 1 || i === 4 ? '100%' : '-8px',
+                          transform: (i === 0 || i === 3) ? 'translateX(-50%)' : ''
+                        }} />
+                      ))}
                     </div>
-                    {[...Array(8)].map((_, i) => (
-                      <div key={`electron-${i}`} className="absolute w-3 h-3 bg-green-400 rounded-full electron-orbit" style={{ animationDelay: `${i * 0.5}s`, animationDuration: '3s' }} />
-                    ))}
-                    {[
-                      { pos: 'top-[10%] left-[20%]', size: 'w-3 h-3', color: 'bg-green-400/80' },
-                      { pos: 'top-[20%] right-[15%]', size: 'w-2 h-2', color: 'bg-emerald-400/80' },
-                      { pos: 'bottom-[15%] left-[10%]', size: 'w-4 h-4', color: 'bg-teal-400/80' },
-                      { pos: 'bottom-[25%] right-[20%]', size: 'w-2 h-2', color: 'bg-cyan-400/80' }
-                    ].map((dot, i) => (
-                      <div key={i} className={`absolute ${dot.size} ${dot.color} rounded-full animate-float ${dot.pos}`} style={{ animationDelay: `${i * 0.5}s` }} />
-                    ))}
+                  ))}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-green-500/40 to-emerald-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-green-400/30">
+                      <Brain className="w-10 h-10 text-green-400 animate-pulse" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="flex flex-col space-y-8">
-              {[2, 3].map(offset => (
+              {[2, 0].map(offset => (
                 <div key={offset} className="carousel-image-container">
                   <img src={loadingCarouselImages[(carouselIndex + offset) % loadingCarouselImages.length].url} alt={loadingCarouselImages[(carouselIndex + offset) % loadingCarouselImages.length].alt} className="carousel-image" />
                 </div>
               ))}
-            </div>
-          </div>
-          
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-green-400/60">
-              <div className="w-2 h-2 bg-green-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to smart home network...</span>
             </div>
           </div>
         </div>
@@ -648,20 +532,14 @@ export default function Geofencing() {
           .curtain-reveal-slow { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); transition-delay: 0.6s; }
           @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
-          @keyframes triangleBubble { 0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.3; } 100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; } }
-          @keyframes rotateSubtle { 0% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } 100% { transform: rotate(-20deg); } }
           @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
           @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-          @keyframes electron-orbit { 0% { transform: translate(-50%, -50%) rotate(0deg) translateX(120px) rotate(0deg); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(360deg) translateX(120px) rotate(-360deg); opacity: 1; } }
           .animate-fade-in { animation: fade-in 0.8s ease-out; }
           .animate-tilt { animation: tilt 10s infinite linear; }
-          .triangle-bubble { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid rgba(34, 197, 94, 0.4); animation: triangleBubble 7s infinite linear; }
-          .carousel-image-container { width: 280px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2); animation: rotateSubtle 8s infinite ease-in-out; }
+          .carousel-image-container { width: 280px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2); }
           .carousel-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
           .carousel-image:hover { transform: scale(1.05); }
-          .electron-orbit { animation: electron-orbit linear infinite; top: 50%; left: 50%; }
         `}</style>
       </div>
     );
@@ -680,7 +558,7 @@ export default function Geofencing() {
   const mlMetrics = analytics?.ml_metrics || {};
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-6 space-y-8 animate-fade-in">
       <div style={{ position: 'absolute', left: '-9999px', opacity: 0 }}>
         <EnergyStats />
       </div>
@@ -692,20 +570,20 @@ export default function Geofencing() {
         </div>
       )}
 
-      <div className="text-center py-16 rounded-2xl relative overflow-hidden" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://thumbs.dreamstime.com/z/examining-impact-edge-computing-smart-home-security-systems-dusk-group-gathers-to-discuss-how-enhances-highlighting-356998640.jpg?ct=jpeg')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+      <div className="text-center py-20 rounded-2xl relative overflow-hidden" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://thumbs.dreamstime.com/z/examining-impact-edge-computing-smart-home-security-systems-dusk-group-gathers-to-discuss-how-enhances-highlighting-356998640.jpg?ct=jpeg')`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
         <div className="relative z-10">
-          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">AI-Powered Geofencing Control</h1>
-          <p className="text-green-200 text-xl drop-shadow-md">Machine learning algorithms optimizing your location-based automation</p>
+          <h1 className="text-6xl font-bold text-white mb-6 drop-shadow-lg">AI-Powered Geofencing Control</h1>
+          <p className="text-green-200 text-2xl drop-shadow-md">Machine learning algorithms optimizing your location-based automation</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {[
           { title: "Model Accuracy", value: `${mlMetrics.model_accuracy?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-green-600/20 to-green-800/20", border: "border-green-400/30", color: "text-green-200" },
           { title: "Prediction Confidence", value: `${mlMetrics.prediction_confidence?.toFixed(1) || 0}%`, icon: TrendingUp, gradient: "from-emerald-600/20 to-emerald-800/20", border: "border-emerald-400/30", color: "text-emerald-200" },
           { title: "Zones Created", value: stats?.total_zones || 0, icon: MapIcon, gradient: "from-teal-600/20 to-teal-800/20", border: "border-teal-400/30", color: "text-teal-200" },
           { title: "Total Triggers", value: stats?.total_triggers || 0, icon: Target, gradient: "from-purple-600/20 to-purple-800/20", border: "border-purple-400/30", color: "text-purple-200" },
-          { title: "Real-Time Energy", value: `${energyData.totalEnergyUsage} kWh`, icon: Zap, gradient: "from-lime-600/20 to-lime-800/20", border: "border-lime-400/30", color: "text-lime-200" }
+          { title: "Optimization Success", value: `${mlMetrics.optimization_success_count?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-lime-600/20 to-lime-800/20", border: "border-lime-400/30", color: "text-lime-200" }
         ].map((metric, i) => (
           <Card key={i} className={`bg-gradient-to-br ${metric.gradient} backdrop-blur-md border ${metric.border}`}>
             <CardContent className="p-6">
@@ -721,170 +599,20 @@ export default function Geofencing() {
         ))}
       </div>
 
-      {securityAlerts.length > 0 && (
-        <Card className="bg-red-900/20 backdrop-blur-md border border-red-400/30">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
-              Real-Time Security Alerts ({securityAlerts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {securityAlerts.map((alert) => (
-              <div key={alert.timestamp} className={`p-4 rounded-lg border ${alert.severity === 'high' ? 'bg-red-900/40 border-red-500' : alert.severity === 'medium' ? 'bg-yellow-900/40 border-yellow-500' : 'bg-blue-900/40 border-blue-500'}`}>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-white font-medium">{alert.message}</p>
-                    <p className="text-gray-300 text-sm mt-1">{alert.recommendation}</p>
-                    <p className="text-gray-400 text-xs mt-2">
-                      {new Date(alert.timestamp).toLocaleTimeString()} • Real Energy Data ✓
-                    </p>
-                  </div>
-                  <button onClick={() => dismissAlert(alert.timestamp)} className="text-gray-400 hover:text-white ml-4">
-                    <XCircle className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="bg-blue-900/20 backdrop-blur-md border border-blue-400/30">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-blue-400" />
-            Real-Time AI Suggestions ({suggestions.length}) - Live Energy Data ✓
-          </CardTitle>
-          <div className="text-sm text-blue-300">
-            Current: {energyData.totalEnergyUsage} kWh | {energyData.activeDevices}/{energyData.totalDevices} devices
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {suggestions.length > 0 ? suggestions.map((suggestion) => (
-            <div key={suggestion.id} className={`p-4 rounded-lg border ${suggestion.priority === 'high' ? 'bg-orange-900/40 border-orange-500' : suggestion.priority === 'medium' ? 'bg-blue-900/40 border-blue-500' : 'bg-green-900/40 border-green-500'}`}>
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3 flex-1">
-                  <suggestion.icon className="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h4 className="text-white font-semibold">{suggestion.title}</h4>
-                    <p className="text-gray-300 text-sm mt-1">{suggestion.message}</p>
-                    <div className="flex items-center gap-4 mt-3 text-xs">
-                      <span className="text-blue-300">Confidence: {suggestion.confidence}%</span>
-                      {suggestion.potentialSaving && (
-                        <span className="text-green-300">Potential Saving: {suggestion.potentialSaving} kWh</span>
-                      )}
-                      {suggestion.devices && (
-                        <span className="text-yellow-300">Devices: {suggestion.devices.join(', ')}</span>
-                      )}
-                      <span className="text-green-400 font-bold">✓ Real Data</span>
-                    </div>
-                  </div>
-                </div>
-                <button onClick={() => implementSuggestion(suggestion)} className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-4 flex-shrink-0">
-                  Implement
-                </button>
-              </div>
-            </div>
-          )) : (
-            <p className="text-gray-300 text-center py-4">No suggestions available. Your energy usage is optimal!</p>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-black/40 backdrop-blur-md border border-blue-400/20">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-400" />
-              Live Energy Usage Chart - Real Data ✓
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={energyHistory}>
-                <defs>
-                  <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="hour" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', color: 'white' }} />
-                <Area type="monotone" dataKey="totalEnergyUsage" stroke="#3b82f6" fillOpacity={1} fill="url(#energyGradient)" strokeWidth={2} name="Real Energy Usage (kWh)" />
-              </AreaChart>
-            </ResponsiveContainer>
-            <div className="mt-4 text-center">
-              <p className="text-gray-300 text-sm">Live: {energyData.totalEnergyUsage} kWh | Active: {energyData.activeDevices}/{energyData.totalDevices} devices</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Shield className="w-5 h-5 text-purple-400" />
-              Real Device Activity Monitor ✓
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-72 overflow-y-auto">
-              {Object.values(deviceStates).flat().map((device, i) => {
-                const devicePowerConsumption = {
-                  'Main Light': 60, 'Fan': 75, 'AC': 3500, 'TV': 150, 'Microwave': 1000,
-                  'Refrigerator': 150, 'Shower': 500, 'Water Heater': 4000, 'Dryer': 3000
-                };
-                return (
-                  <div key={i} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${device.isOn ? 'bg-green-400' : 'bg-gray-600'}`} />
-                      <span className="text-white font-medium">{device.name}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-1 rounded text-xs ${device.isOn ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'}`}>
-                        {device.isOn ? `ON (${device.value || 100}%)` : 'OFF'}
-                      </span>
-                      {device.isOn && (
-                        <div className="text-xs text-gray-400 mt-1">
-                          {((devicePowerConsumption[device.name] || 100) * (device.value || 100) / 100 / 1000).toFixed(2)} kW
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-              {Object.values(deviceStates).flat().length === 0 && (
-                <p className="text-gray-400 text-center py-4">No device data available</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex space-x-4 mb-6">
-        {['overview', 'analytics'].map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === tab ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
           <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-green-400" />
+              <CardTitle className="text-white flex items-center gap-2 text-xl">
+                <MapPin className="w-6 h-6 text-green-400" />
                 ML-Optimized Zones
               </CardTitle>
-              <div className="flex gap-2">
-                <button onClick={() => optimizeMutation.mutate()} className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5" disabled={optimizeMutation.isPending}>
+              <div className="flex gap-3">
+                <button onClick={() => optimizeMutation.mutate()} className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-2" disabled={optimizeMutation.isPending}>
                   <Brain className="w-4 h-4" />
                   Optimize
                 </button>
-                <button onClick={() => setShowCreateForm(true)} className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-1.5">
+                <button onClick={() => setShowCreateForm(true)} className="px-4 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Add Zone
                 </button>
@@ -894,12 +622,12 @@ export default function Geofencing() {
               {geofences?.length > 0 ? (
                 geofences.map((geofence) => (
                   <Card key={geofence.id} className="bg-green-900/20 border border-green-400/30">
-                    <CardContent className="p-4">
+                    <CardContent className="p-5">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="text-white font-semibold">{geofence.name}</h3>
+                          <h3 className="text-white font-semibold text-lg">{geofence.name}</h3>
                           <p className="text-green-200 text-sm mt-1">{geofence.address}</p>
-                          <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-green-300">
+                          <div className="grid grid-cols-2 gap-3 mt-3 text-sm text-green-300">
                             <span>Radius: {geofence.radius}m</span>
                             <span>Automations: {geofence.automations}</span>
                             <span>Triggers: {geofence.trigger_count || 0}</span>
@@ -911,70 +639,157 @@ export default function Geofencing() {
                   </Card>
                 ))
               ) : (
-                <p className="text-green-300 text-center">No geofences created yet. Click "Add Zone" to get started!</p>
+                <p className="text-green-300 text-center py-8">No geofences created yet. Click "Add Zone" to get started!</p>
               )}
             </CardContent>
           </Card>
-          <div className="flex flex-col gap-6">
-            <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
-              <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
-              <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living.
-              </p>
-              <ul className="text-green-200 text-sm space-y-1 mb-4">
-                <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
-                <li>• Save energy without sacrificing convenience or style.</li>
-              </ul>
-            </div>
-            <div className="mt-2">
-              <ImageCarousel />
-            </div>
+
+          <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-xl p-8 shadow-xl border border-green-400/20">
+            <h2 className="text-3xl font-bold text-white mb-4">Smart Home in Action</h2>
+            <p className="text-green-100 mb-6 text-lg leading-relaxed">
+              See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living.
+            </p>
+            <ul className="text-green-200 text-base space-y-2 mb-6">
+              <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
+              <li>• Save energy without sacrificing convenience or style.</li>
+            </ul>
+            <ImageCarousel />
           </div>
         </div>
-      )}
 
-      {activeTab === 'analytics' && analytics && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-            <CardHeader><CardTitle className="text-white">24h Energy Optimization</CardTitle></CardHeader>
-            <CardContent>
-              {analytics.energy_optimization && analytics.energy_optimization.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={analytics.energy_optimization}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="hour" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: 'white' }} />
-                    <Line type="monotone" dataKey="consumption" stroke="#ef4444" strokeWidth={2} name="Actual" />
-                    <Line type="monotone" dataKey="predicted" stroke="#3b82f6" strokeWidth={2} name="Predicted" />
-                    <Line type="monotone" dataKey="optimized" stroke="#22c55e" strokeWidth={2} name="Optimized" />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-green-300 text-center">No energy optimization data available.</p>
+        <div className="space-y-6">
+          {securityAlerts.length > 0 && (
+            <Card className="bg-red-900/20 backdrop-blur-md border border-red-400/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                  Security Alerts ({securityAlerts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {securityAlerts.map((alert) => (
+                  <div key={alert.timestamp} className={`p-4 rounded-lg border ${alert.severity === 'high' ? 'bg-red-900/40 border-red-500' : 'bg-yellow-900/40 border-yellow-500'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-white font-medium">{alert.message}</p>
+                        <p className="text-gray-300 text-sm mt-1">{alert.recommendation}</p>
+                        <p className="text-gray-400 text-xs mt-2">{new Date(alert.timestamp).toLocaleTimeString()}</p>
+                      </div>
+                      <button onClick={() => dismissAlert(alert.timestamp)} className="text-gray-400 hover:text-white ml-4">
+                        <XCircle className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="bg-blue-900/20 backdrop-blur-md border border-blue-400/30">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Lightbulb className="w-5 h-5 text-blue-400" />
+                AI Suggestions ({suggestions.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {suggestions.length > 0 ? suggestions.map((suggestion) => (
+                <div key={suggestion.id} className={`p-4 rounded-lg border ${suggestion.priority === 'high' ? 'bg-orange-900/40 border-orange-500' : suggestion.priority === 'medium' ? 'bg-blue-900/40 border-blue-500' : 'bg-green-900/40 border-green-500'}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      <suggestion.icon className="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="text-white font-semibold">{suggestion.title}</h4>
+                        <p className="text-gray-300 text-sm mt-1">{suggestion.message}</p>
+                        <div className="flex items-center gap-4 mt-3 text-xs">
+                          <span className="text-blue-300">Confidence: {suggestion.confidence}%</span>
+                          {suggestion.potentialSaving && (
+                            <span className="text-green-300">Saving: {suggestion.potentialSaving} kWh</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button onClick={() => implementSuggestion(suggestion)} className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md ml-4 flex-shrink-0">
+                      Implement
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <p className="text-gray-300 text-center py-4">No suggestions available. Your energy usage is optimal!</p>
               )}
             </CardContent>
           </Card>
-          <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-            <CardHeader><CardTitle className="text-white">Zone Efficiency</CardTitle></CardHeader>
+
+          <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Shield className="w-5 h-5 text-purple-400" />
+                Device Monitor
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              {analytics.zone_efficiency && analytics.zone_efficiency.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={analytics.zone_efficiency}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="name" stroke="#9ca3af" />
-                    <YAxis stroke="#9ca3af" />
-                    <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: 'white' }} />
-                    <Bar dataKey="efficiency" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-green-300 text-center">No zone efficiency data available.</p>
-              )}
+              <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+                {Object.values(deviceStates).flat().map((device, i) => {
+                  const devicePowerConsumption = {
+                    'Main Light': 60, 'Fan': 75, 'AC': 3500, 'TV': 150, 'Microwave': 1000,
+                    'Refrigerator': 150, 'Shower': 500, 'Water Heater': 4000, 'Dryer': 3000
+                  };
+                  return (
+                    <div key={i} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800/70 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${device.isOn ? 'bg-green-400' : 'bg-gray-600'}`} />
+                        <span className="text-white font-medium">{device.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-2 py-1 rounded text-xs ${device.isOn ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'}`}>
+                          {device.isOn ? `ON (${device.value || 100}%)` : 'OFF'}
+                        </span>
+                        {device.isOn && (
+                          <div className="text-xs text-gray-400 mt-1">
+                            {((devicePowerConsumption[device.name] || 100) * (device.value || 100) / 100 / 1000).toFixed(2)} kW
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {Object.values(deviceStates).flat().length === 0 && (
+                  <p className="text-gray-400 text-center py-4">No device data available</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
-      )}
+      </div>
+
+      <Card className="bg-black/40 backdrop-blur-md border border-blue-400/20">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Activity className="w-5 h-5 text-blue-400" />
+            Live Energy Usage Chart
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            <AreaChart data={energyHistory}>
+              <defs>
+                <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="hour" stroke="#9ca3af" />
+              <YAxis stroke="#9ca3af" />
+              <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', color: 'white' }} />
+              <Area type="monotone" dataKey="totalEnergyUsage" stroke="#3b82f6" fillOpacity={1} fill="url(#energyGradient)" strokeWidth={2} name="Energy Usage (kWh)" />
+            </AreaChart>
+          </ResponsiveContainer>
+          <div className="mt-4 text-center">
+            <p className="text-gray-300 text-sm">Current: {energyData.totalEnergyUsage} kWh | Active: {energyData.activeDevices}/{energyData.totalDevices} devices</p>
+          </div>
+        </CardContent>
+      </Card>
 
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -1013,6 +828,10 @@ export default function Geofencing() {
       <style jsx>{`
         .animate-fade-in { animation: fade-in 0.8s ease-out; }
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(55, 65, 81, 0.3); border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(34, 197, 94, 0.5); border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(34, 197, 94, 0.7); }
       `}</style>
     </div>
   );

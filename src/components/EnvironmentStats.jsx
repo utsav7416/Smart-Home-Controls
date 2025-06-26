@@ -13,7 +13,6 @@ import {
   Cell
 } from 'recharts'
 
-// --- Device definitions ---
 const DEVICES = [
   { id: 'lights', label: 'Lights', watt: 60 },
   { id: 'heater', label: 'Heater', watt: 1500 },
@@ -23,9 +22,7 @@ const DEVICES = [
 
 const COLORS = ['#10b981', '#f59e42', '#6366f1', '#f43f5e']
 
-// --- Energy Flow Chart (static SVG, easy to extend) ---
 function EnergyFlowChart({ activeDevices }) {
-  // Map device to position and color
   const deviceMap = {
     lights: { x: 60, y: 170, color: COLORS[0] },
     heater: { x: 140, y: 60, color: COLORS[1] },
@@ -36,13 +33,10 @@ function EnergyFlowChart({ activeDevices }) {
     <div className="mb-8">
       <h2 className="text-2xl font-semibold text-white mb-4">Energy Flow / Distribution</h2>
       <svg width={320} height={340} style={{ background: '#18181b', borderRadius: 16, width: '100%', maxWidth: 350 }}>
-        {/* Central node */}
         <circle cx={160} cy={160} r={36} fill="#22223b" stroke="#10b981" strokeWidth={3} />
         <text x={160} y={165} textAnchor="middle" fill="#fff" fontSize={16} fontWeight="bold">Home</text>
-        {/* Device nodes and lines */}
         {DEVICES.map((d, i) => {
           const dev = deviceMap[d.id]
-          // Draw line from home to device
           return (
             <g key={d.id}>
               <line
@@ -80,9 +74,7 @@ function EnergyFlowChart({ activeDevices }) {
   )
 }
 
-// --- Pie Chart of Device Usage ---
 function DeviceUsagePie({ devices }) {
-  // Only include devices that are ON
   const data = DEVICES
     .filter(d => devices[d.id])
     .map((d, i) => ({
@@ -90,7 +82,6 @@ function DeviceUsagePie({ devices }) {
       value: d.watt,
       color: COLORS[i % COLORS.length]
     }))
-  // If none are on, show all as 0 for legend consistency
   const pieData = data.length > 0 ? data : DEVICES.map((d, i) => ({
     name: d.label, value: 0.01, color: COLORS[i % COLORS.length]
   }))
@@ -126,7 +117,6 @@ function DeviceUsagePie({ devices }) {
   )
 }
 
-// --- Main EnvironmentStats component ---
 export default function EnvironmentStats() {
   const [devices, setDevices] = useState(() => {
     const stored = localStorage.getItem('devices')
@@ -163,11 +153,9 @@ export default function EnvironmentStats() {
 
   return (
     <div className="space-y-8 p-8 max-w-4xl mx-auto">
-      {/* --- Other Ideas Section --- */}
       <DeviceUsagePie devices={devices} />
       <EnergyFlowChart activeDevices={devices} />
 
-      {/* --- Your original Device Power Controls --- */}
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
         <h2 className="text-2xl font-semibold text-white mb-4">Device Power Controls</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -192,7 +180,6 @@ export default function EnvironmentStats() {
         </div>
       </div>
 
-      {/* --- Your original Power Consumption Over Time Chart --- */}
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
         <h2 className="text-2xl font-semibold text-white mb-4">Power Consumption Over Time</h2>
         <ResponsiveContainer width="100%" height={350}>

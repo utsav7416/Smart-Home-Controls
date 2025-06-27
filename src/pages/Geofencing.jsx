@@ -122,26 +122,17 @@ const useApiData = (key, fetchFn, refetchInterval = 30000) => {
 };
 
 const useMutation = (mutationFn, options = {}) => {
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState(null);
-
+  const [isPending, setIsPending] = useState(false), [error, setError] = useState(null);
   const mutate = async (variables) => {
     try {
-      setIsPending(true);
-      setError(null);
+      setIsPending(true); setError(null);
       const result = await mutationFn(variables);
-      if (options.onSuccess) {
-        options.onSuccess(result);
-      }
+      options.onSuccess && options.onSuccess(result);
       return result;
     } catch (err) {
       setError(err.message);
-      if (options.onError) {
-        options.onError(err);
-      }
-    } finally {
-      setIsPending(false);
-    }
+      options.onError && options.onError(err);
+    } finally { setIsPending(false); }
   };
   return { mutate, isPending, error };
 };
@@ -165,37 +156,18 @@ const useLocalEnergyData = () => {
           };
           
           let totalEnergy = 0, active = 0, total = 0;
-          Object.values(parsed).forEach(roomDevices => {
-            if (Array.isArray(roomDevices)) {
-              roomDevices.forEach(device => {
-                total++;
-                if (device.isOn) {
-                  active++;
-                  let base = devicePower[device.name] || 100;
-                  let mult = 1;
-                  switch (device.property) {
-                    case 'brightness':
-                    case 'speed':
-                    case 'pressure':
-                    case 'power':
-                      mult = device.value / 100;
-                      break;
-                    case 'temp':
-                    case 'temperature':
-                      mult = device.name === 'AC' ? Math.abs(72 - device.value) / 20 + 0.5 : device.value / 100;
-                      break;
-                    case 'volume':
-                      mult = 0.8 + (device.value / 100) * 0.4;
-                      break;
-                    default:
-                      mult = 1;
-                  }
-                  totalEnergy += (base * mult) / 1000;
-                }
-              });
+          Object.values(parsed).forEach(roomDevices => Array.isArray(roomDevices) && roomDevices.forEach(device => {
+            total++;
+            if (device.isOn) {
+              active++;
+              let base = devicePower[device.name] || 100, mult = 1;
+              if (['brightness','speed','pressure','power'].includes(device.property)) mult = device.value / 100;
+              else if (['temp','temperature'].includes(device.property)) mult = device.name === 'AC' ? Math.abs(72 - device.value) / 20 + 0.5 : device.value / 100;
+              else if (device.property === 'volume') mult = 0.8 + (device.value / 100) * 0.4;
+              totalEnergy += (base * mult) / 1000;
             }
-          });
-          
+          }));
+
           if (active === 0) active = 4;
           if (totalEnergy === 0) totalEnergy = 2.5;
           
@@ -249,7 +221,6 @@ function getAlertAndRecommendation(energyData, dismissedAlertIds) {
   return { alert, recommendation };
 }
 
-
 const doYouKnowFacts = [
   "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
   "Did you know? Your smart home learns and optimizes your energy usage over time."
@@ -271,36 +242,17 @@ const loadingCarouselImages = [
 ];
 
 function ImageCarousel() {
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
-  
+  const [index, setIndex] = useState(0), [fade, setFade] = useState(true);
+
   useEffect(() => {
     setFade(false);
-    const fadeTimeout = setTimeout(() => setFade(true), 50);
-    const timer = setTimeout(() => {
-      setIndex((prev) => (prev + 1) % carouselImages.length);
-    }, 5000);
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(fadeTimeout);
-    };
+    const fadeTimeout = setTimeout(() => setFade(true), 50),
+          timer = setTimeout(() => setIndex(i => (i + 1) % carouselImages.length), 5000);
+    return () => { clearTimeout(timer); clearTimeout(fadeTimeout); };
   }, [index]);
 
-  const goPrev = () => {
-    setFade(false);
-    setTimeout(() => {
-      setIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
-      setFade(true);
-    }, 100);
-  };
-
-  const goNext = () => {
-    setFade(false);
-    setTimeout(() => {
-      setIndex((prev) => (prev + 1) % carouselImages.length);
-      setFade(true);
-    }, 100);
-  };
+  const goPrev = () => { setFade(false); setTimeout(() => { setIndex(i => (i - 1 + carouselImages.length) % carouselImages.length); setFade(true); }, 100); };
+  const goNext = () => { setFade(false); setTimeout(() => { setIndex(i => (i + 1) % carouselImages.length); setFade(true); }, 100); };
 
   return (
     <div className="relative w-full h-64 flex items-center justify-center group overflow-hidden rounded-lg shadow-2xl bg-gradient-to-br from-green-900/30 to-slate-900/30">
@@ -794,8 +746,8 @@ export default function Geofencing() {
                   </div>
                   <div className="text-white text-sm">
                     {new Date().getHours() < 6 || new Date().getHours() > 22 
-                      ? "Night mode detected - Consider automated dimming"
-                      : "Daytime optimization - Natural light available"
+                      ? "Night mode detected - Ensure electrical appliances are switched off"
+                      : "Daytime optimization - Natural light available, consider switching off some lights"
                     }
                   </div>
                 </div>
@@ -870,85 +822,66 @@ export default function Geofencing() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-gradient-to-br from-slate-900/90 to-gray-900/90 backdrop-blur-md border border-emerald-400/30 shadow-2xl rounded-lg">
-          <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border-b border-emerald-400/20 px-6 py-4 rounded-t-lg">
-            <h3 className="text-white text-2xl font-bold flex items-center gap-3">
-              <span className="p-2 bg-emerald-500/20 rounded-lg"><Zap className="w-7 h-7 text-emerald-400" /></span>
+        <div className="bg-gradient-to-br from-black via-gray-900 to-black border border-emerald-600 shadow-2xl rounded-lg">
+          <div className="bg-gradient-to-r from-black via-gray-900 to-black border-b border-emerald-700 px-6 py-4 rounded-t-lg">
+            <h3 className="text-emerald-400 text-2xl font-bold flex items-center gap-3">
+              <span className="p-2 bg-emerald-800/40 rounded-lg"><Zap className="w-7 h-7 text-emerald-400" /></span>
               Energy Analytics Dashboard
             </h3>
           </div>
           <div className="p-8">
+            <div className="mb-6 flex items-center gap-4">
+              <span className="text-blue-300 text-base">To toggle devices,</span>
+              <a href="/device-control" className="bg-gradient-to-r from-emerald-700 to-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:from-emerald-600 hover:to-blue-600 transition-all text-sm">Device Control</a>
+            </div>
             <div className="space-y-8">
               <div className="grid grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-gradient-to-br from-emerald-900/30 to-teal-900/30 rounded-xl border border-emerald-400/20">
+                <div className="text-center p-4 bg-gradient-to-br from-black via-gray-900 to-black rounded-xl border border-emerald-800">
                   <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalEnergyUsage}</div>
-                  <div className="text-emerald-200 text-sm font-medium">kWh Usage</div>
+                  <div className="text-emerald-300 text-sm font-medium">kWh Usage</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-xl border border-blue-400/20">
+                <div className="text-center p-4 bg-gradient-to-br from-black via-gray-900 to-black rounded-xl border border-blue-700">
                   <div className="text-3xl font-bold text-blue-400 mb-2">{energyData.activeDevices}</div>
-                  <div className="text-blue-200 text-sm font-medium">Active Devices</div>
+                  <div className="text-blue-300 text-sm font-medium">Active Devices</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-400/20">
-                  <div className="text-3xl font-bold text-purple-400 mb-2">{energyData.totalDevices}</div>
-                  <div className="text-purple-200 text-sm font-medium">Total Devices</div>
+                <div className="text-center p-4 bg-gradient-to-br from-black via-gray-900 to-black rounded-xl border border-emerald-800">
+                  <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalDevices}</div>
+                  <div className="text-emerald-300 text-sm font-medium">Total Devices</div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-gray-800/50 to-slate-800/50 rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-400" />Real-time Monitoring
-                </h3>
+              <div className="bg-gradient-to-r from-black via-gray-900 to-black rounded-xl p-6 border border-gray-700">
+                <h3 className="text-blue-300 text-lg font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-400" />Real-time Monitoring</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-300">Efficiency Rating:</span>
-                    <span className="text-green-400 font-medium">
-                      {getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between"><span className="text-gray-300">Cost Estimate:</span>
-                    <span className="text-blue-400 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between"><span className="text-gray-300">Savings Today:</span>
-                    <span className="text-emerald-400 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span>
-                  </div>
+                  <div className="flex justify-between"><span className="text-gray-400">Efficiency Rating:</span><span className="text-emerald-400 font-medium">{getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Cost Estimate:</span><span className="text-blue-400 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Savings Today:</span><span className="text-emerald-400 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Peak Hours:</span><span className="text-blue-400 font-medium">6PM - 9PM</span></div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 rounded-xl p-6 border border-emerald-400/20">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-emerald-300 font-medium">System Status: Optimized</span>
-                </div>
+              <div className="bg-gradient-to-r from-black via-gray-900 to-black rounded-xl p-6 border border-emerald-800">
+                <div className="flex items-center gap-3 mb-4"><div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div><span className="text-emerald-300 font-medium">System Status: Optimized</span></div>
               </div>
             </div>
           </div>
         </div>
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-slate-900/80 to-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-600/30">
+          <div className="bg-gradient-to-br from-black via-gray-900 to-black backdrop-blur-md rounded-2xl p-6 border border-gray-700">
             <h3 className="text-white text-xl font-bold mb-6 text-center">Smart Home Showcase</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                <img src="https://thumbs.dreamstime.com/b/smart-home-bedroom-futuristic-design-modern-bedroom-interior-showcasing-smart-home-concept-futuristic-design-325690136.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
-              </div>
-              <div className="transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-                <img src="https://as1.ftcdn.net/v2/jpg/05/75/63/70/1000_F_575637092_BndwXzl5YjHfmVLtvFh3j00vXdgkQdw2.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
-              </div>
-              <div className="transform -rotate-2 hover:rotate-0 transition-transform duration-300">
-                <img src="https://images.squarespace-cdn.com/content/v1/62dfa656a2986f7b76f75c92/b78fb41c-6929-4a68-b805-7d933f90ee80/innovative-luxury-hotel-design-ideas-concepts-bar.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
-              </div>
-              <div className="transform rotate-2 hover:rotate-0 transition-transform duration-300">
-                <img src="https://www.luxxu.net/blog/wp-content/uploads/2016/03/Luxury-design-ideas-from-Paramount-Hotel-in-New-York-850x410.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
-              </div>
+              <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://thumbs.dreamstime.com/b/smart-home-bedroom-futuristic-design-modern-bedroom-interior-showcasing-smart-home-concept-futuristic-design-325690136.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
+              <div className="transform -rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://as1.ftcdn.net/v2/jpg/05/75/63/70/1000_F_575637092_BndwXzl5YjHfmVLtvFh3j00vXdgkQdw2.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
+              <div className="transform -rotate-2 hover:rotate-0 transition-transform duration-300"><img src="https://images.squarespace-cdn.com/content/v1/62dfa656a2986f7b76f75c92/b78fb41c-6929-4a68-b805-7d933f90ee80/innovative-luxury-hotel-design-ideas-concepts-bar.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
+              <div className="transform rotate-2 hover:rotate-0 transition-transform duration-300"><img src="https://www.luxxu.net/blog/wp-content/uploads/2016/03/Luxury-design-ideas-from-Paramount-Hotel-in-New-York-850x410.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
             </div>
           </div>
           <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-xl p-6 border border-indigo-400/20">
             <div className="text-center">
               <div className="text-indigo-300 text-lg font-semibold mb-2">Next Generation Living</div>
-              <div className="text-gray-300 text-sm">
-                Experience the future of home automation with AI-powered geofencing technology
-              </div>
+              <div className="text-gray-300 text-sm">Experience the future of home automation with AI-powered geofencing technology</div>
             </div>
           </div>
         </div>
       </div>
-
 
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">

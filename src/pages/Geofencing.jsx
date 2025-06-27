@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, Shield, Zap, Clock, Home } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import EnergyStats from '../components/EnergyStats';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -278,6 +279,7 @@ function ImageCarousel() {
 }
 
 export default function Geofencing() {
+  const navigate = useNavigate();
   const [geofences, setGeofences] = useState(geofencesCache);
   const [error, setError] = useState(null);
   const [viewState, setViewState] = useState(hasInitiatedGeofences ? 'loading' : 'initial');
@@ -296,6 +298,16 @@ export default function Geofencing() {
 
   const dismissAlert = (alertId) => {
     setDismissedAlertIds(ids => [...ids, alertId]);
+  };
+
+  const handleDeviceControlClick = async () => {
+    await navigate('/');
+    setTimeout(() => {
+      const element = document.getElementById('device-control');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 300);
   };
 
   const handleInitiate = () => {
@@ -485,16 +497,6 @@ export default function Geofencing() {
       </div>
     );
   }
-  
-  if (viewState === 'error') {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to load geofencing data: {error}
-        </div>
-      </div>
-    );
-  }
 
   if (viewState !== 'dashboard' || !geofences) {
     return null;
@@ -540,7 +542,7 @@ export default function Geofencing() {
           { title: "Model Accuracy", value: `${mlMetrics.model_accuracy?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-green-600/20 to-green-800/20", border: "border-green-400/30", color: "text-green-200" },
           { title: "Prediction Confidence", value: `${mlMetrics.prediction_confidence?.toFixed(1) || 0}%`, icon: TrendingUp, gradient: "from-emerald-600/20 to-emerald-800/20", border: "border-emerald-400/30", color: "text-emerald-200" },
           { title: "Zones Created", value: stats?.total_zones || 0, icon: MapIcon, gradient: "from-teal-600/20 to-teal-800/20", border: "border-teal-400/30", color: "text-teal-200" },
-          { title: "Total Triggers", value: stats?.total_triggers || 0, icon: Target, gradient: "from-purple-600/20 to-purple-800/20", border: "border-purple-400/30", color: "text-purple-200" },
+          { title: "Total Triggers", value: stats?.total_triggers || 0, icon: Target, gradient: "from-gray-600/20 to-gray-800/20", border: "border-gray-400/30", color: "text-gray-200" },
           { title: "Optimization Success", value: `${mlMetrics.optimization_success_count?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-lime-600/20 to-lime-800/20", border: "border-lime-400/30", color: "text-lime-200" }
         ].map((metric, i) => (
           <Card key={i} className={`bg-gradient-to-br ${metric.gradient} backdrop-blur-md border ${metric.border}`}>
@@ -785,7 +787,6 @@ export default function Geofencing() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
           <CardHeader>
             <CardTitle className="text-white">Hourly Usage Trend</CardTitle>
@@ -802,7 +803,7 @@ export default function Geofencing() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
+        <Card className="bg-black/40 backdrop-blur-md border border-gray-400/20">
           <CardHeader>
             <CardTitle className="text-white">Device Activity</CardTitle>
           </CardHeader>
@@ -812,8 +813,8 @@ export default function Geofencing() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="name" stroke="#9ca3af" />
                 <YAxis stroke="#9ca3af" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px', color: 'white' }} />
-                <Bar dataKey="value" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(156, 163, 175, 0.3)', borderRadius: '8px', color: 'white' }} />
+                <Bar dataKey="value" fill="#6b7280" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

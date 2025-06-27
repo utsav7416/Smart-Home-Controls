@@ -90,14 +90,14 @@ function CalendarHeatmap({ data, deviceName, room }) {
 function DeviceControl({ room }) {
   const baseDevices = {
     'Living Room': [
-      { id: 1, name: 'Main Light', isOn: false, property: 'brightness', value: 70 },
+      { id: 1, name: 'Main Light', isOn: true, property: 'brightness', value: 70 },
       { id: 2, name: 'Fan', isOn: false, property: 'speed', value: 50 },
       { id: 3, name: 'AC', isOn: false, property: 'temp', value: 72 },
-      { id: 4, name: 'TV', isOn: false, property: 'volume', value: 30 },
+      { id: 4, name: 'TV', isOn: true, property: 'volume', value: 30 },
     ],
     Bedroom: [
       { id: 1, name: 'Main Light', isOn: false, property: 'brightness', value: 70 },
-      { id: 2, name: 'Fan', isOn: false, property: 'speed', value: 50 },
+      { id: 2, name: 'Fan', isOn: true, property: 'speed', value: 50 },
       { id: 3, name: 'AC', isOn: false, property: 'temp', value: 72 },
       { id: 4, name: 'TV', isOn: false, property: 'volume', value: 30 },
     ],
@@ -111,7 +111,7 @@ function DeviceControl({ room }) {
       { id: 1, name: 'Main Light', isOn: false, property: 'brightness', value: 70 },
       { id: 2, name: 'Microwave', isOn: false, property: 'temp', value: 50 },
       { id: 3, name: 'AC', isOn: false, property: 'temp', value: 72 },
-      { id: 4, name: 'Refrigerator', isOn: false, property: 'power', value: 80 },
+      { id: 4, name: 'Refrigerator', isOn: true, property: 'power', value: 80 },
     ],
     Bathroom: [
       { id: 1, name: 'Main Light', isOn: false, property: 'brightness', value: 70 },

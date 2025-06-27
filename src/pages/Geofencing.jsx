@@ -12,32 +12,27 @@ let hasInitiatedGeofences = false;
 export function prefetchGeofences() {
   if (geofencesCache) return Promise.resolve(geofencesCache);
   if (geofencesPromise) return geofencesPromise;
-  geofencesPromise = Promise.race([
-    fetch(`${FLASK_API_URL}/api/geofences`, { cache: 'force-cache', keepalive: true })
-      .then(res => {
-        if (!res.ok) throw new Error(`Geofencing fetch failed: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        geofencesCache = data;
-        geofencesPromise = null;
-        return data;
-      }),
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-  ])
-  .catch(error => {
-    geofencesPromise = null;
-    hasInitiatedGeofences = false;
-    throw error;
-  });
+  geofencesPromise = fetch(`${FLASK_API_URL}/api/geofences`, { cache: 'force-cache', keepalive: true })
+    .then(res => {
+      if (!res.ok) throw new Error(`Geofencing fetch failed: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      geofencesCache = data;
+      geofencesPromise = null;
+      return data;
+    })
+    .catch(error => {
+      geofencesPromise = null;
+      hasInitiatedGeofences = false;
+      throw error;
+    });
   return geofencesPromise;
 }
-
 const Card = ({ children, className = '' }) => (<div className={`rounded-lg shadow-lg ${className}`}>{children}</div>);
 const CardHeader = ({ children, className = '' }) => (<div className={`px-6 py-4 ${className}`}>{children}</div>);
 const CardTitle = ({ children, className = '' }) => (<h3 className={`text-lg font-semibold ${className}`}>{children}</h3>);
 const CardContent = ({ children, className = '' }) => (<div className={`px-6 pb-6 ${className}`}>{children}</div>);
-
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
     className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
@@ -95,7 +90,7 @@ const optimizeGeofences = async () => {
   return await response.json();
 };
 
-const useApiData = (key, fetchFn, refetchInterval = 60000) => {
+const useApiData = (key, fetchFn, refetchInterval = 30000) => {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -194,7 +189,7 @@ const useLocalEnergyData = () => {
     };
     
     update();
-    const interval = setInterval(update, 5000);
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, []);
   
@@ -292,8 +287,8 @@ export default function Geofencing() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
 
-  const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 60000);
-  const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 120000);
+  const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
+  const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
   const { energyData, energyHistory, deviceStates } = useLocalEnergyData();
   const { alert, recommendation } = getAlertAndRecommendation(energyData, dismissedAlertIds);
   const deviceList = Object.values(deviceStates).flat();
@@ -404,8 +399,11 @@ export default function Geofencing() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
         <div className="absolute inset-0">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(20)].map((_, i) => (
             <div key={i} className="absolute w-2 h-2 bg-green-400/20 rounded-full animate-pulse" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 3}s`, animationDuration: `${2 + Math.random() * 2}s` }} />
+          ))}
+          {[...Array(15)].map((_, i) => (
+            <div key={`triangle-${i}`} className="absolute triangle-bubble" style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, animationDelay: `${Math.random() * 5}s`, animationDuration: `${4 + Math.random() * 3}s` }} />
           ))}
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen p-8">
@@ -482,11 +480,14 @@ export default function Geofencing() {
         <style>{`
           @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
+          @keyframes triangleBubble { 0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.3; } 100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; } }
+          @keyframes rotateSubtle { 0% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } 100% { transform: rotate(-20deg); } }
           @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
           @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
           .animate-fade-in { animation: fade-in 0.8s ease-out; }
           .animate-tilt { animation: tilt 10s infinite linear; }
-          .carousel-image-container { width: 280px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2); }
+          .triangle-bubble { width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 14px solid rgba(34, 197, 94, 0.4); animation: triangleBubble 7s infinite linear; }
+          .carousel-image-container { width: 280px; height: 200px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px rgba(34, 197, 94, 0.2); animation: rotateSubtle 8s infinite ease-in-out; }
           .carousel-image { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
           .carousel-image:hover { transform: scale(1.05); }
         `}</style>
@@ -890,7 +891,7 @@ export default function Geofencing() {
           </div>
         </div>
       </div>
-      
+
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">
@@ -923,4 +924,3 @@ export default function Geofencing() {
     </div>
   );
 }
-      

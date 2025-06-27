@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, Shield, Zap, Clock, Home } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import EnergyStats from '../components/EnergyStats';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
@@ -177,32 +177,34 @@ const useLocalEnergyData = () => {
           
           let totalEnergy = 0, active = 0, total = 0;
           Object.values(parsed).forEach(roomDevices => {
-            roomDevices.forEach(device => {
-              total++;
-              if (device.isOn) {
-                active++;
-                let base = devicePower[device.name] || 100;
-                let mult = 1;
-                switch (device.property) {
-                  case 'brightness':
-                  case 'speed':
-                  case 'pressure':
-                  case 'power':
-                    mult = device.value / 100;
-                    break;
-                  case 'temp':
-                  case 'temperature':
-                    mult = device.name === 'AC' ? Math.abs(72 - device.value) / 20 + 0.5 : device.value / 100;
-                    break;
-                  case 'volume':
-                    mult = 0.8 + (device.value / 100) * 0.4;
-                    break;
-                  default:
-                    mult = 1;
+            if (Array.isArray(roomDevices)) {
+              roomDevices.forEach(device => {
+                total++;
+                if (device.isOn) {
+                  active++;
+                  let base = devicePower[device.name] || 100;
+                  let mult = 1;
+                  switch (device.property) {
+                    case 'brightness':
+                    case 'speed':
+                    case 'pressure':
+                    case 'power':
+                      mult = device.value / 100;
+                      break;
+                    case 'temp':
+                    case 'temperature':
+                      mult = device.name === 'AC' ? Math.abs(72 - device.value) / 20 + 0.5 : device.value / 100;
+                      break;
+                    case 'volume':
+                      mult = 0.8 + (device.value / 100) * 0.4;
+                      break;
+                    default:
+                      mult = 1;
+                  }
+                  totalEnergy += (base * mult) / 1000;
                 }
-                totalEnergy += (base * mult) / 1000;
-              }
-            });
+              });
+            }
           });
           
           const e = {
@@ -232,6 +234,7 @@ function getUsageLevel(active) {
 
 function getAlertAndRecommendation(energyData, dismissedAlertIds) {
   const usageLevel = getUsageLevel(energyData.activeDevices);
+  const currentHour = new Date().getHours();
   let alert = null;
   let recommendation = null;
   
@@ -545,7 +548,6 @@ export default function Geofencing() {
                 </div>
               ))}
             </div>
-
             <div className="flex flex-col items-center space-y-8 mx-16">
               <div className="flex flex-row items-center justify-center w-full mb-8">
                 <img
@@ -614,7 +616,6 @@ export default function Geofencing() {
                 </div>
               </div>
             </div>
-
             <div className="flex flex-col space-y-8">
               {[2, 3].map(offset => (
                 <div key={offset} className="carousel-image-container">
@@ -628,7 +629,7 @@ export default function Geofencing() {
             </div>
           </div>
         </div>
-        <style jsx>{`
+        <style>{`
           @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
           @keyframes triangleBubble { 0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; } 10% { opacity: 0.7; } 90% { opacity: 0.3; } 100% { transform: translateY(-100vh) rotate(360deg) scale(1); opacity: 0; } }
@@ -662,6 +663,19 @@ export default function Geofencing() {
 
   const mlMetrics = analytics?.ml_metrics || {};
 
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const energyDistribution = [
+    { name: 'Lighting', value: energyData.totalEnergyUsage * 0.3, color: '#0088FE' },
+    { name: 'HVAC', value: energyData.totalEnergyUsage * 0.4, color: '#00C49F' },
+    { name: 'Appliances', value: energyData.totalEnergyUsage * 0.2, color: '#FFBB28' },
+    { name: 'Others', value: energyData.totalEnergyUsage * 0.1, color: '#FF8042' }
+  ];
+
+  const deviceActivityData = deviceList.map(device => ({
+    name: device.name,
+    value: device.isOn ? (device.value || 100) : 0
+  }));
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       {overallError && (
@@ -670,97 +684,6 @@ export default function Geofencing() {
           <p>Error: {overallError}. Please ensure the Flask backend is running.</p>
         </div>
       )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-red-900/20 backdrop-blur-md border border-red-400/30">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2 text-xl">
-              <AlertTriangle className="w-6 h-6 text-red-400" />
-              Security Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {alert ? (
-              <div className={`p-5 mb-3 rounded-lg border ${alert.severity === 'high' ? 'bg-red-900/40 border-red-500' : 'bg-yellow-900/40 border-yellow-500'}`}>
-                <div className="flex justify-between">
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg text-white">{alert.message}</div>
-                    <div className="text-sm text-gray-300 mt-2">{alert.recommendation}</div>
-                  </div>
-                  <button onClick={() => dismissAlert(alert.id)} className="text-gray-400 hover:text-white ml-4 p-1">
-                    <XCircle className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-green-300 text-lg py-4">No security alerts.</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="bg-blue-900/20 backdrop-blur-md border border-blue-400/30">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2 text-xl">
-              <Lightbulb className="w-6 h-6 text-yellow-400" />
-              AI Recommendations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg text-white py-4">{recommendation.message}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="bg-black/40 backdrop-blur-md border border-blue-400/20">
-        <CardHeader>
-          <CardTitle className="text-white text-xl">Live Energy Usage</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={160}>
-            <AreaChart data={energyHistory}>
-              <defs>
-                <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="hour" stroke="#9ca3af" />
-              <YAxis stroke="#9ca3af" />
-              <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', color: 'white' }} />
-              <Area type="monotone" dataKey="totalEnergyUsage" stroke="#3b82f6" fillOpacity={1} fill="url(#energyGradient)" strokeWidth={2} name="Energy Usage (kWh)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
-        <CardHeader>
-          <CardTitle className="text-white text-xl">Device Monitor</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-row flex-wrap gap-3">
-            {deviceList.length === 0 && <div className="text-gray-400">No devices found.</div>}
-            {deviceList.map((device, idx) => (
-              <div key={idx} className="flex flex-col items-center px-3 py-2 bg-gray-800/80 rounded-lg min-w-[90px]">
-                <span className={`w-3 h-3 rounded-full mb-2 ${device.isOn ? 'bg-green-400' : 'bg-gray-600'}`}></span>
-                <span className="text-white text-sm font-medium truncate max-w-[80px]">{device.name}</span>
-                <span className={`px-2 py-1 rounded text-xs mt-1 ${device.isOn ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-300'}`}>
-                  {device.isOn ? `${device.value || 100}%` : 'OFF'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-        <CardHeader>
-          <CardTitle className="text-white text-xl">Energy Stats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EnergyStats />
-        </CardContent>
-      </Card>
 
       <div
         className="text-center py-16 rounded-2xl relative overflow-hidden"
@@ -825,7 +748,7 @@ export default function Geofencing() {
               </CardTitle>
               <div className="flex gap-2">
                 <button
-                  onClick={() => optimizeMutation.mutate()}
+                  onClick={() => optimizeMutation.mutate({})}
                   className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5"
                   disabled={optimizeMutation.isPending}
                 >
@@ -931,6 +854,174 @@ export default function Geofencing() {
         </div>
       )}
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-gray-900/80 backdrop-blur-md border border-orange-400/30 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-orange-900/40 to-red-900/40 border-b border-orange-400/20">
+            <CardTitle className="text-white flex items-center gap-3 text-xl">
+              <div className="p-2 bg-orange-500/20 rounded-lg">
+                <Shield className="w-6 h-6 text-orange-400" />
+              </div>
+              Security Center
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            {alert ? (
+              <div className={`p-5 rounded-xl border-l-4 ${alert.severity === 'high' ? 'bg-red-900/30 border-red-500 shadow-red-500/20' : 'bg-yellow-900/30 border-yellow-500 shadow-yellow-500/20'} shadow-lg`}>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className={`w-5 h-5 ${alert.severity === 'high' ? 'text-red-400' : 'text-yellow-400'}`} />
+                      <span className={`text-sm font-medium ${alert.severity === 'high' ? 'text-red-300' : 'text-yellow-300'}`}>
+                        {alert.severity.toUpperCase()} ALERT
+                      </span>
+                    </div>
+                    <div className="text-white font-semibold text-lg mb-2">{alert.message}</div>
+                    <div className="text-gray-300 text-sm">{alert.recommendation}</div>
+                  </div>
+                  <button 
+                    onClick={() => dismissAlert(alert.id)} 
+                    className="text-gray-400 hover:text-white ml-4 p-1 rounded-full hover:bg-white/10 transition-colors"
+                  >
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-8 h-8 text-green-400" />
+                </div>
+                <div className="text-green-300 text-lg font-medium">All Systems Secure</div>
+                <div className="text-gray-400 text-sm mt-1">No security alerts detected</div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gray-900/80 backdrop-blur-md border border-cyan-400/30 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-cyan-900/40 to-blue-900/40 border-b border-cyan-400/20">
+            <CardTitle className="text-white flex items-center gap-3 text-xl">
+              <div className="p-2 bg-cyan-500/20 rounded-lg">
+                <Lightbulb className="w-6 h-6 text-cyan-400" />
+              </div>
+              Smart Recommendations
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="p-4 bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-xl border border-cyan-400/20">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${recommendation.priority === 'high' ? 'bg-red-500/20' : recommendation.priority === 'medium' ? 'bg-yellow-500/20' : 'bg-green-500/20'}`}>
+                    <Zap className={`w-5 h-5 ${recommendation.priority === 'high' ? 'text-red-400' : recommendation.priority === 'medium' ? 'text-yellow-400' : 'text-green-400'}`} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-white font-medium text-lg mb-1">{recommendation.message}</div>
+                    <div className="text-gray-400 text-sm">Based on current usage: {energyData.activeDevices} active devices</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-600/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-medium text-blue-300">Time-Based Insight</span>
+                  </div>
+                  <div className="text-white text-sm">
+                    {new Date().getHours() < 6 || new Date().getHours() > 22 
+                      ? "Night mode detected - Consider automated dimming"
+                      : "Daytime optimization - Natural light available"
+                    }
+                  </div>
+                </div>
+                
+                <div className="p-3 bg-gray-800/50 rounded-lg border border-gray-600/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Home className="w-4 h-4 text-green-400" />
+                    <span className="text-sm font-medium text-green-300">Energy Efficiency</span>
+                  </div>
+                  <div className="text-white text-sm">
+                    Potential savings: {(energyData.totalEnergyUsage * 0.15).toFixed(1)} kWh with smart scheduling
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="bg-black/40 backdrop-blur-md border border-blue-400/20">
+          <CardHeader>
+            <CardTitle className="text-white">Energy Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={energyDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {energyDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
+          <CardHeader>
+            <CardTitle className="text-white">Hourly Usage Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={energyHistory}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="hour" stroke="#9ca3af" />
+                <YAxis stroke="#9ca3af" />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', color: 'white' }} />
+                <Line type="monotone" dataKey="totalEnergyUsage" stroke="#22c55e" strokeWidth={2} name="Energy (kWh)" />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
+          <CardHeader>
+            <CardTitle className="text-white">Device Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={deviceActivityData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="name" stroke="#9ca3af" />
+                <YAxis stroke="#9ca3af" />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px', color: 'white' }} />
+                <Bar dataKey="value" fill="#a855f7" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
+        <CardHeader>
+          <CardTitle className="text-white text-xl">Energy Stats</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EnergyStats />
+        </CardContent>
+      </Card>
+
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">
@@ -953,7 +1044,15 @@ export default function Geofencing() {
                     step={field.step}
                     placeholder={field.placeholder}
                     value={formData[field.key]}
-                    onChange={(e) => setFormData({ ...formData, [field.key]: field.type === 'number' ? (field.key === 'lat' || field.key === 'lng' ? parseFloat(e.target.value) || 0 : parseInt(e.target.value) || (field.key === 'radius' ? 200 : 0)) : e.target.value })}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      [field.key]: field.type === 'number' 
+                        ? (field.key === 'lat' || field.key === 'lng' 
+                          ? parseFloat(e.target.value) || 0 
+                          : parseInt(e.target.value) || (field.key === 'radius' ? 200 : 0)
+                        ) 
+                        : e.target.value 
+                    })}
                   />
                 </div>
               ))}

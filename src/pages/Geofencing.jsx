@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, Shield, Zap, Clock, Home } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import EnergyStats from '../components/EnergyStats';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -303,9 +302,9 @@ export default function Geofencing() {
   const handleDeviceControlClick = async () => {
     await navigate('/');
     setTimeout(() => {
-      const element = document.getElementById('device-control');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const roomSelectorElement = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-3');
+      if (roomSelectorElement) {
+        roomSelectorElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 300);
   };
@@ -787,6 +786,7 @@ export default function Geofencing() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
         <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
           <CardHeader>
             <CardTitle className="text-white">Hourly Usage Trend</CardTitle>

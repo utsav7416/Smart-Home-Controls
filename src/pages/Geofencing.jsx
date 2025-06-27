@@ -29,12 +29,10 @@ export function prefetchGeofences() {
     });
   return geofencesPromise;
 }
-
 const Card = ({ children, className = '' }) => (<div className={`rounded-lg shadow-lg ${className}`}>{children}</div>);
 const CardHeader = ({ children, className = '' }) => (<div className={`px-6 py-4 ${className}`}>{children}</div>);
 const CardTitle = ({ children, className = '' }) => (<h3 className={`text-lg font-semibold ${className}`}>{children}</h3>);
 const CardContent = ({ children, className = '' }) => (<div className={`px-6 pb-6 ${className}`}>{children}</div>);
-
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
     className={`inline-flex items-center justify-center rounded-md text-xl font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-400 focus-visible:ring-offset-4 disabled:pointer-events-none disabled:opacity-50 px-10 py-5 bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-500/50 ${className}`}
@@ -227,18 +225,18 @@ const doYouKnowFacts = [
 ];
 
 const carouselImages = [
-  { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "Modern living room with smart home controls" },
-  { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "Smart lighting and climate control" },
-  { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "Smart home dashboard interface" },
-  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "Connected devices in a smart home" },
-  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "Smart lighting setup in a cozy room" }
+  { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "1" },
+  { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "1" },
+  { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "1" },
+  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "1" },
+  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "1" }
 ];
 
 const loadingCarouselImages = [
-  { url: "https://i.pinimg.com/736x/2f/6c/92/2f6c925f049eb916866d983cd3fca54d.jpg", alt: "Smart Home Interior 1" },
-  { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLvOde-b4NSV-1FfKVCOdbwFZpVh83W7YUrjT7wXSy23T2qMnN_Wx4p5_aZHM8zicHfak&usqp=CAU", alt: "Smart Home Interior 2" },
-  { url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg", alt: "Smart Home Interior 3" },
-  { url: "https://images.stockcake.com/public/c/b/5/cb505e46-ce71-46e7-b8b6-a9c2ba06701e_large/luxurious-living-room-stockcake.jpg", alt: "Smart Home Interior 4" }
+  { url: "https://i.pinimg.com/736x/2f/6c/92/2f6c925f049eb916866d983cd3fca54d.jpg", alt: "1" },
+  { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLvOde-b4NSV-1FfKVCOdbwFZpVh83W7YUrjT7wXSy23T2qMnN_Wx4p5_aZHM8zicHfak&usqp=CAU", alt: "1" },
+  { url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg", alt: "1" },
+  { url: "https://images.stockcake.com/public/c/b/5/cb505e46-ce71-46e7-b8b6-a9c2ba06701e_large/luxurious-living-room-stockcake.jpg", alt: "1" }
 ];
 
 function ImageCarousel() {
@@ -419,7 +417,7 @@ export default function Geofencing() {
             </div>
             <div className="flex flex-col items-center space-y-8 mx-16">
               <div className="flex flex-row items-center justify-center w-full mb-8">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU" alt="Geofencing Icon" className="w-12 h-12 mr-6" style={{ objectFit: 'contain' }} />
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY_ACzMMPyCEbyYaq8NsBFjD-l1cjwY-jh9fEi9ky1fumk-hmLB81Gq8OBAMEPBIu90ok&usqp=CAU" alt="1" className="w-12 h-12 mr-6" style={{ objectFit: 'contain' }} />
                 <div className="text-center max-w-2xl flex-1">
                   <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                     Initializing Geofencing Engine
@@ -496,6 +494,16 @@ export default function Geofencing() {
       </div>
     );
   }
+  
+  if (viewState === 'error') {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="text-red-400 text-lg">
+          Failed to load geofencing data: {error}
+        </div>
+      </div>
+    );
+  }
 
   if (viewState !== 'dashboard' || !geofences) {
     return null;
@@ -541,7 +549,7 @@ export default function Geofencing() {
           { title: "Model Accuracy", value: `${mlMetrics.model_accuracy?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-green-600/20 to-green-800/20", border: "border-green-400/30", color: "text-green-200" },
           { title: "Prediction Confidence", value: `${mlMetrics.prediction_confidence?.toFixed(1) || 0}%`, icon: TrendingUp, gradient: "from-emerald-600/20 to-emerald-800/20", border: "border-emerald-400/30", color: "text-emerald-200" },
           { title: "Zones Created", value: stats?.total_zones || 0, icon: MapIcon, gradient: "from-teal-600/20 to-teal-800/20", border: "border-teal-400/30", color: "text-teal-200" },
-          { title: "Total Triggers", value: stats?.total_triggers || 0, icon: Target, gradient: "from-gray-600/20 to-gray-800/20", border: "border-gray-400/30", color: "text-gray-200" },
+          { title: "Total Triggers", value: stats?.total_triggers || 0, icon: Target, gradient: "from-purple-600/20 to-violet-800/20", border: "border-purple-400/30", color: "text-purple-200" },
           { title: "Optimization Success", value: `${mlMetrics.optimization_success_count?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-lime-600/20 to-lime-800/20", border: "border-lime-400/30", color: "text-lime-200" }
         ].map((metric, i) => (
           <Card key={i} className={`bg-gradient-to-br ${metric.gradient} backdrop-blur-md border ${metric.border}`}>
@@ -803,7 +811,7 @@ export default function Geofencing() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card className="bg-black/40 backdrop-blur-md border border-gray-400/20">
+        <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
           <CardHeader>
             <CardTitle className="text-white">Device Activity</CardTitle>
           </CardHeader>
@@ -813,8 +821,8 @@ export default function Geofencing() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="name" stroke="#9ca3af" />
                 <YAxis stroke="#9ca3af" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(156, 163, 175, 0.3)', borderRadius: '8px', color: 'white' }} />
-                <Bar dataKey="value" fill="#6b7280" radius={[4, 4, 0, 0]} />
+                <Tooltip contentStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.9)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px', color: 'white' }} />
+                <Bar dataKey="value" fill="#a855f7" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -822,51 +830,51 @@ export default function Geofencing() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-gradient-to-br from-emerald-900/90 to-black border border-emerald-400/30 shadow-2xl rounded-lg">
-          <div className="bg-gradient-to-r from-emerald-900/40 to-black border-b border-emerald-400/20 px-6 py-4 rounded-t-lg">
-            <h3 className="text-emerald-400 text-2xl font-bold flex items-center gap-3">
-              <span className="p-2 bg-emerald-500/20 rounded-lg"><Zap className="w-7 h-7 text-emerald-400" /></span>
+        <div className="bg-gradient-to-br from-green-500/20 via-emerald-600/20 to-purple-500/20 border border-emerald-400/40 shadow-2xl rounded-lg">
+          <div className="bg-gradient-to-r from-green-600/30 via-emerald-500/30 to-purple-600/30 border-b border-emerald-400/30 px-6 py-4 rounded-t-lg">
+            <h3 className="text-emerald-300 text-2xl font-bold flex items-center gap-3">
+              <span className="p-2 bg-emerald-500/30 rounded-lg"><Zap className="w-7 h-7 text-emerald-300" /></span>
               Energy Analytics Dashboard
             </h3>
           </div>
           <div className="p-8">
             <div className="mb-6 flex items-center gap-4">
-              <span className="text-gray-300 text-base">To toggle devices,</span>
-              <button onClick={handleDeviceControlClick} className="bg-gradient-to-r from-emerald-700 to-gray-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:from-emerald-600 hover:to-gray-600 transition-all text-sm">Device Control</button>
+              <span className="text-emerald-200 text-base">To toggle devices,</span>
+              <button onClick={handleDeviceControlClick} className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:from-emerald-500 hover:to-purple-500 transition-all text-sm">Device Control</button>
             </div>
             <div className="space-y-8">
               <div className="grid grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-gradient-to-br from-emerald-900/30 to-black rounded-xl border border-emerald-400/20">
-                  <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalEnergyUsage}</div>
-                  <div className="text-emerald-300 text-sm font-medium">kWh Usage</div>
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-600/20 to-green-700/20 rounded-xl border border-emerald-400/30">
+                  <div className="text-3xl font-bold text-emerald-300 mb-2">{energyData.totalEnergyUsage}</div>
+                  <div className="text-emerald-200 text-sm font-medium">kWh Usage</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-gray-900/30 to-black rounded-xl border border-gray-400/20">
-                  <div className="text-3xl font-bold text-gray-400 mb-2">{energyData.activeDevices}</div>
-                  <div className="text-gray-300 text-sm font-medium">Active Devices</div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-600/20 to-violet-700/20 rounded-xl border border-purple-400/30">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">{energyData.activeDevices}</div>
+                  <div className="text-purple-200 text-sm font-medium">Active Devices</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-emerald-900/30 to-black rounded-xl border border-emerald-400/20">
-                  <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalDevices}</div>
-                  <div className="text-emerald-300 text-sm font-medium">Total Devices</div>
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-600/20 to-green-700/20 rounded-xl border border-emerald-400/30">
+                  <div className="text-3xl font-bold text-emerald-300 mb-2">{energyData.totalDevices}</div>
+                  <div className="text-emerald-200 text-sm font-medium">Total Devices</div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-gray-800/50 to-black rounded-xl p-6 border border-gray-600/30">
-                <h3 className="text-gray-300 text-lg font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-400" />Real-time Monitoring</h3>
+              <div className="bg-gradient-to-r from-gray-800/50 to-purple-900/30 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-emerald-200 text-lg font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-400" />Real-time Monitoring</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-400">Efficiency Rating:</span><span className="text-emerald-400 font-medium">{getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Cost Estimate:</span><span className="text-gray-400 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Savings Today:</span><span className="text-emerald-400 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Peak Hours:</span><span className="text-gray-400 font-medium">6PM - 9PM</span></div>
+                  <div className="flex justify-between"><span className="text-gray-300">Efficiency Rating:</span><span className="text-emerald-300 font-medium">{getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-300">Cost Estimate:</span><span className="text-purple-300 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-300">Savings Today:</span><span className="text-emerald-300 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-300">Peak Hours:</span><span className="text-purple-300 font-medium">6PM - 9PM</span></div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-emerald-900/20 to-black rounded-xl p-6 border border-emerald-400/20">
-                <div className="flex items-center gap-3 mb-4"><div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div><span className="text-emerald-300 font-medium">System Status: Optimized</span></div>
-                <div className="text-gray-300 text-sm leading-relaxed">Your smart home is operating at peak efficiency. All geofencing zones are active and energy consumption is within optimal parameters.</div>
+              <div className="bg-gradient-to-r from-emerald-700/20 to-purple-700/20 rounded-xl p-6 border border-emerald-400/30">
+                <div className="flex items-center gap-3 mb-4"><div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div><span className="text-emerald-200 font-medium">System Status: Optimized</span></div>
+                <div className="text-emerald-100 text-sm leading-relaxed">Your smart home is operating at peak efficiency. All geofencing zones are active and energy consumption is within optimal parameters.</div>
               </div>
             </div>
           </div>
         </div>
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-emerald-900/80 to-black backdrop-blur-md rounded-2xl p-6 border border-emerald-400/20">
+          <div className="bg-gradient-to-br from-green-600/30 to-emerald-700/30 backdrop-blur-md rounded-2xl p-6 border border-green-400/30">
             <h3 className="text-white text-xl font-bold mb-6 text-center">Smart Home Showcase</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://thumbs.dreamstime.com/b/smart-home-bedroom-futuristic-design-modern-bedroom-interior-showcasing-smart-home-concept-futuristic-design-325690136.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-emerald-400/20" /></div>
@@ -883,7 +891,7 @@ export default function Geofencing() {
           </div>
         </div>
       </div>
-      
+
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">

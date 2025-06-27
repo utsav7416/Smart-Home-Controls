@@ -30,21 +30,10 @@ export function prefetchGeofences() {
   return geofencesPromise;
 }
 
-const Card = ({ children, className = '' }) => (
-  <div className={`rounded-lg shadow-lg ${className}`}>{children}</div>
-);
-
-const CardHeader = ({ children, className = '' }) => (
-  <div className={`px-6 py-4 ${className}`}>{children}</div>
-);
-
-const CardTitle = ({ children, className = '' }) => (
-  <h3 className={`text-lg font-semibold ${className}`}>{children}</h3>
-);
-
-const CardContent = ({ children, className = '' }) => (
-  <div className={`px-6 pb-6 ${className}`}>{children}</div>
-);
+const Card = ({ children, className = '' }) => (<div className={`rounded-lg shadow-lg ${className}`}>{children}</div>);
+const CardHeader = ({ children, className = '' }) => (<div className={`px-6 py-4 ${className}`}>{children}</div>);
+const CardTitle = ({ children, className = '' }) => (<h3 className={`text-lg font-semibold ${className}`}>{children}</h3>);
+const CardContent = ({ children, className = '' }) => (<div className={`px-6 pb-6 ${className}`}>{children}</div>);
 
 const Button = ({ children, onClick, className = '', disabled = false, ...props }) => (
   <button
@@ -245,46 +234,21 @@ function getUsageLevel(active) {
 
 function getAlertAndRecommendation(energyData, dismissedAlertIds) {
   const usageLevel = getUsageLevel(energyData.activeDevices);
-  const currentHour = new Date().getHours();
-  let alert = null;
-  let recommendation = null;
-  
+  let alert = null, recommendation = null;
   if (usageLevel === 'high') {
-    alert = {
-      id: 'high',
-      severity: 'high',
-      message: `High device activity: ${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh)`,
-      recommendation: 'Review active devices for optimization'
-    };
-    recommendation = {
-      id: 'high',
-      priority: 'high',
-      message: 'Consider reducing usage or enabling smart automation to save energy.'
-    };
+    alert = { id: 'high', severity: 'high', message: `High device activity: ${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh)`, recommendation: 'Review active devices for optimization' };
+    recommendation = { id: 'high', priority: 'high', message: 'Consider reducing usage by temporarily switching off devices.' };
   } else if (usageLevel === 'medium') {
-    alert = {
-      id: 'medium',
-      severity: 'medium',
-      message: `Medium device activity: ${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh)`,
-      recommendation: 'Monitor device usage patterns'
-    };
-    recommendation = {
-      id: 'medium',
-      priority: 'medium',
-      message: 'You can optimize further by turning off unused devices.'
-    };
+    alert = { id: 'medium', severity: 'medium', message: `Medium device activity: ${energyData.activeDevices} devices active (${energyData.totalEnergyUsage} kWh)`, recommendation: 'Monitor device usage patterns' };
+    recommendation = { id: 'medium', priority: 'medium', message: 'So far, so good! You can optimize further by turning off unused devices.' };
   } else {
     alert = null;
-    recommendation = {
-      id: 'low',
-      priority: 'low',
-      message: 'Your energy usage is optimal!'
-    };
+    recommendation = { id: 'low', priority: 'low', message: 'Well Done! Your energy usage is optimal!' };
   }
-  
   if (alert && dismissedAlertIds.includes(alert.id)) alert = null;
   return { alert, recommendation };
 }
+
 
 const doYouKnowFacts = [
   "Did you know? Smart zones can reduce your home's energy waste by up to 30%.",
@@ -905,14 +869,86 @@ export default function Geofencing() {
         </Card>
       </div>
 
-      <Card className="bg-black/40 backdrop-blur-md border border-green-400/20">
-        <CardHeader>
-          <CardTitle className="text-white text-xl">Energy Stats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EnergyStats />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-gradient-to-br from-slate-900/90 to-gray-900/90 backdrop-blur-md border border-emerald-400/30 shadow-2xl rounded-lg">
+          <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border-b border-emerald-400/20 px-6 py-4 rounded-t-lg">
+            <h3 className="text-white text-2xl font-bold flex items-center gap-3">
+              <span className="p-2 bg-emerald-500/20 rounded-lg"><Zap className="w-7 h-7 text-emerald-400" /></span>
+              Energy Analytics Dashboard
+            </h3>
+          </div>
+          <div className="p-8">
+            <div className="space-y-8">
+              <div className="grid grid-cols-3 gap-6">
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-900/30 to-teal-900/30 rounded-xl border border-emerald-400/20">
+                  <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalEnergyUsage}</div>
+                  <div className="text-emerald-200 text-sm font-medium">kWh Usage</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-xl border border-blue-400/20">
+                  <div className="text-3xl font-bold text-blue-400 mb-2">{energyData.activeDevices}</div>
+                  <div className="text-blue-200 text-sm font-medium">Active Devices</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-400 mb-2">{energyData.totalDevices}</div>
+                  <div className="text-purple-200 text-sm font-medium">Total Devices</div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-gray-800/50 to-slate-800/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-400" />Real-time Monitoring
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between"><span className="text-gray-300">Efficiency Rating:</span>
+                    <span className="text-green-400 font-medium">
+                      {getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between"><span className="text-gray-300">Cost Estimate:</span>
+                    <span className="text-blue-400 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between"><span className="text-gray-300">Savings Today:</span>
+                    <span className="text-emerald-400 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-emerald-900/20 to-teal-900/20 rounded-xl p-6 border border-emerald-400/20">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-emerald-300 font-medium">System Status: Optimized</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-slate-900/80 to-gray-900/80 backdrop-blur-md rounded-2xl p-6 border border-gray-600/30">
+            <h3 className="text-white text-xl font-bold mb-6 text-center">Smart Home Showcase</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                <img src="https://thumbs.dreamstime.com/b/smart-home-bedroom-futuristic-design-modern-bedroom-interior-showcasing-smart-home-concept-futuristic-design-325690136.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
+              </div>
+              <div className="transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                <img src="https://as1.ftcdn.net/v2/jpg/05/75/63/70/1000_F_575637092_BndwXzl5YjHfmVLtvFh3j00vXdgkQdw2.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
+              </div>
+              <div className="transform -rotate-2 hover:rotate-0 transition-transform duration-300">
+                <img src="https://images.squarespace-cdn.com/content/v1/62dfa656a2986f7b76f75c92/b78fb41c-6929-4a68-b805-7d933f90ee80/innovative-luxury-hotel-design-ideas-concepts-bar.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
+              </div>
+              <div className="transform rotate-2 hover:rotate-0 transition-transform duration-300">
+                <img src="https://www.luxxu.net/blog/wp-content/uploads/2016/03/Luxury-design-ideas-from-Paramount-Hotel-in-New-York-850x410.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-600/30" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-xl p-6 border border-indigo-400/20">
+            <div className="text-center">
+              <div className="text-indigo-300 text-lg font-semibold mb-2">Next Generation Living</div>
+              <div className="text-gray-300 text-sm">
+                Experience the future of home automation with AI-powered geofencing technology
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
 
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">

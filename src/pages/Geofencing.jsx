@@ -802,7 +802,6 @@ export default function Geofencing() {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card className="bg-black/40 backdrop-blur-md border border-purple-400/20">
           <CardHeader>
             <CardTitle className="text-white">Device Activity</CardTitle>
@@ -822,56 +821,57 @@ export default function Geofencing() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-gradient-to-br from-black via-gray-900 to-black border border-emerald-600 shadow-2xl rounded-lg">
-          <div className="bg-gradient-to-r from-black via-gray-900 to-black border-b border-emerald-700 px-6 py-4 rounded-t-lg">
+        <div className="bg-gradient-to-br from-emerald-900/90 to-purple-900/90 border border-emerald-400/30 shadow-2xl rounded-lg">
+          <div className="bg-gradient-to-r from-emerald-900/40 to-purple-900/40 border-b border-emerald-400/20 px-6 py-4 rounded-t-lg">
             <h3 className="text-emerald-400 text-2xl font-bold flex items-center gap-3">
-              <span className="p-2 bg-emerald-800/40 rounded-lg"><Zap className="w-7 h-7 text-emerald-400" /></span>
+              <span className="p-2 bg-emerald-500/20 rounded-lg"><Zap className="w-7 h-7 text-emerald-400" /></span>
               Energy Analytics Dashboard
             </h3>
           </div>
           <div className="p-8">
             <div className="mb-6 flex items-center gap-4">
-              <span className="text-blue-300 text-base">To toggle devices,</span>
-              <a href="/device-control" className="bg-gradient-to-r from-emerald-700 to-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:from-emerald-600 hover:to-blue-600 transition-all text-sm">Device Control</a>
+              <span className="text-purple-300 text-base">To toggle devices,</span>
+              <a href="/#device-control" className="bg-gradient-to-r from-emerald-700 to-purple-700 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:from-emerald-600 hover:to-purple-600 transition-all text-sm">Device Control</a>
             </div>
             <div className="space-y-8">
               <div className="grid grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-gradient-to-br from-black via-gray-900 to-black rounded-xl border border-emerald-800">
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-900/30 to-purple-900/30 rounded-xl border border-emerald-400/20">
                   <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalEnergyUsage}</div>
                   <div className="text-emerald-300 text-sm font-medium">kWh Usage</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-black via-gray-900 to-black rounded-xl border border-blue-700">
-                  <div className="text-3xl font-bold text-blue-400 mb-2">{energyData.activeDevices}</div>
-                  <div className="text-blue-300 text-sm font-medium">Active Devices</div>
+                <div className="text-center p-4 bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-400 mb-2">{energyData.activeDevices}</div>
+                  <div className="text-purple-300 text-sm font-medium">Active Devices</div>
                 </div>
-                <div className="text-center p-4 bg-gradient-to-br from-black via-gray-900 to-black rounded-xl border border-emerald-800">
+                <div className="text-center p-4 bg-gradient-to-br from-emerald-900/30 to-purple-900/30 rounded-xl border border-emerald-400/20">
                   <div className="text-3xl font-bold text-emerald-400 mb-2">{energyData.totalDevices}</div>
                   <div className="text-emerald-300 text-sm font-medium">Total Devices</div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-black via-gray-900 to-black rounded-xl p-6 border border-gray-700">
-                <h3 className="text-blue-300 text-lg font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-400" />Real-time Monitoring</h3>
+              <div className="bg-gradient-to-r from-gray-800/50 to-slate-800/50 rounded-xl p-6 border border-gray-600/30">
+                <h3 className="text-purple-300 text-lg font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-400" />Real-time Monitoring</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex justify-between"><span className="text-gray-400">Efficiency Rating:</span><span className="text-emerald-400 font-medium">{getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Cost Estimate:</span><span className="text-blue-400 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Cost Estimate:</span><span className="text-purple-400 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span></div>
                   <div className="flex justify-between"><span className="text-gray-400">Savings Today:</span><span className="text-emerald-400 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-400">Peak Hours:</span><span className="text-blue-400 font-medium">6PM - 9PM</span></div>
+                  <div className="flex justify-between"><span className="text-gray-400">Peak Hours:</span><span className="text-purple-400 font-medium">6PM - 9PM</span></div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-black via-gray-900 to-black rounded-xl p-6 border border-emerald-800">
+              <div className="bg-gradient-to-r from-emerald-900/20 to-purple-900/20 rounded-xl p-6 border border-emerald-400/20">
                 <div className="flex items-center gap-3 mb-4"><div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div><span className="text-emerald-300 font-medium">System Status: Optimized</span></div>
+                <div className="text-gray-300 text-sm leading-relaxed">Your smart home is operating at peak efficiency. All geofencing zones are active and energy consumption is within optimal parameters.</div>
               </div>
             </div>
           </div>
         </div>
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-black via-gray-900 to-black backdrop-blur-md rounded-2xl p-6 border border-gray-700">
+          <div className="bg-gradient-to-br from-emerald-900/80 to-purple-900/80 backdrop-blur-md rounded-2xl p-6 border border-emerald-400/20">
             <h3 className="text-white text-xl font-bold mb-6 text-center">Smart Home Showcase</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://thumbs.dreamstime.com/b/smart-home-bedroom-futuristic-design-modern-bedroom-interior-showcasing-smart-home-concept-futuristic-design-325690136.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
-              <div className="transform -rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://as1.ftcdn.net/v2/jpg/05/75/63/70/1000_F_575637092_BndwXzl5YjHfmVLtvFh3j00vXdgkQdw2.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
-              <div className="transform -rotate-2 hover:rotate-0 transition-transform duration-300"><img src="https://images.squarespace-cdn.com/content/v1/62dfa656a2986f7b76f75c92/b78fb41c-6929-4a68-b805-7d933f90ee80/innovative-luxury-hotel-design-ideas-concepts-bar.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
-              <div className="transform rotate-2 hover:rotate-0 transition-transform duration-300"><img src="https://www.luxxu.net/blog/wp-content/uploads/2016/03/Luxury-design-ideas-from-Paramount-Hotel-in-New-York-850x410.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-gray-700" /></div>
+              <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://thumbs.dreamstime.com/b/smart-home-bedroom-futuristic-design-modern-bedroom-interior-showcasing-smart-home-concept-futuristic-design-325690136.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-emerald-400/20" /></div>
+              <div className="transform -rotate-3 hover:rotate-0 transition-transform duration-300"><img src="https://as1.ftcdn.net/v2/jpg/05/75/63/70/1000_F_575637092_BndwXzl5YjHfmVLtvFh3j00vXdgkQdw2.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-emerald-400/20" /></div>
+              <div className="transform -rotate-2 hover:rotate-0 transition-transform duration-300"><img src="https://images.squarespace-cdn.com/content/v1/62dfa656a2986f7b76f75c92/b78fb41c-6929-4a68-b805-7d933f90ee80/innovative-luxury-hotel-design-ideas-concepts-bar.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-emerald-400/20" /></div>
+              <div className="transform rotate-2 hover:rotate-0 transition-transform duration-300"><img src="https://www.luxxu.net/blog/wp-content/uploads/2016/03/Luxury-design-ideas-from-Paramount-Hotel-in-New-York-850x410.jpg" alt="1" className="w-full h-32 object-cover rounded-lg shadow-lg border border-emerald-400/20" /></div>
             </div>
           </div>
           <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 rounded-xl p-6 border border-indigo-400/20">

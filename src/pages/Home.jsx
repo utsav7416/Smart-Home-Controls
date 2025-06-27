@@ -521,11 +521,13 @@ function Home() {
           )}
         </div>
         <div className={`${selectedRoom === 'All Rooms' ? 'lg:col-span-1' : 'lg:col-span-2'} flex-shrink-0`}>
-          <DeviceControl
-            room={selectedRoom}
-            onDeviceChange={handleDeviceChange}
-            heatmapData={heatmapData}
-          />
+          <div id="device-control">
+            <DeviceControl
+              room={selectedRoom}
+              onDeviceChange={handleDeviceChange}
+              heatmapData={heatmapData}
+            />
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

@@ -29,6 +29,7 @@ export function prefetchGeofences() {
     });
   return geofencesPromise;
 }
+
 const Card = ({ children, className = '' }) => (<div className={`rounded-lg shadow-lg ${className}`}>{children}</div>);
 const CardHeader = ({ children, className = '' }) => (<div className={`px-6 py-4 ${className}`}>{children}</div>);
 const CardTitle = ({ children, className = '' }) => (<h3 className={`text-lg font-semibold ${className}`}>{children}</h3>);
@@ -300,9 +301,9 @@ export default function Geofencing() {
   const handleDeviceControlClick = async () => {
     await navigate('/');
     setTimeout(() => {
-      const roomSelectorElement = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-3');
-      if (roomSelectorElement) {
-        roomSelectorElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const deviceControlElement = document.getElementById('device-control');
+      if (deviceControlElement) {
+        deviceControlElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }, 300);
   };

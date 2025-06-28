@@ -15,11 +15,11 @@ export default function Profile() {
       catch { localStorage.removeItem(LOCAL_STORAGE_KEY) }
     }
     return {
-      name: 'XYZ',
-      email: 'xyz@example.com',
+      name: 'Utsav Choudhary',
+      email: 'utsavchoudhary2005@gmail.com',
       phone: '+91 88268 34155',
       address: '77, Sannaiyat Lines, Delhi Cantonment',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3'
+      image: 'public/profileimage.jpg'
     }
   })
 

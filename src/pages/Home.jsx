@@ -425,7 +425,6 @@ function Home() {
             Activate Emergency
           </button>
         </div>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         {emergencyActive && (
           <div className="fixed inset-0 bg-red-900 bg-opacity-90 flex flex-col items-center justify-center z-50 animate-pulse-fast">
             <div className="bg-white rounded-3xl p-10 text-center shadow-red-glow animate-bounce-slow">
@@ -450,13 +449,13 @@ function Home() {
             Advanced operational intelligence with real-time monitoring and predictive analytics
           </p>
         </div>
-        <div className="relative bg-black rounded-3xl overflow-hidden border-2 border-gray-600/30 shadow-2xl flex items-center justify-center" style={{ height: 650 }}>
+        <div className="relative bg-black rounded-3xl overflow-hidden border-2 border-gray-600/30 shadow-2xl flex items-center justify-center" style={{ height: 550 }}>
           <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 via-transparent to-gray-900/50" />
           <div className="absolute inset-0 z-5">
             <GlowingPipelines connections={roadmapConnections} />
           </div>
-          <div className="relative z-20 w-full h-full flex items-center justify-center" style={{ height: 650 }}>
-            <div className="relative" style={{ width: 1200, height: 550 }}>
+          <div className="relative z-20 w-full h-full flex items-center justify-center" style={{ height: 550 }}>
+            <div className="relative" style={{ width: 1200, height: 450 }}>
               {roadmapNodes.map((node) => (
                 <StaticRoadmapCard key={node.id} node={node} />
               ))}
@@ -479,8 +478,70 @@ function Home() {
         <div className="text-center mt-8">
           <div className="bg-blue-900/20 border border-blue-400/30 rounded-lg px-6 py-4 inline-block">
             <p className="text-base text-blue-300">
-              <span className="font-semibold">Navigation Note:</span> Use the top global navbar to navigate between different sections and features of the smart home dashboard
+              <span className="font-bold">Navigation Note:</span> Use the top global navbar to navigate between different sections and features of the smart home dashboard
             </p>
+          </div>
+        </div>
+        <div className="mt-8 grid grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="relative group">
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSWgpqhO9T1j7eU_CqQooRWnxrFiqKfL_LMw&s"
+              alt="Smart Lighting"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Smart Lighting</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://i.pinimg.com/736x/19/98/e2/1998e2348d8feede91e9094a2f81a402.jpg"
+              alt="Aesthetic Dark Shades"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Aesthetic Dark Shades</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://thumbs.dreamstime.com/b/modern-smart-home-apartment-night-view-stylish-showcasing-comfortable-living-space-large-windows-offering-stunning-368499538.jpg"
+              alt="Intelligent Control"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Intelligent Control</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://thumbs.dreamstime.com/b/living-room-boasts-modern-aesthetic-stunning-city-sunset-view-pink-led-lighting-accents-372979994.jpg"
+              alt="LED Ambiance"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">LED Ambiance</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://img.freepik.com/premium-photo/futuristic-smart-home-diverse-connected-devices-digital-icons-seamless-integration_951586-139549.jpg?ga=GA1.1.355402728.1750275417&semt=ais_hybrid&w=740"
+              alt="IoT Integration"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">IoT Integration</span>
+            </div>
+          </div>
+          <div className="relative group">
+            <img
+              src="https://thumbs.dreamstime.com/b/futuristic-smart-kitchens-innovative-appliances-collection-high-tech-featuring-modern-automated-systems-sustainable-353602406.jpg?w=992"
+              alt="Usage Trends"
+              className="w-full h-64 md:h-72 lg:h-80 object-cover rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center">
+              <span className="text-white text-xl font-semibold">Usage Trends</span>
+            </div>
           </div>
         </div>
       </div>

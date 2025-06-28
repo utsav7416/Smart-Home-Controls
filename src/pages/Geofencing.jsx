@@ -301,24 +301,18 @@ export default function Geofencing() {
   const handleDeviceControlClick = async () => {
     navigate('/');
     setTimeout(() => {
-      const roomSelectorElements = document.querySelectorAll('*');
-      let roomSelectorElement = null;
-      
-      for (let element of roomSelectorElements) {
-        const text = element.textContent || '';
-        if (text.includes('Living Room') && text.includes('Kitchen') && text.includes('Bedroom') && text.includes('Office')) {
-          roomSelectorElement = element;
-          break;
-        }
-      }
+      const roomSelectorElement = document.querySelector('[class*="RoomSelector"]') || 
+                                 document.querySelector('[id*="room"]') ||
+                                 document.querySelector('button[class*="room"]') ||
+                                 document.querySelector('div[class*="room"]');
       
       if (roomSelectorElement) {
         roomSelectorElement.scrollIntoView({ 
           behavior: 'smooth', 
-          block: 'start'
+          block: 'center'
         });
       }
-    }, 500);
+    }, 100);
   };
 
   const handleInitiate = () => {
@@ -522,10 +516,6 @@ export default function Geofencing() {
     { name: 'Appliances', value: energyData.totalEnergyUsage * 0.2, color: '#FFBB28' },
     { name: 'Others', value: energyData.totalEnergyUsage * 0.1, color: '#FF8042' }
   ];
-
-  <p className="text-sm text-white mt-2">
-    *HVAC stands for Heating, Ventilation, and Air Conditioning
-  </p>
 
   const deviceActivityData = deviceList.map(device => ({
     name: device.name,
@@ -800,6 +790,9 @@ export default function Geofencing() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            <p className="text-sm text-white mt-2">
+              *HVAC stands for Heating, Ventilation, and Air Conditioning
+            </p>
           </CardContent>
         </Card>
 
@@ -871,7 +864,6 @@ export default function Geofencing() {
                   <div className="flex justify-between"><span className="text-gray-300">Efficiency Rating:</span><span className="text-emerald-300 font-medium">{getUsageLevel(energyData.activeDevices) === 'low' ? 'Excellent' : getUsageLevel(energyData.activeDevices) === 'medium' ? 'Good' : 'Needs Attention'}</span></div>
                   <div className="flex justify-between"><span className="text-gray-300">Cost Estimate:</span><span className="text-purple-300 font-medium">${(energyData.totalEnergyUsage * 0.12).toFixed(2)}</span></div>
                   <div className="flex justify-between"><span className="text-gray-300">Savings Today:</span><span className="text-emerald-300 font-medium">${(energyData.totalEnergyUsage * 0.08).toFixed(2)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-300">Peak Hours:</span><span className="text-purple-300 font-medium">6PM - 9PM</span></div>
                 </div>
               </div>
               <div className="bg-gradient-to-r from-emerald-700/20 to-purple-700/20 rounded-xl p-6 border border-emerald-400/30">
@@ -881,6 +873,7 @@ export default function Geofencing() {
             </div>
           </div>
         </div>
+
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-green-600/30 to-emerald-700/30 backdrop-blur-md rounded-2xl p-6 border border-green-400/30">
             <h3 className="text-white text-xl font-bold mb-6 text-center">Smart Home Showcase</h3>

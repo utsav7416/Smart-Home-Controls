@@ -545,7 +545,9 @@ function Home() {
           </div>
         </div>
       </div>
-      <RoomSelector rooms={rooms} selectedRoom={selectedRoom} onSelectRoom={setSelectedRoom} />
+      <div id="room-selector">
+        <RoomSelector rooms={rooms} selectedRoom={selectedRoom} onSelectRoom={setSelectedRoom} />
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         {selectedRoom === 'All Rooms' && (
           <div className="lg:col-span-1">

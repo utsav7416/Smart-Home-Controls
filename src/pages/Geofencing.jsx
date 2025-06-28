@@ -301,25 +301,14 @@ export default function Geofencing() {
   const handleDeviceControlClick = async () => {
     navigate('/');
     setTimeout(() => {
-      const deviceControlElement = document.querySelector('#device-control') || 
-                                  document.querySelector('[id="device-control"]');
+      const roomSelectorElement = document.querySelector('#room-selector');
       
-      if (deviceControlElement) {
-        deviceControlElement.scrollIntoView({ 
+      if (roomSelectorElement) {
+        roomSelectorElement.scrollIntoView({ 
           behavior: 'smooth', 
-          block: 'start',
+          block: 'center',
           inline: 'nearest'
         });
-      } else {
-        const fallbackElement = document.querySelector('[class*="DeviceControl"]') ||
-                               document.querySelector('div:has(> [class*="device"])');
-        if (fallbackElement) {
-          fallbackElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start',
-            inline: 'nearest'
-          });
-        }
       }
     }, 300); 
   };

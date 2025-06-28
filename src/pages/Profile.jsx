@@ -19,7 +19,7 @@ export default function Profile() {
       email: 'utsavchoudhary2005@gmail.com',
       phone: '+91 88268 34155',
       address: '77, Sannaiyat Lines, Delhi Cantonment',
-      image: 'public/profileimage.jpg'
+      image: '/profileimage.jpg'
     }
   })
 

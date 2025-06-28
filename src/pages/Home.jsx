@@ -556,11 +556,12 @@ function Home() {
           {selectedRoom === 'All Rooms' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div className="w-full h-64 md:h-72 lg:h-80 flex items-center justify-center rounded-xl bg-gradient-to-br from-green-900 to-blue-700 p-6 text-white text-2xl font-semibold text-center leading-relaxed shadow-lg">
-                <ul className="list-disc list-inside space-y-2">
+                <ol className="list-decimal list-inside space-y-2">
                   <li>Navigate to different rooms and their controls via the upper room navbar (Kitchen, Bathroom, Living Room, Office).</li>
                   <li>Adjust power and lights accordingly (microwave, AC, heater, etc.).</li>
                   <li>View usage details, energy saved, active devices, and cost at the bottom by scrolling down.</li>
-                </ul>
+                  <li>The active devices and energy usage would only change once you do toggle the switches (steps 1 & 2)</li>
+                </ol>
               </div>
               {rooms[0].images.map((img, idx) => (
                 <img

@@ -299,13 +299,26 @@ export default function Geofencing() {
   };
 
   const handleDeviceControlClick = async () => {
-    await navigate('/');
+    navigate('/');
     setTimeout(() => {
-      const deviceControlElement = document.getElementById('device-control');
-      if (deviceControlElement) {
-        deviceControlElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const roomSelectorElements = document.querySelectorAll('*');
+      let roomSelectorElement = null;
+      
+      for (let element of roomSelectorElements) {
+        const text = element.textContent || '';
+        if (text.includes('Living Room') && text.includes('Kitchen') && text.includes('Bedroom') && text.includes('Office')) {
+          roomSelectorElement = element;
+          break;
+        }
       }
-    }, 300);
+      
+      if (roomSelectorElement) {
+        roomSelectorElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }
+    }, 500);
   };
 
   const handleInitiate = () => {
@@ -495,16 +508,6 @@ export default function Geofencing() {
       </div>
     );
   }
-  
-  if (viewState === 'error') {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-screen bg-black text-white">
-        <div className="text-red-400 text-lg">
-          Failed to load geofencing data: {error}
-        </div>
-      </div>
-    );
-  }
 
   if (viewState !== 'dashboard' || !geofences) {
     return null;
@@ -519,6 +522,10 @@ export default function Geofencing() {
     { name: 'Appliances', value: energyData.totalEnergyUsage * 0.2, color: '#FFBB28' },
     { name: 'Others', value: energyData.totalEnergyUsage * 0.1, color: '#FF8042' }
   ];
+
+  <p className="text-sm text-white mt-2">
+    *HVAC stands for Heating, Ventilation, and Air Conditioning
+  </p>
 
   const deviceActivityData = deviceList.map(device => ({
     name: device.name,

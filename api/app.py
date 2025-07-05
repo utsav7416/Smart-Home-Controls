@@ -287,15 +287,15 @@ def detect_dynamic_anomalies(df):
     global last_device_change_time
     if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 300:
         row = recent_data.iloc[-1]
-        if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
-            anomaly_data.insert(0, {
-                'time': int(row['hour']),
-                'consumption': round(float(row['consumption']), 1),
-                'severity': 'high',
-                'timestamp': row['timestamp'],
-                'score': 0.99,
-                'type': 'device_change'
-            })
+        anomaly_data = [a for a in anomaly_data if a['timestamp'] != row['timestamp']]
+        anomaly_data.insert(0, {
+            'time': int(row['hour']),
+            'consumption': round(float(row['consumption']), 1),
+            'severity': 'high',
+            'timestamp': row['timestamp'],
+            'score': 0.99,
+            'type': 'device_change'
+        })
     return anomaly_data[:25]
 
 @app.route('/')

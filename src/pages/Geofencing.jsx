@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, Shield, Zap, Clock, Home, Pause, Trash2, Navigation } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -117,6 +118,30 @@ const useApiData = (key, fetchFn, refetchInterval = 30000) => {
   }, [key, refetchInterval]);
 
   return { data, isLoading, error, refetch: fetchData };
+};
+
+const useMutation = (mutationFn, options = {}) => {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState(null);
+  const mutate = async (variables) => {
+    try {
+      setIsPending(true);
+      setError(null);
+      const result = await mutationFn(variables);
+      if (typeof options.onSuccess === "function") {
+        options.onSuccess(result);
+      }
+      return result;
+    } catch (err) {
+      setError(err.message);
+      if (typeof options.onError === "function") {
+        options.onError(err);
+      }
+    } finally {
+      setIsPending(false);
+    }
+  };
+  return { mutate, isPending, error };
 };
 
 const useLocalEnergyData = () => {
@@ -260,6 +285,7 @@ function ImageCarousel() {
 }
 
 export default function Geofencing() {
+  const navigate = useNavigate();
   const [geofences, setGeofences] = useState(geofencesCache);
   const [error, setError] = useState(null);
   const [viewState, setViewState] = useState(hasInitiatedGeofences ? 'loading' : 'initial');
@@ -270,10 +296,6 @@ export default function Geofencing() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
   const [pausedZones, setPausedZones] = useState(new Set());
-  const [isCreating, setIsCreating] = useState(false);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [createError, setCreateError] = useState(null);
-  const [optimizeError, setOptimizeError] = useState(null);
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
@@ -286,7 +308,18 @@ export default function Geofencing() {
   };
 
   const handleDeviceControlClick = async () => {
-    window.location.href = '/';
+    navigate('/');
+    setTimeout(() => {
+      const roomSelectorElement = document.querySelector('#room-selector');
+      
+      if (roomSelectorElement) {
+        roomSelectorElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 300); 
   };
 
   const handleInitiate = () => {
@@ -311,43 +344,34 @@ export default function Geofencing() {
     }).catch(e => setError(e.message));
   };
   
-  const handleCreateGeofence = async () => {
-    if (!formData.name.trim() || !formData.address.trim() || isNaN(formData.lat) || isNaN(formData.lng) || isNaN(formData.radius)) {
-      alert('Please fill all required fields correctly (Name, Address, Lat, Lng, Radius).');
-      return;
-    }
-
-    setIsCreating(true);
-    setCreateError(null);
-    
-    try {
-      await createGeofence(formData);
+  const createMutation = useMutation(createGeofence, {
+    onSuccess: () => {
       refetchGeofencesData();
       refetchStats();
       setShowCreateForm(false);
       setFormData({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200, automationRules: '' });
-    } catch (err) {
-      setCreateError(err.message);
+    },
+    onError: (err) => {
       alert(`Failed to create geofence: ${err.message}`);
-    } finally {
-      setIsCreating(false);
     }
-  };
+  });
 
-  const handleOptimizeGeofences = async () => {
-    setIsOptimizing(true);
-    setOptimizeError(null);
-    
-    try {
-      const result = await optimizeGeofences();
+  const optimizeMutation = useMutation(optimizeGeofences, {
+    onSuccess: (result) => {
       refetchGeofencesData();
       refetchStats();
       alert(result.message);
-    } catch (err) {
-      setOptimizeError(err.message);
+    },
+    onError: (err) => {
       alert(`Failed to optimize geofences: ${err.message}`);
-    } finally {
-      setIsOptimizing(false);
+    }
+  });
+
+  const handleCreateSubmit = () => {
+    if (formData.name.trim() && formData.address.trim() && !isNaN(formData.lat) && !isNaN(formData.lng) && !isNaN(formData.radius)) {
+      createMutation.mutate(formData);
+    } else {
+      alert('Please fill all required fields correctly (Name, Address, Lat, Lng, Radius).');
     }
   };
 
@@ -421,7 +445,7 @@ export default function Geofencing() {
     }
   }, [viewState]);
 
-  const overallError = error || statsError || analyticsError || createError || optimizeError;
+  const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
   
   if (viewState === 'initial' || viewState === 'loading') {
     return (
@@ -601,9 +625,9 @@ export default function Geofencing() {
                 ML-Optimized Zones
               </CardTitle>
               <div className="flex gap-2">
-                <button onClick={handleOptimizeGeofences} className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5" disabled={isOptimizing}>
+                <button onClick={() => optimizeMutation.mutate({})} className="px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center gap-1.5" disabled={optimizeMutation.isPending}>
                   <Brain className="w-4 h-4" />
-                  {isOptimizing ? 'Optimizing...' : 'Optimize'}
+                  Optimize
                 </button>
                 <button onClick={() => setShowCreateForm(true)} className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 text-white rounded-md flex items-center gap-1.5">
                   <Plus className="w-4 h-4" />
@@ -986,8 +1010,8 @@ export default function Geofencing() {
 
               <div className="flex justify-end gap-3 pt-4">
                 <button className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600" onClick={() => setShowCreateForm(false)}>Cancel</button>
-                <button className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50" onClick={handleCreateGeofence} disabled={isCreating || !formData.name.trim() || !formData.address.trim() || isNaN(formData.lat) || isNaN(formData.lng) || isNaN(formData.radius) || formData.radius <= 0}>
-                  {isCreating ? 'Creating...' : 'Create Zone'}
+                <button className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50" onClick={handleCreateSubmit} disabled={createMutation.isPending || !formData.name.trim() || !formData.address.trim() || isNaN(formData.lat) || isNaN(formData.lng) || isNaN(formData.radius) || formData.radius <= 0}>
+                  {createMutation.isPending ? 'Creating...' : 'Create Zone'}
                 </button>
               </div>
             </CardContent>

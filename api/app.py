@@ -46,9 +46,6 @@ energy_data = []
 geofence_data = []
 device_states = {}
 ml_performance_history = []
-optimization_history = []
-optimization_success_count = 0
-total_optimization_attempts = 0
 last_calculated_contamination_rate = 0.15
 last_device_change_time = None
 
@@ -145,13 +142,13 @@ def initialize_minimal_data():
         {
             'id': 1, 'name': 'Home', 'address': 'A-101, Ashoka Apartments, New Delhi, IN',
             'lat': 37.7749, 'lng': -122.4194, 'radius': 200, 'isActive': True, 'automations': 8,
-            'trigger_count': random.randint(120, 180), 'energy_savings': random.uniform(45, 65),
+            'energy_savings': random.uniform(45, 65),
             'created_at': (datetime.now() - timedelta(days=30)).isoformat()
         },
         {
             'id': 2, 'name': 'Work Office', 'address': 'K-15, The Sinclairs Bayview, Dubai, UAE',
             'lat': 37.7849, 'lng': -122.4094, 'radius': 150, 'isActive': True, 'automations': 5,
-            'trigger_count': random.randint(80, 120), 'energy_savings': random.uniform(25, 40),
+            'energy_savings': random.uniform(25, 40),
             'created_at': (datetime.now() - timedelta(days=20)).isoformat()
         }
     ])
@@ -428,8 +425,6 @@ def get_analytics():
                     'avg_consumption': round(float(hour_data['consumption'].mean()), 1),
                     'device_contribution': round(float(hour_data['device_consumption'].mean()), 1)
                 })
-        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
         ml_algorithms = {
             'random_forest': {
                 'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
@@ -483,7 +478,6 @@ def create_geofence():
             'lat': data.get('lat', 37.7749 + random.uniform(-0.01, 0.01)),
             'lng': data.get('lng', -122.4194 + random.uniform(-0.01, 0.01)),
             'radius': data.get('radius', 200), 'isActive': True, 'automations': int(random.randint(1, 6)),
-            'trigger_count': 0,
             'energy_savings': random.uniform(5, 15),  
             'created_at': datetime.now().isoformat()
         }
@@ -496,12 +490,8 @@ def create_geofence():
 def get_geofence_stats():
     try:
         total_zones = len([g for g in geofence_data if g.get('isActive', False)])
-        total_triggers = sum(g.get('trigger_count', 0) for g in geofence_data)
-        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
         return jsonify({
-            'total_zones': total_zones, 'total_triggers': int(total_triggers),
-            'optimization_success_count': round(dynamic_display_percentage, 1)
+            'total_zones': total_zones
         })
     except Exception:
         return jsonify({'error': 'Stats unavailable'}), 500
@@ -509,7 +499,6 @@ def get_geofence_stats():
 @app.route('/api/geofences/analytics', methods=['GET'])
 def get_geofence_analytics():
     try:
-        global total_optimization_attempts, optimization_success_count
         energy_optimization = []
         for hour in range(0, 24, 3):
             consumption = 15 + 10 * np.sin(2 * np.pi * hour / 24) + random.uniform(-2, 2)
@@ -521,69 +510,13 @@ def get_geofence_analytics():
         zone_efficiency = []
         for geofence in geofence_data:
             zone_efficiency.append({'name': geofence['name'], 'efficiency': round(float(random.uniform(75, 88)), 1)})
-        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
         ml_metrics = {
             'model_accuracy': round(float(random.uniform(91, 97)), 1),
-            'prediction_confidence': round(float(random.uniform(88, 96)), 1),
-            'optimization_success_count': round(dynamic_display_percentage, 1)
+            'prediction_confidence': round(float(random.uniform(88, 96)), 1)
         }
         return jsonify({'energy_optimization': energy_optimization, 'zone_efficiency': zone_efficiency, 'ml_metrics': ml_metrics})
     except Exception:
         return jsonify({'error': 'Analytics unavailable'}), 500
-
-@app.route('/api/geofences/optimize', methods=['POST'])
-def optimize_geofences():
-    try:
-        global optimization_history, optimization_success_count, total_optimization_attempts
-        total_optimization_attempts += 1
-        improvements = []
-        total_energy_improvement = 0
-        for geofence in geofence_data:
-            old_savings = geofence['energy_savings']
-            energy_improvement = float(random.uniform(1, 4))
-            geofence['energy_savings'] = min(80, old_savings + energy_improvement)
-            old_radius = geofence['radius']
-            radius_change = float(random.uniform(-15, 15))
-            geofence['radius'] = max(50, old_radius + radius_change)
-            improvements.append({
-                'zone_name': geofence['name'], 'energy_improvement': round(energy_improvement, 1),
-                'radius_change': round(radius_change, 1)
-            })
-            total_energy_improvement += energy_improvement
-        if random.random() < 0.90: 
-            optimization_success_count += 1
-        else: 
-            if optimization_success_count > 0:
-                optimization_success_count = max(0, optimization_success_count - random.randint(1, 3)) 
-        optimization_record = {
-            'timestamp': datetime.now().isoformat(), 'total_improvement': round(total_energy_improvement, 1),
-            'zones_optimized': len(geofence_data), 'improvements': improvements, 'success_number': optimization_success_count
-        }
-        optimization_history.append(optimization_record)
-        if len(optimization_history) > 10:
-            optimization_history.pop(0)
-        optimization_success_percentage_raw = (optimization_success_count / total_optimization_attempts) * 100 if total_optimization_attempts > 0 else 70.0
-        dynamic_display_percentage = np.clip(optimization_success_percentage_raw + random.uniform(-3, 3), 70.0, 99.9)
-        return jsonify({
-            'success': True, 'message': 'Geofences optimized using ML algorithms',
-            'total_improvement': round(total_energy_improvement, 1), 'zones_optimized': len(geofence_data),
-            'improvements': improvements, 'timestamp': optimization_record['timestamp'],
-            'optimization_success_count': round(dynamic_display_percentage, 1)
-        })
-    except Exception:
-        return jsonify({'error': 'Optimization failed'}), 500
-
-@app.route('/api/geofences/optimization-history', methods=['GET'])
-def get_optimization_history():
-    try:
-        global optimization_success_count, total_optimization_attempts
-        return jsonify({
-            'history': optimization_history, 'total_optimizations': len(optimization_history),
-            'optimization_success_count': optimization_success_count, 'total_optimization_attempts': total_optimization_attempts
-        })
-    except Exception:
-        return jsonify({'error': 'History unavailable'}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))

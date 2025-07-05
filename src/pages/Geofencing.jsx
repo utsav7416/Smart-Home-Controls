@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, Shield, Zap, Clock, Home, Pause, Trash2, Navigation } from 'lucide-react';
+import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, Shield, Zap, Clock, Home } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 let geofencesCache = null;
-let geofencesPromise = null; 
+let geofencesPromise = null;
 let hasInitiatedGeofences = false;
 
 export function prefetchGeofences() {
@@ -121,25 +121,17 @@ const useApiData = (key, fetchFn, refetchInterval = 30000) => {
 };
 
 const useMutation = (mutationFn, options = {}) => {
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState(null);
+  const [isPending, setIsPending] = useState(false), [error, setError] = useState(null);
   const mutate = async (variables) => {
     try {
-      setIsPending(true);
-      setError(null);
+      setIsPending(true); setError(null);
       const result = await mutationFn(variables);
-      if (typeof options.onSuccess === "function") {
-        options.onSuccess(result);
-      }
+      options.onSuccess && options.onSuccess(result);
       return result;
     } catch (err) {
       setError(err.message);
-      if (typeof options.onError === "function") {
-        options.onError(err);
-      }
-    } finally {
-      setIsPending(false);
-    }
+      options.onError && options.onError(err);
+    } finally { setIsPending(false); }
   };
   return { mutate, isPending, error };
 };
@@ -291,11 +283,10 @@ export default function Geofencing() {
   const [viewState, setViewState] = useState(hasInitiatedGeofences ? 'loading' : 'initial');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200, automationRules: '' });
+  const [formData, setFormData] = useState({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
   const [factIndex, setFactIndex] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
-  const [pausedZones, setPausedZones] = useState(new Set());
 
   const { data: stats, error: statsError, refetch: refetchStats } = useApiData('geofence-stats', fetchGeofenceStats, 30000);
   const { data: analytics, error: analyticsError } = useApiData('geofence-analytics', fetchAnalytics, 60000);
@@ -349,7 +340,7 @@ export default function Geofencing() {
       refetchGeofencesData();
       refetchStats();
       setShowCreateForm(false);
-      setFormData({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200, automationRules: '' });
+      setFormData({ name: '', address: '', lat: 37.7749, lng: -122.4194, radius: 200 });
     },
     onError: (err) => {
       alert(`Failed to create geofence: ${err.message}`);
@@ -372,43 +363,6 @@ export default function Geofencing() {
       createMutation.mutate(formData);
     } else {
       alert('Please fill all required fields correctly (Name, Address, Lat, Lng, Radius).');
-    }
-  };
-
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setFormData({
-            ...formData,
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          alert('Unable to get current location. Please enter coordinates manually.');
-        }
-      );
-    } else {
-      alert('Geolocation is not supported by this browser.');
-    }
-  };
-
-  const toggleZonePause = (zoneId) => {
-    setPausedZones(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(zoneId)) {
-        newSet.delete(zoneId);
-      } else {
-        newSet.add(zoneId);
-      }
-      return newSet;
-    });
-  };
-
-  const deleteZone = (zoneId) => {
-    if (confirm('Are you sure you want to delete this zone?')) {
-      alert('Zone deleted successfully');
     }
   };
 
@@ -638,16 +592,11 @@ export default function Geofencing() {
             <CardContent className="space-y-4">
               {geofences?.length > 0 ? (
                 geofences.map((geofence) => (
-                  <Card key={geofence.id} className={`${pausedZones.has(geofence.id) ? 'bg-gray-900/40 border-gray-500/30' : 'bg-green-900/20 border-green-400/30'} border`}>
+                  <Card key={geofence.id} className="bg-green-900/20 border border-green-400/30">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-white font-semibold">{geofence.name}</h3>
-                            {pausedZones.has(geofence.id) && (
-                              <span className="px-2 py-1 text-xs bg-gray-600 text-gray-300 rounded">Inactive</span>
-                            )}
-                          </div>
+                          <h3 className="text-white font-semibold">{geofence.name}</h3>
                           <p className="text-green-200 text-sm mt-1">{geofence.address}</p>
                           <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-green-300">
                             <span>Radius: {geofence.radius}m</span>
@@ -655,22 +604,6 @@ export default function Geofencing() {
                             <span>Triggers: {geofence.trigger_count || 0}</span>
                             <span>Savings: {(geofence.energy_savings || 0).toFixed(1)}%</span>
                           </div>
-                        </div>
-                        <div className="flex gap-2 ml-4">
-                          <button 
-                            onClick={() => toggleZonePause(geofence.id)}
-                            className={`p-1.5 rounded ${pausedZones.has(geofence.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'} text-white transition-colors`}
-                            title={pausedZones.has(geofence.id) ? 'Resume Zone' : 'Pause Zone'}
-                          >
-                            <Pause className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => deleteZone(geofence.id)}
-                            className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors"
-                            title="Delete Zone"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
                       </div>
                     </CardContent>
@@ -972,42 +905,11 @@ export default function Geofencing() {
                 { label: "Longitude", key: "lng", placeholder: "-122.4194", type: "number", step: "0.0001" },
                 { label: "Radius (meters)", key: "radius", placeholder: "200", type: "number" }
               ].map((field, i) => (
-                <div key={i} className="space-y-2">
+                <div key={i} className="space-y-4">
                   <label className="block text-green-200 text-sm font-medium">{field.label}</label>
-                  <div className="flex gap-2">
-                    <input 
-                      className="flex-1 p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                      type={field.type} 
-                      step={field.step} 
-                      placeholder={field.placeholder} 
-                      value={formData[field.key]} 
-                      onChange={(e) => setFormData({ ...formData, [field.key]: field.type === 'number' ? (field.key === 'lat' || field.key === 'lng' ? parseFloat(e.target.value) || 0 : parseInt(e.target.value) || (field.key === 'radius' ? 200 : 0)) : e.target.value })} 
-                    />
-                    {(field.key === 'lat' || field.key === 'lng') && i === 2 && (
-                      <button
-                        type="button"
-                        onClick={getCurrentLocation}
-                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1 text-sm"
-                        title="Use Current Location"
-                      >
-                        <Navigation className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type={field.type} step={field.step} placeholder={field.placeholder} value={formData[field.key]} onChange={(e) => setFormData({ ...formData, [field.key]: field.type === 'number' ? (field.key === 'lat' || field.key === 'lng' ? parseFloat(e.target.value) || 0 : parseInt(e.target.value) || (field.key === 'radius' ? 200 : 0)) : e.target.value })} />
                 </div>
               ))}
-              
-              <div className="space-y-2">
-                <label className="block text-green-200 text-sm font-medium">Automation Rules</label>
-                <input 
-                  className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                  type="text" 
-                  placeholder="Turn on lights, Set AC to 72°F, Turn off TV, Lock doors, Turn on security system" 
-                  value={formData.automationRules} 
-                  onChange={(e) => setFormData({ ...formData, automationRules: e.target.value })} 
-                />
-              </div>
-
               <div className="flex justify-end gap-3 pt-4">
                 <button className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600" onClick={() => setShowCreateForm(false)}>Cancel</button>
                 <button className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50" onClick={handleCreateSubmit} disabled={createMutation.isPending || !formData.name.trim() || !formData.address.trim() || isNaN(formData.lat) || isNaN(formData.lng) || isNaN(formData.radius) || formData.radius <= 0}>

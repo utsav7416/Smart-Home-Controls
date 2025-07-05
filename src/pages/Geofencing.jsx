@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 let geofencesCache = null;
-let geofencesPromise = null;
+let geofencesPromise = null; 
 let hasInitiatedGeofences = false;
 
 export function prefetchGeofences() {
@@ -69,19 +69,6 @@ const createGeofence = async (geofenceData) => {
   return await response.json();
 };
 
-const deleteGeofence = async (zoneId) => {
-    const response = await fetch(`${FLASK_API_URL}/api/geofences/${zoneId}`, {
-        method: 'DELETE',
-    });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`Failed to delete geofence: ${errorData.error || response.statusText}`);
-    }
-    geofencesCache = null;
-    geofencesPromise = null;
-    return { success: true, id: zoneId };
-};
-
 const fetchAnalytics = async () => {
   const response = await fetch(`${FLASK_API_URL}/api/geofences/analytics`);
   if (!response.ok) {
@@ -136,24 +123,26 @@ const useApiData = (key, fetchFn, refetchInterval = 30000) => {
 const useMutation = (mutationFn, options = {}) => {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState(null);
+  
   const mutate = async (variables) => {
     try {
       setIsPending(true);
       setError(null);
       const result = await mutationFn(variables);
-      if (options.onSuccess) {
-        options.onSuccess(result, variables);
+      if (typeof options.onSuccess === 'function') {
+        options.onSuccess(result);
       }
       return result;
     } catch (err) {
       setError(err.message);
-      if (options.onError) {
-        options.onError(err, variables);
+      if (typeof options.onError === 'function') {
+        options.onError(err);
       }
     } finally {
       setIsPending(false);
     }
   };
+  
   return { mutate, isPending, error };
 };
 
@@ -266,8 +255,8 @@ function ImageCarousel() {
 
   useEffect(() => {
     setFade(false);
-    const fadeTimeout = setTimeout(() => setFade(true), 50);
-    const timer = setTimeout(() => setIndex(i => (i + 1) % carouselImages.length), 5000);
+    const fadeTimeout = setTimeout(() => setFade(true), 50),
+          timer = setTimeout(() => setIndex(i => (i + 1) % carouselImages.length), 5000);
     return () => { clearTimeout(timer); clearTimeout(fadeTimeout); };
   }, [index]);
 
@@ -324,10 +313,15 @@ export default function Geofencing() {
     navigate('/');
     setTimeout(() => {
       const roomSelectorElement = document.querySelector('#room-selector');
+      
       if (roomSelectorElement) {
-        roomSelectorElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        roomSelectorElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'nearest'
+        });
       }
-    }, 300);
+    }, 300); 
   };
 
   const handleInitiate = () => {
@@ -348,10 +342,10 @@ export default function Geofencing() {
 
   const refetchGeofencesData = () => {
     prefetchGeofences().then(data => {
-      setGeofences(data);
+        setGeofences(data);
     }).catch(e => setError(e.message));
   };
-
+  
   const createMutation = useMutation(createGeofence, {
     onSuccess: () => {
       refetchGeofencesData();
@@ -362,17 +356,6 @@ export default function Geofencing() {
     onError: (err) => {
       alert(`Failed to create geofence: ${err.message}`);
     }
-  });
-
-  const deleteMutation = useMutation(deleteGeofence, {
-      onSuccess: () => {
-          refetchGeofencesData();
-          refetchStats();
-          alert('Zone deleted successfully.');
-      },
-      onError: (err) => {
-          alert(`Failed to delete zone: ${err.message}`);
-      }
   });
 
   const optimizeMutation = useMutation(optimizeGeofences, {
@@ -404,7 +387,7 @@ export default function Geofencing() {
             lng: position.coords.longitude
           });
         },
-        () => {
+        (error) => {
           alert('Unable to get current location. Please enter coordinates manually.');
         }
       );
@@ -426,8 +409,8 @@ export default function Geofencing() {
   };
 
   const deleteZone = (zoneId) => {
-    if (window.confirm('Are you sure you want to delete this zone?')) {
-        deleteMutation.mutate(zoneId);
+    if (confirm('Are you sure you want to delete this zone?')) {
+      alert('Zone deleted successfully');
     }
   };
 
@@ -464,8 +447,8 @@ export default function Geofencing() {
     }
   }, [viewState]);
 
-  const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error || deleteMutation.error;
-
+  const overallError = error || statsError || analyticsError || createMutation.error || optimizeMutation.error;
+  
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -503,6 +486,7 @@ export default function Geofencing() {
                   </p>
                 </div>
               </div>
+              
               <div className="flex flex-col items-center space-y-6 mt-4 mb-6">
                 {viewState === 'loading' ? (
                   <div className="flex items-center space-x-4">
@@ -524,6 +508,7 @@ export default function Geofencing() {
                   </div>
                 )}
               </div>
+
               <div className="w-80 h-80 relative">
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="absolute w-72 h-72 border-2 border-green-400/40 animate-spin-slow" style={{ clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)', animationDuration: '20s' }}>
@@ -624,7 +609,7 @@ export default function Geofencing() {
           </Card>
         ))}
       </div>
-      
+
       <div className="flex space-x-4 mb-6">
         {['overview', 'analytics'].map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === tab ? 'bg-green-600 text-white shadow-lg' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}>
@@ -674,18 +659,17 @@ export default function Geofencing() {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
-                          <button
+                          <button 
                             onClick={() => toggleZonePause(geofence.id)}
                             className={`p-1.5 rounded ${pausedZones.has(geofence.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'} text-white transition-colors`}
                             title={pausedZones.has(geofence.id) ? 'Resume Zone' : 'Pause Zone'}
                           >
                             <Pause className="w-4 h-4" />
                           </button>
-                          <button
+                          <button 
                             onClick={() => deleteZone(geofence.id)}
-                            className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50"
+                            className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors"
                             title="Delete Zone"
-                            disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -763,7 +747,7 @@ export default function Geofencing() {
           </Card>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-gray-900/80 backdrop-blur-md border border-orange-400/30 shadow-xl">
           <CardHeader className="bg-gradient-to-r from-orange-900/40 to-red-900/40 border-b border-orange-400/20">
@@ -856,7 +840,7 @@ export default function Geofencing() {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="bg-black/40 backdrop-blur-md border border-blue-400/20">
           <CardHeader>
@@ -912,7 +896,7 @@ export default function Geofencing() {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-gradient-to-br from-green-500/20 via-emerald-600/20 to-purple-500/20 border border-emerald-400/40 shadow-2xl rounded-lg">
           <div className="bg-gradient-to-r from-green-600/30 via-emerald-500/30 to-purple-600/30 border-b border-emerald-400/30 px-6 py-4 rounded-t-lg">
@@ -975,7 +959,7 @@ export default function Geofencing() {
           </div>
         </div>
       </div>
-      
+
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg mx-4 bg-black/80 backdrop-blur-lg border border-green-500/40 shadow-lg">

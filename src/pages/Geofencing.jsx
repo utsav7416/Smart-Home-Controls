@@ -3,7 +3,7 @@ import { MapPin, Plus, Brain, TrendingUp, Target, MapIcon, XCircle, ChevronLeft,
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 
-const FLASK_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
+const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
 let geofencesCache = null;
 let geofencesPromise = null; 

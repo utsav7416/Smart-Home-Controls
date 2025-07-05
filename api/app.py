@@ -47,6 +47,7 @@ last_calculated_contamination_rate = 0.15
 last_device_change_time = None
 cached_analytics = None
 analytics_cache_time = None
+device_state_history = []
 CACHE_DURATION = 30
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
@@ -188,6 +189,133 @@ def ensure_initialized_and_trained():
         initialize_minimal_data()
         threading.Thread(target=train_models_background, daemon=True).start()
 
+def detect_dynamic_anomalies(df):
+    anomaly_data = []
+    
+    if len(df) < 3:
+        return anomaly_data
+    
+    # Use only recent data for more responsive detection
+    recent_data = df.tail(min(12, len(df))).copy()
+    
+    print(f"[DEBUG] Analyzing {len(recent_data)} recent data points for anomalies")
+    
+    # Calculate current total device consumption using existing device_states
+    total_device_consumption = 0
+    if device_states:
+        for room, devices in device_states.items():
+            for device in devices:
+                if device.get('isOn', False):
+                    total_device_consumption += calculate_device_consumption(
+                        device['name'], device['isOn'], device['value'], device['property']
+                    )
+    
+    print(f"[DEBUG] Current device consumption: {total_device_consumption}")
+    
+    # If very low device usage, be more selective about anomalies
+    if total_device_consumption < 100:
+        recent_consumption = recent_data['consumption'].values
+        if len(recent_consumption) > 1:
+            recent_mean = np.mean(recent_consumption)
+            recent_std = np.std(recent_consumption)
+            
+            # Only check the most recent entry for severe spikes
+            latest_row = recent_data.iloc[-1]
+            consumption = latest_row['consumption']
+            
+            if recent_std > 0 and consumption > recent_mean + (3.5 * recent_std):
+                severity = 'high' if consumption > recent_mean + (4.5 * recent_std) else 'medium'
+                anomaly_data.append({
+                    'time': int(latest_row['hour']),
+                    'consumption': round(float(consumption), 1),
+                    'severity': severity,
+                    'timestamp': latest_row['timestamp'],
+                    'score': 0.9,
+                    'type': 'unexpected_spike'
+                })
+        
+        print(f"[DEBUG] Low device usage mode - found {len(anomaly_data)} anomalies")
+        return anomaly_data
+    
+    # Active device usage - check for device/consumption mismatches
+    consumption_values = recent_data['consumption'].values
+    
+    # Check last few entries for device consumption mismatches
+    for _, row in recent_data.tail(4).iterrows():
+        actual_consumption = row['consumption']
+        device_consumption = row.get('device_consumption', 0)
+        
+        if device_consumption > 0:
+            # Calculate expected range more tightly
+            expected_base = 50 + device_consumption
+            expected_min = expected_base * 0.75
+            expected_max = expected_base * 1.35
+            
+            # Flag significant deviations
+            if actual_consumption < expected_min or actual_consumption > expected_max:
+                deviation_ratio = abs(actual_consumption - expected_base) / expected_base
+                if deviation_ratio > 0.25:  # 25% deviation threshold
+                    severity = 'high' if deviation_ratio > 0.5 else 'medium'
+                    anomaly_data.append({
+                        'time': int(row['hour']),
+                        'consumption': round(float(actual_consumption), 1),
+                        'severity': severity,
+                        'timestamp': row['timestamp'],
+                        'score': round(min(0.95, 0.6 + deviation_ratio), 3),
+                        'type': 'device_mismatch'
+                    })
+    
+    # Statistical anomaly detection using recent data patterns
+    if len(recent_data) >= 3:
+        overall_mean = consumption_values.mean()
+        overall_std = consumption_values.std()
+        
+        if overall_std > 0:
+            # More aggressive thresholds for better responsiveness
+            upper_threshold = 2.0
+            lower_threshold = 1.8
+            
+            for _, row in recent_data.tail(3).iterrows():  # Check last 3 entries
+                consumption = row['consumption']
+                z_score = abs((consumption - overall_mean) / overall_std)
+                
+                if z_score > upper_threshold or (consumption < overall_mean and z_score > lower_threshold):
+                    # Avoid duplicates
+                    if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
+                        severity = 'high' if z_score > 2.5 else 'medium'
+                        anomaly_data.append({
+                            'time': int(row['hour']),
+                            'consumption': round(float(consumption), 1),
+                            'severity': severity,
+                            'timestamp': row['timestamp'],
+                            'score': round(min(0.95, 0.5 + (z_score / 4.0)), 3),
+                            'type': 'statistical'
+                        })
+    
+    # Enhanced device change detection using existing last_device_change_time
+    current_time = datetime.now()
+    if last_device_change_time and (current_time - last_device_change_time).total_seconds() < 600:  # 10 minutes
+        latest_row = recent_data.iloc[-1]
+        
+        # Remove any existing anomaly for this timestamp to avoid duplicates
+        anomaly_data = [a for a in anomaly_data if a['timestamp'] != latest_row['timestamp']]
+        
+        # Always mark recent device changes as high priority anomalies
+        anomaly_data.insert(0, {
+            'time': int(latest_row['hour']),
+            'consumption': round(float(latest_row['consumption']), 1),
+            'severity': 'high',
+            'timestamp': latest_row['timestamp'],
+            'score': 0.98,
+            'type': 'device_change'
+        })
+    
+    print(f"[DEBUG] Total anomalies detected: {len(anomaly_data)}")
+    
+    # Limit anomalies based on device activity level
+    max_anomalies = 3 if total_device_consumption < 200 else 6
+    return anomaly_data[:max_anomalies]
+
 @app.before_request
 def before_any_request():
     ensure_initialized_and_trained()
@@ -196,123 +324,37 @@ def before_any_request():
 def ready():
     return jsonify({'initialized': initialized, 'models_trained': models_trained})
 
-def detect_dynamic_anomalies(df):
-    anomaly_data = []
-    if len(df) < 5:
-        return anomaly_data
-    recent_data = df[-min(24, len(df)):]
-    consumption_values = recent_data['consumption'].values
-    for _, row in recent_data.iterrows():
-        hour = row['hour']
-        consumption = row['consumption']
-        timestamp = row['timestamp']
-        device_consumption = row.get('device_consumption', 0)
-        similar_hours = recent_data[recent_data['hour'] == hour]['consumption']
-        if len(similar_hours) > 1:
-            hour_mean = similar_hours.mean()
-            hour_std = similar_hours.std()
-            if hour_std > 0:
-                z_score = abs((consumption - hour_mean) / hour_std)
-                threshold = 1.4 if hour_std < hour_mean * 0.3 else 1.8
-                if z_score > threshold:
-                    deviation_ratio = abs(consumption - hour_mean) / hour_mean
-                    severity = 'high' if deviation_ratio > 0.4 else ('medium' if deviation_ratio > 0.2 else 'low')
-                    confidence = min(0.95, 0.5 + (z_score / 4.0))
-                    anomaly_data.append({
-                        'time': int(hour), 'consumption': round(float(consumption), 1),
-                        'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
-                        'type': 'temporal_pattern'
-                    })
-        if device_consumption > 0:
-            expected_base = 50 + (device_consumption * 0.7)
-            if consumption > expected_base * 1.25 or consumption < expected_base * 0.75:
-                deviation_ratio = abs(consumption - expected_base) / expected_base
-                severity = 'high' if deviation_ratio > 0.5 else 'medium'
-                confidence = min(0.95, 0.6 + (deviation_ratio * 0.4))
-                if not any(a['timestamp'] == timestamp for a in anomaly_data):
-                    anomaly_data.append({
-                        'time': int(hour), 'consumption': round(float(consumption), 1),
-                        'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
-                        'type': 'device_mismatch'
-                    })
-    overall_mean = consumption_values.mean()
-    overall_std = consumption_values.std()
-    if overall_std > 0:
-        upper_bound = overall_mean + (2.2 * overall_std)
-        lower_bound = overall_mean - (1.8 * overall_std)
-        for _, row in recent_data.iterrows():
-            consumption = row['consumption']
-            if consumption > upper_bound or consumption < lower_bound:
-                if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
-                    deviation_ratio = abs(consumption - overall_mean) / overall_mean
-                    severity = 'high' if deviation_ratio > 0.4 else 'medium'
-                    confidence = min(0.95, 0.6 + (deviation_ratio * 0.3))
-                    anomaly_data.append({
-                        'time': int(row['hour']), 'consumption': round(float(consumption), 1),
-                        'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
-                        'type': 'statistical'
-                    })
-    if len(recent_data) > 8 and models_trained:
-        try:
-            features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption']].fillna(0).values
-            global last_calculated_contamination_rate
-            contamination_rate = 0.18
-            if len(energy_data) > 15:
-                recent_variance = np.var(consumption_values)
-                if recent_variance > overall_mean * 0.1:
-                    contamination_rate = min(0.25, contamination_rate + 0.05)
-            last_calculated_contamination_rate = contamination_rate
-            temp_detector = IsolationForest(
-                contamination=contamination_rate,
-                random_state=int(time.time()) % 1000,
-                n_estimators=20,
-                n_jobs=1
-            )
-            temp_detector.fit(features)
-            ml_anomalies = temp_detector.predict(features)
-            ml_scores = temp_detector.decision_function(features)
-            for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
-                if is_anomaly == -1 and len(anomaly_data) < 15:
-                    row = recent_data.iloc[i]
-                    if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
-                        severity = 'high' if abs(score) > 0.3 else 'medium'
-                        confidence = min(0.95, 0.4 + abs(score))
-                        anomaly_data.append({
-                            'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
-                            'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
-                            'type': 'ml_detected'
-                        })
-        except Exception:
-            pass
-    global last_device_change_time
-    if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 300:
-        row = recent_data.iloc[-1]
-        anomaly_data = [a for a in anomaly_data if a['timestamp'] != row['timestamp']]
-        anomaly_data.insert(0, {
-            'time': int(row['hour']),
-            'consumption': round(float(row['consumption']), 1),
-            'severity': 'high',
-            'timestamp': row['timestamp'],
-            'score': 0.99,
-            'type': 'device_change'
-        })
-    return anomaly_data[:25]
-
 @app.route('/')
 def health_check():
     return jsonify({'status': 'ok', 'models_trained': models_trained})
 
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
-    global device_states, last_device_change_time, cached_analytics, analytics_cache_time
+    global device_states, last_device_change_time, cached_analytics, analytics_cache_time, device_state_history
     try:
         data = request.json
+        previous_states = device_states.copy()
         device_states = data.get('deviceStates', {})
         last_device_change_time = datetime.now()
+        
+        # Store device state change in history
+        device_state_history.append({
+            'timestamp': last_device_change_time.isoformat(),
+            'states': device_states.copy(),
+            'previous_states': previous_states
+        })
+        
+        # Keep only last 50 state changes
+        if len(device_state_history) > 50:
+            device_state_history = device_state_history[-50:]
+        
         cached_analytics = None
         analytics_cache_time = None
         new_energy_point = generate_realistic_energy_data(device_states)
         energy_data.append(new_energy_point)
+        
+        print(f"[DEBUG] Device state updated. New consumption: {new_energy_point['consumption']}, Device consumption: {new_energy_point['device_consumption']}")
+        
         if len(energy_data) > 200:
             energy_data.pop(0)
         if len(energy_data) % 30 == 0 and models_trained:
@@ -323,7 +365,8 @@ def update_device_states():
             'device_consumption': new_energy_point['device_consumption'],
             'timestamp': new_energy_point['timestamp']
         })
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] Failed to update device states: {e}")
         return jsonify({'error': 'Failed to update device states'}), 500
 
 @app.route('/api/energy-data', methods=['GET'])
@@ -441,7 +484,8 @@ def get_analytics():
         cached_analytics = result
         analytics_cache_time = current_time
         return jsonify(result)
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] Analytics error: {e}")
         return jsonify({'error': 'Analytics unavailable'}), 500
 
 @app.route('/api/geofences', methods=['GET'])

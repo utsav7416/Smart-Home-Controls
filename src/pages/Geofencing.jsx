@@ -213,18 +213,18 @@ const doYouKnowFacts = [
 ];
 
 const carouselImages = [
-  { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "1" },
-  { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "1" },
-  { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "1" },
-  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "1" },
-  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "1" }
+  { url: "https://www.smarthomeworld.in/wp-content/uploads/2025/03/4-1024x576.jpg", alt: "Smart Living Room" },
+  { url: "https://d6y5eqdcxq8w3.cloudfront.net/assets/blog/prosource_member_blogs/Smart-Home-Climate-Control-and-Lights.webp", alt: "Climate Control" },
+  { url: "https://preview.redd.it/869yzxqr5ar51.jpg?width=640&crop=smart&auto=webp&s=762b8d68b17930b1bee6459ef060a24026240a4a", alt: "Modern Kitchen" },
+  { url: "https://oltdesign.com/wp-content/uploads/2025/02/smart-home-technology.jpg", alt: "Smart Technology" },
+  { url: "https://www.ledyilighting.com/wp-content/uploads/2025/05/Factors-To-Consider-Before-Establishing-Smart-Home-Lighting-1024x683.jpeg", alt: "Smart Lighting" }
 ];
 
 const loadingCarouselImages = [
-  { url: "https://i.pinimg.com/736x/2f/6c/92/2f6c925f049eb916866d983cd3fca54d.jpg", alt: "1" },
-  { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLvOde-b4NSV-1FfKVCOdbwFZpVh83W7YUrjT7wXSy23T2qMnN_Wx4p5_aZHM8zicHfak&usqp=CAU", alt: "1" },
-  { url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg", alt: "1" },
-  { url: "https://images.stockcake.com/public/c/b/5/cb505e46-ce71-46e7-b8b6-a9c2ba06701e_large/luxurious-living-room-stockcake.jpg", alt: "1" }
+  { url: "https://i.pinimg.com/736x/2f/6c/92/2f6c925f049eb916866d983cd3fca54d.jpg", alt: "Luxury Interior" },
+  { url: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLvOde-b4NSV-1FfKVCOdbwFZpVh83W7YUrjT7wXSy23T2qMnN_Wx4p5_aZHM8zicHfak&usqp=CAU", alt: "Modern Design" },
+  { url: "https://thumbs.dreamstime.com/b/modern-living-room-city-skyline-view-night-featuring-elegant-decor-lush-greenery-luxurious-showcases-furnishings-362289898.jpg", alt: "City View" },
+  { url: "https://images.stockcake.com/public/c/b/5/cb505e46-ce71-46e7-b8b6-a9c2ba06701e_large/luxurious-living-room-stockcake.jpg", alt: "Luxurious Space" }
 ];
 
 function ImageCarousel() {
@@ -554,35 +554,39 @@ export default function Geofencing() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {[
-          { title: "Model Accuracy", value: `${mlMetrics.model_accuracy?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-green-600/20 to-green-800/20", border: "border-green-400/30", color: "text-green-200" },
-          { title: "Prediction Confidence", value: `${mlMetrics.prediction_confidence?.toFixed(1) || 0}%`, icon: TrendingUp, gradient: "from-emerald-600/20 to-emerald-800/20", border: "border-emerald-400/30", color: "text-emerald-200" },
-          { title: "Zones Created", value: stats?.total_zones || 0, icon: MapIcon, gradient: "from-teal-600/20 to-teal-800/20", border: "border-teal-400/30", color: "text-teal-200" }
-        ].map((metric, i) => (
-          <Card key={i} className={`bg-gradient-to-br ${metric.gradient} backdrop-blur-md border ${metric.border}`}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`${metric.color} text-sm`}>{metric.title}</p>
-                  <p className="text-3xl font-bold text-white">{metric.value}</p>
+      <div className="flex gap-6">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" style={{ width: '60%' }}>
+          {[
+            { title: "Model Accuracy", value: `${mlMetrics.model_accuracy?.toFixed(1) || 0}%`, icon: Brain, gradient: "from-green-600/20 to-green-800/20", border: "border-green-400/30", color: "text-green-200" },
+            { title: "Prediction Confidence", value: `${mlMetrics.prediction_confidence?.toFixed(1) || 0}%`, icon: TrendingUp, gradient: "from-emerald-600/20 to-emerald-800/20", border: "border-emerald-400/30", color: "text-emerald-200" },
+            { title: "Zones Created", value: stats?.total_zones || 0, icon: MapIcon, gradient: "from-lime-600/20 to-lime-800/20", border: "border-lime-400/30", color: "text-lime-200" }
+          ].map((metric, i) => (
+            <Card key={i} className={`bg-gradient-to-br ${metric.gradient} backdrop-blur-md border ${metric.border}`}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`${metric.color} text-sm`}>{metric.title}</p>
+                    <p className="text-3xl font-bold text-white">{metric.value}</p>
+                  </div>
+                  <metric.icon className={`w-8 h-8 ${metric.color.replace('text-', 'text-').replace('/20', '400')}`} />
                 </div>
-                <metric.icon className={`w-8 h-8 ${metric.color.replace('text-', 'text-').replace('/20', '400')}`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-md border border-blue-400/30">
-        <CardContent className="p-6">
-          <div className="text-center">
-            <p className="text-blue-100 text-lg leading-relaxed">
-              <strong>Want the full picture?</strong> Scroll down for your latest security warnings, tailored home‑automation tips, plus a rich graphical overview. Add zones and set your preferences on the left.
-            </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-md border border-blue-400/30 rounded-lg p-6" style={{ width: '40%' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-500/20 rounded-lg">
+              <Target className="w-6 h-6 text-blue-400" />
+            </div>
+            <h3 className="text-white text-lg font-semibold">Navigation Guide</h3>
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-blue-100 text-sm leading-relaxed">
+            Want the full picture? Scroll down for your latest security warnings, tailored home‑automation tips, plus a rich graphical overview. Add zones and set your preferences on the left.
+          </p>
+        </div>
+      </div>
 
       <div className="flex space-x-4 mb-6">
         {['overview', 'analytics'].map((tab) => (
@@ -616,9 +620,7 @@ export default function Geofencing() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="text-white font-semibold">{geofence.name}</h3>
-                            {pausedZones.has(geofence.id) && (
-                              <span className="px-2 py-1 text-xs bg-gray-600 text-gray-300 rounded">Inactive</span>
-                            )}
+                            {pausedZones.has(geofence.id) && <span className="px-2 py-1 text-xs bg-gray-600 text-gray-300 rounded">Inactive</span>}
                           </div>
                           <p className="text-green-200 text-sm mt-1">{geofence.address}</p>
                           <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-green-300">
@@ -628,18 +630,10 @@ export default function Geofencing() {
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4">
-                          <button 
-                            onClick={() => toggleZonePause(geofence.id)}
-                            className={`p-1.5 rounded ${pausedZones.has(geofence.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'} text-white transition-colors`}
-                            title={pausedZones.has(geofence.id) ? 'Resume Zone' : 'Pause Zone'}
-                          >
+                          <button onClick={() => toggleZonePause(geofence.id)} className={`p-1.5 rounded ${pausedZones.has(geofence.id) ? 'bg-green-600 hover:bg-green-700' : 'bg-yellow-600 hover:bg-yellow-700'} text-white transition-colors`} title={pausedZones.has(geofence.id) ? 'Resume Zone' : 'Pause Zone'}>
                             <Pause className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={() => deleteZone(geofence.id)}
-                            className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors"
-                            title="Delete Zone"
-                          >
+                          <button onClick={() => deleteZone(geofence.id)} className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors" title="Delete Zone">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -655,17 +649,13 @@ export default function Geofencing() {
           <div className="flex flex-col gap-6">
             <div className="bg-gradient-to-tr from-green-900/30 to-slate-900/30 rounded-lg p-6 shadow-xl">
               <h2 className="text-2xl font-bold text-white mb-2">Smart Home in Action</h2>
-              <p className="text-green-100 mb-4 text-base leading-relaxed">
-                See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living.
-              </p>
+              <p className="text-green-100 mb-4 text-base leading-relaxed">See how your smart zones come alive. Below, you'll find a showcase of real-world smart home environments—each image highlights a different aspect of intelligent living.</p>
               <ul className="text-green-200 text-sm space-y-1 mb-4">
                 <li>• Enjoy personalized comfort—your home adapts to your schedule, not the other way around.</li>
                 <li>• Save energy without sacrificing convenience or style.</li>
               </ul>
             </div>
-            <div className="mt-2">
-              <ImageCarousel />
-            </div>
+            <div className="mt-2"><ImageCarousel /></div>
           </div>
         </div>
       )}
@@ -939,83 +929,35 @@ export default function Geofencing() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Zone Name</label>
-                  <input 
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                    type="text" 
-                    placeholder="Home, Work, etc." 
-                    value={formData.name} 
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                  />
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type="text" placeholder="Home, Work, etc." value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                 </div>
-                
                 <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Address</label>
-                  <input 
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                    type="text" 
-                    placeholder="123 Main St, City, Country" 
-                    value={formData.address} 
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })} 
-                  />
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type="text" placeholder="123 Main St, City, Country" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                 </div>
-
                 <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Latitude</label>
                   <div className="flex gap-2">
-                    <input 
-                      className="flex-1 p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                      type="number" 
-                      step="0.0001" 
-                      placeholder="37.7749" 
-                      value={formData.lat} 
-                      onChange={(e) => setFormData({ ...formData, lat: parseFloat(e.target.value) || 0 })} 
-                    />
-                    <button
-                      type="button"
-                      onClick={getCurrentLocation}
-                      className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1 text-sm"
-                      title="Use Current Location"
-                    >
+                    <input className="flex-1 p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type="number" step="0.0001" placeholder="37.7749" value={formData.lat} onChange={(e) => setFormData({ ...formData, lat: parseFloat(e.target.value) || 0 })} />
+                    <button type="button" onClick={getCurrentLocation} className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm whitespace-nowrap" title="Use Current Location">
                       <Navigation className="w-4 h-4" />
+                      Use Current Location
                     </button>
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Longitude</label>
-                  <input 
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                    type="number" 
-                    step="0.0001" 
-                    placeholder="-122.4194" 
-                    value={formData.lng} 
-                    onChange={(e) => setFormData({ ...formData, lng: parseFloat(e.target.value) || 0 })} 
-                  />
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type="number" step="0.0001" placeholder="-122.4194" value={formData.lng} onChange={(e) => setFormData({ ...formData, lng: parseFloat(e.target.value) || 0 })} />
                 </div>
-
                 <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Radius (meters)</label>
-                  <input 
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                    type="number" 
-                    placeholder="200" 
-                    value={formData.radius} 
-                    onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 200 })} 
-                  />
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type="number" placeholder="200" value={formData.radius} onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) || 200 })} />
                 </div>
-                
                 <div className="space-y-2">
                   <label className="block text-green-200 text-sm font-medium">Automation Rules</label>
-                  <input 
-                    className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" 
-                    type="text" 
-                    placeholder="Turn on lights, Set AC to 72°F, Turn off TV, Lock doors, Turn on security system" 
-                    value={formData.automationRules} 
-                    onChange={(e) => setFormData({ ...formData, automationRules: e.target.value })} 
-                  />
+                  <input className="w-full p-3 bg-green-900/20 border border-green-400/30 rounded-lg text-white placeholder-green-400 focus:outline-none focus:ring-2 focus:ring-green-500" type="text" placeholder="Turn on lights, Set AC to 72°F, Turn off TV, Lock doors, Turn on security system" value={formData.automationRules} onChange={(e) => setFormData({ ...formData, automationRules: e.target.value })} />
                 </div>
               </div>
-
               <div className="flex justify-end gap-3 pt-4">
                 <button className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600" onClick={() => setShowCreateForm(false)}>Cancel</button>
                 <button className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50" onClick={handleCreateSubmit} disabled={createMutation.isPending || !formData.name.trim() || !formData.address.trim() || isNaN(formData.lat) || isNaN(formData.lng) || isNaN(formData.radius) || formData.radius <= 0}>

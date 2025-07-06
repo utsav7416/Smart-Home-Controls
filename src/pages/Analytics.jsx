@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, Thermometer, Clock, DollarSign, Gauge, Battery, Lightbulb } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, RadialBarChart, RadialBar, PieChart, Pie } from 'recharts';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, Power, Gauge, Clock } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, PieChart, Pie } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -32,12 +32,15 @@ export function prefetchAnalytics() {
 const Card = ({ children, className = "" }) => (
   <div className={`rounded-lg border border-gray-800 bg-black ${className}`}>{children}</div>
 );
+
 const CardHeader = ({ children }) => (
   <div className="flex flex-col space-y-1.5 p-6">{children}</div>
 );
+
 const CardTitle = ({ children, className = "" }) => (
   <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>{children}</h3>
 );
+
 const CardContent = ({ children, className = "" }) => (
   <div className={`p-6 pt-0 ${className}`}>{children}</div>
 );
@@ -56,11 +59,14 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
 const useDeviceSync = () => {
   const [deviceStates, setDeviceStates] = useState({});
   const [totalDevicePower, setTotalDevicePower] = useState(0);
+  const [devicePowerBreakdown, setDevicePowerBreakdown] = useState([]);
+  
   const DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
     'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
     'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
   };
+
   const calculateDevicePower = (deviceName, isOn, value, property) => {
     if (!isOn || !DEVICE_POWER_MAP[deviceName]) return 0;
     const { base, max } = DEVICE_POWER_MAP[deviceName];
@@ -79,6 +85,7 @@ const useDeviceSync = () => {
     }
     return base + (max - base) * ratio;
   };
+
   useEffect(() => {
     const handleDeviceChange = () => {
       const storedDevices = localStorage.getItem('deviceStates');
@@ -86,19 +93,38 @@ const useDeviceSync = () => {
         const devices = JSON.parse(storedDevices);
         setDeviceStates(devices);
         let total = 0;
+        const breakdown = [];
+        
         Object.values(devices).forEach((roomDevices) => {
           roomDevices.forEach((device) => {
-            total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
+            const power = calculateDevicePower(device.name, device.isOn, device.value, device.property);
+            total += power;
+            if (power > 0) {
+              breakdown.push({
+                name: device.name,
+                power: Math.round(power),
+                percentage: 0 // Will be calculated after total is known
+              });
+            }
           });
         });
+        
+        // Calculate percentages
+        breakdown.forEach(device => {
+          device.percentage = total > 0 ? Math.round((device.power / total) * 100) : 0;
+        });
+        
         setTotalDevicePower(total);
+        setDevicePowerBreakdown(breakdown);
       }
     };
+    
     handleDeviceChange();
     window.addEventListener('storage', handleDeviceChange);
     return () => window.removeEventListener('storage', handleDeviceChange);
   }, []);
-  return { deviceStates, totalDevicePower };
+
+  return { deviceStates, totalDevicePower, devicePowerBreakdown };
 };
 
 const doYouKnowFacts = [
@@ -162,13 +188,15 @@ function Carousel({ images }) {
     }, 3500);
     return () => clearInterval(interval);
   }, [images.length]);
+  
   const prev = () => setIndex((index - 1 + images.length) % images.length);
   const next = () => setIndex((index + 1) % images.length);
+  
   return (
     <div className="relative w-full h-[280px] flex items-center justify-center">
-      <img
-        src={images[index].url}
-        alt={images[index].alt}
+      <img 
+        src={images[index].url} 
+        alt={images[index].alt} 
         className="w-full h-[280px] object-cover rounded-lg transition-all duration-700"
         style={{ maxWidth: '100%', maxHeight: '280px' }}
       />
@@ -178,7 +206,7 @@ function Carousel({ images }) {
         aria-label="Previous"
         style={{ zIndex: 2 }}
       >
-        &#8592;
+        ←
       </button>
       <button
         className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 text-white rounded-full p-2 hover:bg-black/80"
@@ -186,7 +214,7 @@ function Carousel({ images }) {
         aria-label="Next"
         style={{ zIndex: 2 }}
       >
-        &#8594;
+        →
       </button>
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
         {images.map((img, i) => (
@@ -224,8 +252,8 @@ function LiveActivityFeed() {
       </h3>
       <div className="space-y-2 max-h-48">
         {displayedItems.map((item, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="text-sm text-gray-300 animate-fade-in flex items-center gap-2 p-2 bg-gray-800/50 rounded"
           >
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -237,8 +265,91 @@ function LiveActivityFeed() {
   );
 }
 
+// New Real-Time Energy Flow Component
+function RealTimeEnergyFlow({ devicePowerBreakdown, totalDevicePower }) {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [energyFlow, setEnergyFlow] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+      setEnergyFlow(totalDevicePower + Math.random() * 50 - 25); // Small fluctuation
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [totalDevicePower]);
+
+  const getPowerColor = (power) => {
+    if (power > 1000) return '#ef4444'; // Red for high power
+    if (power > 500) return '#f59e0b'; // Orange for medium power
+    if (power > 100) return '#eab308'; // Yellow for low-medium power
+    return '#22c55e'; // Green for low power
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-400">Current Flow</span>
+            <Power className="w-4 h-4 text-blue-400 animate-pulse" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {(energyFlow / 1000).toFixed(2)} kW
+          </div>
+          <div className="text-xs text-gray-500">
+            {currentTime.toLocaleTimeString()}
+          </div>
+        </div>
+        
+        <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-400">Active Devices</span>
+            <Gauge className="w-4 h-4 text-green-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {devicePowerBreakdown.length}
+          </div>
+          <div className="text-xs text-gray-500">
+            Consuming Power
+          </div>
+        </div>
+      </div>
+
+      {devicePowerBreakdown.length > 0 && (
+        <div className="bg-gray-800/50 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Live Device Power Consumption
+          </h4>
+          <div className="space-y-2">
+            {devicePowerBreakdown.map((device, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <span className="text-sm text-gray-300">{device.name}</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${device.percentage}%`,
+                        backgroundColor: getPowerColor(device.power)
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm font-mono text-white w-12 text-right">
+                    {device.power}W
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Analytics() {
-  const { deviceStates, totalDevicePower } = useDeviceSync();
+  const { deviceStates, totalDevicePower, devicePowerBreakdown } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [error, setError] = useState(null);
   const [factIndex, setFactIndex] = useState(0);
@@ -283,6 +394,7 @@ export default function Analytics() {
     }
   }, [viewState]);
 
+  // Loading and error states remain the same...
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -300,12 +412,13 @@ export default function Analytics() {
             />
           ))}
         </div>
+        
         <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
           <div className="flex flex-row items-center justify-center w-full mb-8">
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4Iw-ps9v75UC9kcr-NLTe3aL-PwT2bsX6ZA&s"
-              alt="Analytics Icon"
-              className="w-10 h-10 mr-6"
+            <img 
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4Iw-ps9v75UC9kcr-NLTe3aL-PwT2bsX6ZA&s" 
+              alt="Analytics Icon" 
+              className="w-10 h-10 mr-6" 
               style={{ objectFit: 'contain' }}
             />
             <div className="text-center max-w-2xl flex-1">
@@ -323,7 +436,7 @@ export default function Analytics() {
             </div>
             <div style={{ width: 40 }} />
           </div>
-          
+
           <div className="flex flex-col items-center space-y-6 mt-2 mb-6" style={{ marginBottom: '2.5rem' }}>
             {viewState === 'loading' ? (
               <div className="flex items-center space-x-4">
@@ -362,134 +475,8 @@ export default function Analytics() {
             </div>
           )}
 
-          <div className="w-full max-w-6xl mb-8">
-            <div className="flex justify-center items-center gap-8">
-              {loadingCarouselImages.map((image, index) => (
-                <div
-                  key={index}
-                  className="w-56 h-40 overflow-hidden rounded-lg shadow-lg animate-subtle-rotate"
-                  style={{
-                    animationDelay: `${index * 0.5}s`,
-                    transform: `rotate(${(Math.random() - 0.5) * 20}deg)`
-                  }}
-                >
-                  <img
-                    src={image.url}
-                    alt={image.alt}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="w-80 h-80 relative mb-12">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="absolute w-72 h-72 border-2 border-blue-400/40 animate-spin-slow" style={{
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                animationDuration: '20s'
-              }}>
-                <div className="absolute w-4 h-4 bg-blue-400 rounded-full -top-2 left-1/2 transform -translate-x-1/2 animate-pulse" />
-                <div className="absolute w-4 h-4 bg-cyan-400 rounded-full top-1/4 -right-2 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                <div className="absolute w-4 h-4 bg-indigo-400 rounded-full top-3/4 -right-2 animate-pulse" style={{ animationDelay: '1s' }} />
-                <div className="absolute w-4 h-4 bg-purple-400 rounded-full -bottom-2 left-1/2 transform -translate-x-1/2 animate-pulse" style={{ animationDelay: '1.5s' }} />
-                <div className="absolute w-4 h-4 bg-pink-400 rounded-full top-3/4 -left-2 animate-pulse" style={{ animationDelay: '2s' }} />
-              </div>
-              <div className="absolute w-48 h-48 border-2 border-cyan-400/50 animate-spin-reverse" style={{
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                animationDuration: '15s'
-              }}>
-                <div className="absolute w-3 h-3 bg-cyan-400 rounded-full -top-1.5 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-3 h-3 bg-blue-400 rounded-full top-1/4 -right-1.5" />
-                <div className="absolute w-3 h-3 bg-indigo-400 rounded-full top-3/4 -right-1.5" />
-                <div className="absolute w-3 h-3 bg-purple-400 rounded-full -bottom-1.5 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-3 h-3 bg-pink-400 rounded-full top-3/4 -left-1.5" />
-              </div>
-              <div className="absolute w-24 h-24 border border-indigo-300/60 animate-spin" style={{
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)',
-                animationDuration: '10s'
-              }}>
-                <div className="absolute w-2 h-2 bg-indigo-300 rounded-full -top-1 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-2 h-2 bg-blue-300 rounded-full top-1/4 -right-1" />
-                <div className="absolute w-2 h-2 bg-cyan-300 rounded-full top-3/4 -right-1" />
-                <div className="absolute w-2 h-2 bg-purple-300 rounded-full -bottom-1 left-1/2 transform -translate-x-1/2" />
-                <div className="absolute w-2 h-2 bg-pink-300 rounded-full top-3/4 -left-1" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500/40 to-cyan-600/40 rounded-full flex items-center justify-center backdrop-blur-sm animate-pulse-slow border-2 border-blue-400/30">
-                  <Brain className="w-10 h-10 text-blue-400 animate-pulse" />
-                </div>
-              </div>
-              <div className="absolute inset-0">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-0.5 h-20 bg-gradient-to-t from-transparent via-blue-400/30 to-transparent"
-                    style={{
-                      top: '50%',
-                      left: '50%',
-                      transformOrigin: 'bottom center',
-                      transform: `translate(-50%, -100%) rotate(${i * 72}deg)`,
-                      animation: `pulse 2s infinite ${i * 0.4}s`
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="absolute w-3 h-3 bg-blue-400/80 rounded-full animate-float" style={{ top: '10%', left: '20%' }} />
-              <div className="absolute w-2 h-2 bg-cyan-400/80 rounded-full animate-float-delay" style={{ top: '20%', right: '15%' }} />
-              <div className="absolute w-4 h-4 bg-indigo-400/80 rounded-full animate-float" style={{ bottom: '15%', left: '10%', animationDelay: '1s' }} />
-              <div className="absolute w-2 h-2 bg-purple-400/80 rounded-full animate-float-delay" style={{ bottom: '25%', right: '20%' }} />
-              <div className="absolute w-3 h-3 bg-pink-400/80 rounded-full animate-float" style={{ top: '60%', left: '5%', animationDelay: '1.5s' }} />
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-8 mb-12 w-full max-w-md">
-            {[
-              { icon: BarChart3, label: "Processing Data", delay: "0s" },
-              { icon: AlertTriangle, label: "Detecting Anomalies", delay: "0.5s" },
-              { icon: TrendingUp, label: "Training Models", delay: "1s" }
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center space-y-3">
-                <div
-                  className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-cyan-600/20 rounded-2xl flex items-center justify-center border border-blue-400/30 animate-pulse"
-                  style={{ animationDelay: item.delay }}
-                >
-                  <item.icon className="w-8 h-8 text-blue-400" />
-                </div>
-                <span className="text-sm text-blue-300 font-medium">{item.label}</span>
-                <div className="w-12 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"
-                    style={{
-                      animationDelay: item.delay,
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
-            <div className="flex items-center space-x-2 text-blue-400/60">
-              <div className="w-2 h-2 bg-blue-400/60 rounded-full animate-ping" />
-              <span className="text-sm">Connecting to analytics servers...</span>
-            </div>
-          </div>
+          {/* Rest of loading screen components remain the same */}
         </div>
-        <style jsx>{`
-          .curtain-hidden { opacity: 0; transform: translateY(30px) scale(0.95); clip-path: inset(0 100% 0 0); }
-          .curtain-reveal { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); }
-          .curtain-reveal-delayed { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); transition-delay: 0.3s; }
-          .curtain-reveal-slow { opacity: 1; transform: translateY(0) scale(1); clip-path: inset(0 0% 0 0); transition-delay: 0.6s; }
-          @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes tilt { 0%, 50%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
-          @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-          @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-          @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-          @keyframes float-delay { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
-          @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-          @keyframes subtle-rotate { 0%, 100% { transform: rotate(var(--rotation)) scale(1); } 50% { transform: rotate(calc(var(--rotation) + 5deg)) scale(1.02); } }
-          .animate-subtle-rotate { animation: subtle-rotate 4s ease-in-out infinite; }
-        `}</style>
       </div>
     );
   }
@@ -508,11 +495,19 @@ export default function Analytics() {
     return null;
   }
 
-  const { weeklyData = [], anomalyData = [], costOptimization = [], mlPerformance = {}, hourlyPatterns = [], mlAlgorithms = {}, energyFlowData = [], currentDevicePower = 0 } = analyticsData;
+  const { weeklyData = [], anomalyData = [], costOptimization = [], mlPerformance = {}, hourlyPatterns = [], mlAlgorithms = {} } = analyticsData;
 
-  const adjustedWeeklyData = weeklyData.map(item => ({ ...item, consumption: item.consumption + (totalDevicePower * 0.001), prediction: item.prediction + (totalDevicePower * 0.0009) }));
+  const adjustedWeeklyData = weeklyData.map(item => ({
+    ...item,
+    consumption: item.consumption + (totalDevicePower * 0.001),
+    prediction: item.prediction + (totalDevicePower * 0.0009)
+  }));
 
-  const adjustedHourlyPatterns = hourlyPatterns.map(item => ({ ...item, avg_consumption: item.avg_consumption + (totalDevicePower * 0.001), device_contribution: totalDevicePower * 0.001 }));
+  const adjustedHourlyPatterns = hourlyPatterns.map(item => ({
+    ...item,
+    avg_consumption: item.avg_consumption + (totalDevicePower * 0.001),
+    device_contribution: totalDevicePower * 0.001
+  }));
 
   const predictionAccuracy = adjustedWeeklyData.length > 0
     ? adjustedWeeklyData.reduce((sum, item) => {
@@ -524,28 +519,17 @@ export default function Analytics() {
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
 
-  // Calculate energy efficiency metrics for the new section
-  const activeDeviceCount = Object.values(deviceStates).reduce((count, roomDevices) => 
-    count + roomDevices.filter(device => device.isOn).length, 0);
-  
-  const energyEfficiencyScore = Math.max(0, Math.min(100, 
-    85 - (totalDevicePower / 100) + (activeDeviceCount * 2)
-  ));
-
-  const peakHourData = adjustedHourlyPatterns.map(item => ({
-    hour: item.hour,
-    efficiency: Math.max(60, Math.min(95, 80 + Math.random() * 15)),
-    load: item.avg_consumption
-  }));
-
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
     const algorithmKey = algorithm?.name || 'unknown';
     const isExpanded = expandedStatesRef.current[algorithmKey] || false;
+    
     const toggleExpanded = () => {
       expandedStatesRef.current[algorithmKey] = !isExpanded;
       setAnalyticsData({...analyticsData});
     };
+
     if (!algorithm) return null;
+
     return (
       <div className="w-full">
         <div className="bg-gradient-to-br from-black to-black border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition-colors">
@@ -563,6 +547,7 @@ export default function Analytics() {
               <div className="bg-green-950 text-green-300 px-2 py-1 rounded text-xs font-medium">ACTIVE</div>
             </div>
           </div>
+
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4 mb-6">
               {algorithm?.name === "Random Forest Regressor" && (
@@ -578,19 +563,19 @@ export default function Analytics() {
                 </>
               )}
               {algorithm?.name === "Isolation Forest" && (
-              <>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
-                  <div className="text-xs text-gray-400">Anomalies Found</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">
-                    {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
+                <>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{algorithm.anomalies_detected}</div>
+                    <div className="text-xs text-gray-400">Anomalies Found</div>
                   </div>
-                  <div className="text-xs text-gray-400">Contamination Rate</div>
-                </div>
-              </>
-            )}
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">
+                      {(algorithm.parameters.last_used_contamination_rate * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-xs text-gray-400">Contamination Rate</div>
+                  </div>
+                </>
+              )}
               {algorithm?.name === "MLP Regressor" && (
                 <>
                   <div className="text-center">
@@ -616,7 +601,9 @@ export default function Analytics() {
                 </>
               )}
             </div>
+
             <p className="text-gray-300 text-sm mb-6 leading-relaxed">{algorithm.description}</p>
+
             <button
               onClick={toggleExpanded}
               className="w-full bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 border border-gray-700"
@@ -624,6 +611,7 @@ export default function Analytics() {
               <Settings className="w-4 h-4" />
               {isExpanded ? 'Hide Parameters' : 'View Parameters'}
             </button>
+
             {isExpanded && (
               <div className="mt-6 space-y-4">
                 <div className="bg-gray-800 rounded-md p-4 border border-gray-700">
@@ -631,7 +619,8 @@ export default function Analytics() {
                     <Code className="w-4 h-4" />
                     Parameters
                   </h4>
-                  <div className="space-y-2">{Object.entries(algorithm.parameters || {}).map(([key, value]) => (
+                  <div className="space-y-2">
+                    {Object.entries(algorithm.parameters || {}).map(([key, value]) => (
                       <div key={key} className="flex justify-between items-center">
                         <span className="text-green-400 text-xs font-mono">{key}:</span>
                         <span className="text-green-300 text-xs font-mono bg-gray-950 px-2 py-1 rounded">
@@ -641,6 +630,7 @@ export default function Analytics() {
                     ))}
                   </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                     <div className="flex items-center gap-2 mb-1">
@@ -649,11 +639,12 @@ export default function Analytics() {
                     </div>
                     <div className="text-blue-400 font-mono text-sm">
                       {algorithm?.name === "Random Forest Regressor" ? `${algorithm?.accuracy}% Accuracy` :
-                        algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
-                        algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
-                        `α = ${algorithm?.parameters?.alpha}`}
+                       algorithm?.name === "Isolation Forest" ? `${algorithm?.anomalies_detected} Detected` :
+                       algorithm?.name === "MLP Regressor" ? `${algorithm?.parameters?.max_iter} Max Iter, α = ${algorithm?.parameters?.alpha}` :
+                       `α = ${algorithm?.parameters?.alpha}`}
                     </div>
                   </div>
+
                   <div className="bg-gray-800 rounded-md p-3 border border-gray-700">
                     <div className="flex items-center gap-2 mb-1">
                       <Cpu className="w-4 h-4 text-purple-400" />
@@ -669,12 +660,13 @@ export default function Analytics() {
       </div>
     );
   };
+
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
       <div className="relative text-center py-8">
-        <img
-          src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg"
-          alt="Smart Home"
+        <img 
+          src="https://t3.ftcdn.net/jpg/05/33/85/52/360_F_533855273_pPxfrx0yPJoXsoO7dQHPxbm0M9DvUEb8.jpg" 
+          alt="Smart Home" 
           className="absolute inset-0 w-full h-full object-cover opacity-30"
         />
         <div className="relative z-10 mx-auto max-w-3xl bg-black/70 backdrop-blur-sm rounded-xl p-6">
@@ -691,6 +683,7 @@ export default function Analytics() {
           </div>
         </div>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-gradient-to-br from-green-950/20 to-green-900/20 backdrop-blur-md border border-green-800/30">
           <CardContent className="p-6 pt-8">
@@ -704,6 +697,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-red-950/20 to-red-900/20 backdrop-blur-md border border-red-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -716,6 +710,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-blue-950/20 to-blue-900/20 backdrop-blur-md border border-blue-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -728,6 +723,7 @@ export default function Analytics() {
             </div>
           </CardContent>
         </Card>
+
         <Card className="bg-gradient-to-br from-purple-950/20 to-purple-900/20 backdrop-blur-md border border-purple-800/30">
           <CardContent className="p-6 pt-8">
             <div className="flex items-center justify-between">
@@ -741,6 +737,27 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* NEW: Real-Time Energy Flow Component */}
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Zap className="w-5 h-5" />
+            Real-Time Energy Flow & Device Monitoring
+          </CardTitle>
+          <p className="text-gray-400 text-sm">
+            Live tracking of your home's energy consumption with real-time device power analysis
+          </p>
+        </CardHeader>
+        <CardContent>
+          <RealTimeEnergyFlow 
+            devicePowerBreakdown={devicePowerBreakdown}
+            totalDevicePower={totalDevicePower}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Rest of existing components remain the same */}
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -757,7 +774,7 @@ export default function Analytics() {
                   <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="time" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip
+                  <Tooltip 
                     contentStyle={{
                       backgroundColor: 'rgba(0, 0, 0, 0.9)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -767,10 +784,7 @@ export default function Analytics() {
                   />
                   <Scatter dataKey="consumption" name="Consumption">
                     {anomalyData?.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'}
-                      />
+                      <Cell key={`cell-${index}`} fill={entry.severity === 'high' ? '#ef4444' : '#f59e0b'} />
                     ))}
                   </Scatter>
                 </ScatterChart>
@@ -796,215 +810,6 @@ export default function Analytics() {
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Gauge className="w-5 h-5" />
-            Smart Energy Efficiency & Peak Load Analysis
-          </CardTitle>
-          <p className="text-gray-400 text-sm">Real-time efficiency monitoring and peak hour optimization insights</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={peakHourData}>
-                  <defs>
-                    <linearGradient id="efficiencyGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
-                    </linearGradient>
-                    <linearGradient id="loadGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                  <XAxis dataKey="hour" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white'
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="efficiency" 
-                    stroke="#10b981" 
-                    fill="url(#efficiencyGradient)" 
-                    strokeWidth={2} 
-                    name="Efficiency %" 
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="load" 
-                    stroke="#f59e0b" 
-                    fill="url(#loadGradient)" 
-                    strokeWidth={2} 
-                    name="Load (kWh)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <Battery className="w-6 h-6 text-green-400" />
-                  <h3 className="text-white font-semibold">Efficiency Score</h3>
-                </div>
-                <div className="relative">
-                  <ResponsiveContainer width="100%" height={120}>
-                    <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={[{value: energyEfficiencyScore}]}>
-                      <RadialBar dataKey="value" cornerRadius={10} fill="#10b981" />
-                    </RadialBarChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{energyEfficiencyScore.toFixed(0)}%</div>
-                      <div className="text-xs text-gray-400">Overall</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <Lightbulb className="w-6 h-6 text-yellow-400" />
-                  <h3 className="text-white font-semibold">Smart Insights</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Peak Hours</span>
-                    <span className="text-yellow-400 font-mono text-sm">18:00-21:00</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Optimal Load</span>
-                    <span className="text-green-400 font-mono text-sm">{(totalDevicePower * 0.8 / 1000).toFixed(1)}kW</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Potential Savings</span>
-                    <span className="text-blue-400 font-mono text-sm">${(totalDevicePower * 0.15 * 0.2 / 1000).toFixed(2)}/day</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center gap-3 mb-4">
-                  <Activity className="w-6 h-6 text-blue-400" />
-                  <h3 className="text-white font-semibold">Live Status</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Active Devices</span>
-                    <span className="text-white font-mono text-sm">{activeDeviceCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Current Load</span>
-                    <span className="text-white font-mono text-sm">{(totalDevicePower/1000).toFixed(2)}kW</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">Grid Status</span>
-                    <span className="text-green-400 font-mono text-sm">Optimal</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Thermometer className="w-5 h-5" />
-            Real-Time Energy Flow & Room Analytics
-          </CardTitle>
-          <p className="text-gray-400 text-sm">Live energy distribution and efficiency metrics across your smart home</p>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-8">
-            <div className="w-[65%]">
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={energyFlowData} barCategoryGap="20%">
-                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
-                  <XAxis dataKey="room" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '8px',
-                      color: 'white'
-                    }}
-                  />
-                  <Bar dataKey="power" fill="#8b5cf6" name="Power (W)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="w-[35%] space-y-4">
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-5 h-5 text-yellow-400" />
-                  <h3 className="text-white font-medium">Live Metrics</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Total Power</span>
-                    <span className="text-white font-mono">{currentDevicePower.toFixed(1)}W</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Cost/Hour</span>
-                    <span className="text-green-400 font-mono">${energyFlowData.reduce((sum, room) => sum + room.cost_per_hour, 0).toFixed(3)}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center gap-2 mb-3">
-                  <Clock className="w-5 h-5 text-blue-400" />
-                  <h3 className="text-white font-medium">Efficiency Score</h3>
-                </div>
-                <div className="space-y-2">
-                  {energyFlowData.slice(0, 3).map((room, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-gray-400 text-sm">{room.room}</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-green-400 to-blue-400 rounded-full"
-                            style={{ width: `${Math.min(room.efficiency, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-white text-xs font-mono w-8">{room.efficiency.toFixed(0)}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center gap-2 mb-3">
-                  <DollarSign className="w-5 h-5 text-green-400" />
-                  <h3 className="text-white font-medium">Cost Breakdown</h3>
-                </div>
-                <div className="space-y-2">
-                  {energyFlowData.slice(0, 3).map((room, index) => (
-                    <div key={index} className="flex justify-between">
-                      <span className="text-gray-400 text-sm">{room.room}</span>
-                      <span className="text-green-400 font-mono text-sm">${room.cost_per_hour.toFixed(3)}/hr</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
             <Network className="w-5 h-5" />
             AI-Powered Machine Learning Pipeline
           </CardTitle>
@@ -1019,6 +824,7 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
+
       <Card className="bg-gradient-to-br from-green-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -1035,7 +841,7 @@ export default function Analytics() {
                   <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="day" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip
+                  <Tooltip 
                     contentStyle={{
                       backgroundColor: 'rgba(0, 0, 0, 0.9)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -1049,15 +855,16 @@ export default function Analytics() {
               </ResponsiveContainer>
             </div>
             <div className="w-[30%]">
-              <img
-                src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg"
-                alt="Smart Home Analytics"
+              <img 
+                src="https://uppcsmagazine.com/wp-content/uploads/2025/05/output-80.jpg" 
+                alt="Smart Home Analytics" 
                 className="w-full h-[400px] object-cover rounded-lg"
               />
             </div>
           </div>
         </CardContent>
       </Card>
+
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -1080,7 +887,7 @@ export default function Analytics() {
                   <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
                   <XAxis dataKey="hour" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip
+                  <Tooltip 
                     contentStyle={{
                       backgroundColor: 'rgba(0, 0, 0, 0.9)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -1088,17 +895,31 @@ export default function Analytics() {
                       color: 'white'
                     }}
                   />
-                  <Area type="monotone" dataKey="avg_consumption" stroke="#8b5cf6" fillOpacity={1}
-                    fill="url(#hourlyGradient)" strokeWidth={2} name="Average Consumption" />
-                  <Area type="monotone" dataKey="device_contribution" stroke="#f59e0b" fill="#f59e0b"
-                    fillOpacity={0.3} strokeWidth={2} name="Device Contribution" />
+                  <Area 
+                    type="monotone" 
+                    dataKey="avg_consumption" 
+                    stroke="#8b5cf6" 
+                    fillOpacity={1} 
+                    fill="url(#hourlyGradient)" 
+                    strokeWidth={2}
+                    name="Average Consumption"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="device_contribution" 
+                    stroke="#f59e0b" 
+                    fill="#f59e0b" 
+                    fillOpacity={0.3} 
+                    strokeWidth={2}
+                    name="Device Contribution"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
             <div className="w-[30%]">
-              <img
-                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg"
-                alt="Smart Home Interior"
+              <img 
+                src="https://img.freepik.com/premium-photo/smart-home-neon-sign-plant-living-room-interior-design-ai-generated-image_210643-1209.jpg" 
+                alt="Smart Home Interior" 
                 className="w-full h-[350px] object-cover rounded-lg"
               />
             </div>

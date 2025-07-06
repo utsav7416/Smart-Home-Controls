@@ -404,7 +404,7 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
             <BarChart 
               data={efficiencyBars} 
               layout="horizontal" 
-              margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+              margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" tick={{ fontSize: 12 }} />
@@ -1086,5 +1086,3 @@ export default function Analytics() {
     </div>
   );
 }
-
-

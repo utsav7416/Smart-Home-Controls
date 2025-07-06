@@ -86,6 +86,23 @@ const useDeviceSync = () => {
     return base + (max - base) * ratio;
   };
 
+  const syncWithBackend = async (deviceStates) => {
+    try {
+      const response = await fetch(`${FLASK_API_URL}/api/update-device-states`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceStates })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        analyticsCache = null;
+      }
+    } catch (error) {
+      console.error('Failed to sync device states with backend:', error);
+    }
+  };
+
   useEffect(() => {
     const handleDeviceChange = () => {
       const storedDevices = localStorage.getItem('deviceStates');
@@ -115,12 +132,20 @@ const useDeviceSync = () => {
         
         setTotalDevicePower(total);
         setDevicePowerBreakdown(breakdown);
+        
+        syncWithBackend(devices);
       }
     };
     
     handleDeviceChange();
+    
+    const interval = setInterval(handleDeviceChange, 2000);
+    
     window.addEventListener('storage', handleDeviceChange);
-    return () => window.removeEventListener('storage', handleDeviceChange);
+    return () => {
+      window.removeEventListener('storage', handleDeviceChange);
+      clearInterval(interval);
+    };
   }, []);
 
   return { deviceStates, totalDevicePower, devicePowerBreakdown };
@@ -265,29 +290,68 @@ function LiveActivityFeed() {
 }
 
 function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, analyticsData }) {
-  const calculateEfficiencyMetrics = () => {
+  const calculateRealTimeEfficiencyMetrics = () => {
     const deviceCount = devicePowerBreakdown.length;
     const avgPowerPerDevice = deviceCount > 0 ? totalDevicePower / deviceCount : 0;
     const currentHour = new Date().getHours();
     const isOnPeak = currentHour >= 17 && currentHour <= 22;
     
+    const baseScore = 45;
+    const deviceBonus = Math.min(25, deviceCount * 3);
+    const powerPenalty = Math.min(30, totalDevicePower / 100);
+    
+    const deviceUtilization = Math.max(20, Math.min(100, baseScore + deviceBonus - powerPenalty));
+    
+    const peakPenalty = isOnPeak ? Math.min(25, totalDevicePower / 80) : 0;
+    const peakHourOptimization = Math.max(35, Math.min(95, 85 - peakPenalty));
+    
+    const tempControlBase = totalDevicePower > 1000 ? Math.max(40, 90 - (totalDevicePower / 150)) : Math.min(90, 70 + (deviceCount * 3));
+    const temperatureControl = Math.max(30, Math.min(95, tempControlBase));
+    
+    const standbyBase = 55 + (deviceCount * 4);
+    const standbyReduction = Math.max(45, Math.min(90, standbyBase));
+    
+    const loadBalancingBase = 65 + Math.max(0, 50 - avgPowerPerDevice) / 20;
+    const loadBalancing = Math.max(40, Math.min(95, loadBalancingBase));
+    
+    const timeOfUseBase = isOnPeak ? Math.max(40, 80 - (totalDevicePower / 120)) : Math.min(90, 75 + (deviceCount * 2));
+    const timeOfUse = Math.max(35, Math.min(95, timeOfUseBase));
+    
+    const seasonalBase = 60 + (deviceCount * 2) + Math.random() * 15;
+    const seasonalAdjustment = Math.max(45, Math.min(88, seasonalBase));
+    
+    const occupancyBase = 50 + (deviceCount * 3.5) + Math.random() * 10;
+    const occupancyControl = Math.max(40, Math.min(85, occupancyBase));
+    
+    const weatherBase = 55 + (deviceCount * 2.5) + Math.random() * 12;
+    const weatherResponsive = Math.max(45, Math.min(88, weatherBase));
+    
+    const powerFactorBase = 65 + Math.random() * 15 + (deviceCount * 2);
+    const powerFactor = Math.max(50, Math.min(92, powerFactorBase));
+    
+    const energyRecoveryBase = 40 + (deviceCount * 3) + Math.random() * 10;
+    const energyRecovery = Math.max(35, Math.min(80, energyRecoveryBase));
+    
+    const smartSchedulingBase = 60 + (deviceCount * 2.8) + Math.random() * 12;
+    const smartScheduling = Math.max(45, Math.min(93, smartSchedulingBase));
+
     return {
-      deviceUtilization: Math.min(100, Math.max(20, (deviceCount / 9) * 100)),
-      peakHourOptimization: isOnPeak ? Math.max(40, 100 - (totalDevicePower / 50)) : Math.min(95, 60 + (totalDevicePower / 100)),
-      temperatureControl: totalDevicePower > 1000 ? Math.max(30, 85 - (totalDevicePower / 200)) : Math.min(95, 70 + (totalDevicePower / 50)),
-      standbyReduction: Math.min(90, 50 + (deviceCount * 5)),
-      loadBalancing: Math.min(95, 60 + Math.abs(50 - avgPowerPerDevice) / 10),
-      timeOfUse: isOnPeak ? Math.max(35, 75 - (totalDevicePower / 100)) : Math.min(95, 80 + (totalDevicePower / 200)),
-      seasonalAdjustment: Math.min(90, 65 + Math.random() * 20),
-      occupancyControl: Math.min(85, 55 + (deviceCount * 4)),
-      weatherResponsive: Math.min(88, 62 + Math.random() * 15),
-      powerFactor: Math.min(92, 70 + Math.random() * 15),
-      energyRecovery: Math.min(80, 45 + (deviceCount * 3)),
-      smartScheduling: Math.min(93, 68 + Math.random() * 18)
+      deviceUtilization: Math.round(deviceUtilization),
+      peakHourOptimization: Math.round(peakHourOptimization),
+      temperatureControl: Math.round(temperatureControl),
+      standbyReduction: Math.round(standbyReduction),
+      loadBalancing: Math.round(loadBalancing),
+      timeOfUse: Math.round(timeOfUse),
+      seasonalAdjustment: Math.round(seasonalAdjustment),
+      occupancyControl: Math.round(occupancyControl),
+      weatherResponsive: Math.round(weatherResponsive),
+      powerFactor: Math.round(powerFactor),
+      energyRecovery: Math.round(energyRecovery),
+      smartScheduling: Math.round(smartScheduling)
     };
   };
 
-  const metrics = calculateEfficiencyMetrics();
+  const metrics = calculateRealTimeEfficiencyMetrics();
   
   const radarData = [
     { subject: 'Device Utilization', current: metrics.deviceUtilization, optimal: 85, fullMark: 100 },
@@ -301,54 +365,75 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
   ];
 
   const efficiencyBars = [
-    { name: 'Device Utilization', value: Math.round(metrics.deviceUtilization) },
-    { name: 'Peak Hour Optimization', value: Math.round(metrics.peakHourOptimization) },
-    { name: 'Temperature Control', value: Math.round(metrics.temperatureControl) },
-    { name: 'Standby Power Reduction', value: Math.round(metrics.standbyReduction) },
-    { name: 'Load Balancing', value: Math.round(metrics.loadBalancing) },
-    { name: 'Smart Scheduling', value: Math.round(metrics.smartScheduling) },
-    { name: 'Occupancy Control', value: Math.round(metrics.occupancyControl) },
-    { name: 'Weather Responsive', value: Math.round(metrics.weatherResponsive) }
+    { name: 'Device Utilization', value: metrics.deviceUtilization },
+    { name: 'Peak Hour Optimization', value: metrics.peakHourOptimization },
+    { name: 'Temperature Control', value: metrics.temperatureControl },
+    { name: 'Standby Power Reduction', value: metrics.standbyReduction },
+    { name: 'Load Balancing', value: metrics.loadBalancing },
+    { name: 'Smart Scheduling', value: metrics.smartScheduling },
+    { name: 'Occupancy Control', value: metrics.occupancyControl },
+    { name: 'Weather Responsive', value: metrics.weatherResponsive }
   ];
 
-  const recommendations = [
-    ...(metrics.deviceUtilization < 60 ? [{ 
-      type: 'Immediate', 
-      action: 'Reduce active devices during low-usage periods', 
-      impact: 'High', 
-      savings: '$12-18/month' 
-    }] : []),
-    ...(metrics.peakHourOptimization < 70 ? [{ 
-      type: 'Scheduled', 
-      action: 'Shift high-power devices to off-peak hours', 
-      impact: 'High', 
-      savings: '$25-35/month' 
-    }] : []),
-    ...(metrics.temperatureControl < 75 ? [{ 
-      type: 'Behavioral', 
-      action: 'Optimize AC temperature settings', 
-      impact: 'Medium', 
-      savings: '$15-22/month' 
-    }] : []),
-    ...(metrics.standbyReduction < 80 ? [{ 
-      type: 'System', 
-      action: 'Enable smart power strips for standby reduction', 
-      impact: 'Medium', 
-      savings: '$8-12/month' 
-    }] : []),
-    ...(metrics.loadBalancing < 75 ? [{ 
-      type: 'Upgrade', 
-      action: 'Install smart load balancing switches', 
-      impact: 'High', 
-      savings: '$20-30/month' 
-    }] : []),
-    { 
+  const generateDynamicRecommendations = () => {
+    const recommendations = [];
+    
+    if (metrics.deviceUtilization < 60) {
+      recommendations.push({ 
+        type: 'Immediate', 
+        action: 'Reduce active devices during low-usage periods', 
+        impact: 'High', 
+        savings: `$${(12 + totalDevicePower * 0.005).toFixed(0)}-${(18 + totalDevicePower * 0.008).toFixed(0)}/month` 
+      });
+    }
+    
+    if (metrics.peakHourOptimization < 70) {
+      recommendations.push({ 
+        type: 'Scheduled', 
+        action: 'Shift high-power devices to off-peak hours', 
+        impact: 'High', 
+        savings: `$${(25 + totalDevicePower * 0.012).toFixed(0)}-${(35 + totalDevicePower * 0.018).toFixed(0)}/month` 
+      });
+    }
+    
+    if (metrics.temperatureControl < 75) {
+      recommendations.push({ 
+        type: 'Behavioral', 
+        action: 'Optimize AC temperature settings', 
+        impact: 'Medium', 
+        savings: `$${(15 + totalDevicePower * 0.008).toFixed(0)}-${(22 + totalDevicePower * 0.012).toFixed(0)}/month` 
+      });
+    }
+    
+    if (metrics.standbyReduction < 80) {
+      recommendations.push({ 
+        type: 'System', 
+        action: 'Enable smart power strips for standby reduction', 
+        impact: 'Medium', 
+        savings: `$${(8 + devicePowerBreakdown.length * 2).toFixed(0)}-${(12 + devicePowerBreakdown.length * 3).toFixed(0)}/month` 
+      });
+    }
+    
+    if (metrics.loadBalancing < 75) {
+      recommendations.push({ 
+        type: 'Upgrade', 
+        action: 'Install smart load balancing switches', 
+        impact: 'High', 
+        savings: `$${(20 + totalDevicePower * 0.010).toFixed(0)}-${(30 + totalDevicePower * 0.015).toFixed(0)}/month` 
+      });
+    }
+    
+    recommendations.push({ 
       type: 'Scheduled', 
       action: 'Enable weather-responsive automation', 
       impact: 'Medium', 
-      savings: '$10-15/month' 
-    }
-  ];
+      savings: `$${(10 + devicePowerBreakdown.length * 1.5).toFixed(0)}-${(15 + devicePowerBreakdown.length * 2.5).toFixed(0)}/month` 
+    });
+
+    return recommendations.slice(0, 6);
+  };
+
+  const recommendations = generateDynamicRecommendations();
 
   const getEfficiencyColor = (efficiency) => {
     if (efficiency >= 85) return '#22c55e';
@@ -374,7 +459,7 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
         <div className="bg-gray-800/50 rounded-lg p-6">
           <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-green-400" />
-            Efficiency Radar Analysis
+            Real-Time Efficiency Radar Analysis
           </h4>
           <ResponsiveContainer width="100%" height={300}>
             <RadarChart data={radarData}>
@@ -393,12 +478,15 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
               />
             </RadarChart>
           </ResponsiveContainer>
+          <div className="mt-4 text-center">
+            <div className="text-sm text-gray-400">Active Devices: {devicePowerBreakdown.length} | Total Power: {(totalDevicePower/1000).toFixed(2)}kW</div>
+          </div>
         </div>
 
         <div className="bg-gray-800/50 rounded-lg p-6">
           <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-blue-400" />
-            Efficiency Metrics Breakdown
+            Live Efficiency Metrics Breakdown
           </h4>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart 
@@ -439,7 +527,7 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
       <div className="bg-gray-800/50 rounded-lg p-6">
         <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Lightbulb className="w-5 h-5 text-yellow-400" />
-          Smart Energy Recommendations
+          Dynamic Energy Recommendations
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {recommendations.map((rec, index) => (
@@ -514,6 +602,19 @@ export default function Analytics() {
       return ()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);}
     }
   }, [viewState]);
+
+  useEffect(() => {
+    if (viewState === 'dashboard' && analyticsData) {
+      const refreshInterval = setInterval(() => {
+        analyticsCache = null;
+        prefetchAnalytics()
+          .then(data => setAnalyticsData(data))
+          .catch(e => console.error('Failed to refresh analytics:', e));
+      }, 8000);
+      
+      return () => clearInterval(refreshInterval);
+    }
+  }, [viewState, analyticsData]);
 
   if (viewState === 'initial' || viewState === 'loading') {
     return (

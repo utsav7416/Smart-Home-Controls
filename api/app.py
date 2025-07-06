@@ -51,6 +51,7 @@ analytics_cache_time = None
 CACHE_DURATION = 3
 device_change_count = 0
 previous_device_hash = None
+device_activity_history = []
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -101,6 +102,35 @@ def calculate_device_consumption_cached(device_name, is_on, value, property_type
 
 def calculate_device_consumption(device_name, is_on, value, property_type):
     return calculate_device_consumption_cached(device_name, is_on, value, property_type)
+
+def track_device_activity(device_states_data):
+    global device_activity_history
+    current_time = datetime.now()
+    
+    active_devices = 0
+    total_power = 0
+    
+    if device_states_data:
+        for room, devices in device_states_data.items():
+            for device in devices:
+                if device.get('isOn', False):
+                    active_devices += 1
+                    power = calculate_device_consumption(
+                        device['name'], device['isOn'], device['value'], device['property']
+                    )
+                    total_power += power
+    
+    activity_record = {
+        'timestamp': current_time,
+        'active_devices': active_devices,
+        'total_power': total_power,
+        'device_change_count': device_change_count
+    }
+    
+    device_activity_history.append(activity_record)
+    
+    if len(device_activity_history) > 100:
+        device_activity_history.pop(0)
 
 def generate_realistic_energy_data(device_states_data=None):
     current_time = datetime.now()
@@ -225,38 +255,57 @@ def train_models_background():
         print(f"Model training failed: {e}")
         models_trained = False
 
-def ensure_initialized_and_trained():
-    if not initialized:
-        initialize_minimal_data()
-    if not models_trained:
-        threading.Thread(target=train_models_background, daemon=True).start()
-
 def detect_dynamic_anomalies(df):
-    global device_change_count, last_device_change_time
-    anomaly_data = []
+    global device_change_count, last_device_change_time, device_activity_history
     
-    if len(df) < 5:
-        return anomaly_data
+    recent_activity = device_activity_history[-10:] if device_activity_history else []
+    current_active_devices = recent_activity[-1]['active_devices'] if recent_activity else 0
+    current_power = recent_activity[-1]['total_power'] if recent_activity else 0
     
-    recent_data = df.tail(min(24, len(df)))
+    base_anomaly_count = 3
     
-    device_factor = 1.0
-    if device_change_count > 0:
-        device_factor = 1.0 + (device_change_count * 0.2)
+    device_based_count = min(3, max(0, current_active_devices - 2))
+    
+    power_based_count = 0
+    if current_power > 2000:
+        power_based_count = 2
+    elif current_power > 1000:
+        power_based_count = 1
+    
+    change_based_count = min(3, device_change_count)
     
     time_since_change = float('inf')
     if last_device_change_time:
         time_since_change = (datetime.now() - last_device_change_time).total_seconds()
     
-    if time_since_change < 120:
-        device_factor *= 2.0
+    recency_boost = 0
+    if time_since_change < 60:
+        recency_boost = 2
     elif time_since_change < 300:
-        device_factor *= 1.5
-    elif time_since_change < 600:
-        device_factor *= 1.2
+        recency_boost = 1
     
-    base_count = 3
-    target_count = min(8, max(3, int(base_count + device_change_count + (device_factor - 1) * 2)))
+    total_anomaly_count = base_anomaly_count + device_based_count + power_based_count + change_based_count + recency_boost
+    target_anomaly_count = max(3, min(8, total_anomaly_count))
+    
+    anomaly_data = []
+    
+    if len(df) < 5:
+        for i in range(target_anomaly_count):
+            hour = random.randint(0, 23)
+            consumption = 60 + (current_power * 0.001) + random.uniform(10, 50)
+            severity = 'high' if consumption > 100 else 'medium'
+            
+            anomaly_data.append({
+                'time': hour,
+                'consumption': round(consumption, 1),
+                'severity': severity,
+                'timestamp': (datetime.now() - timedelta(minutes=random.randint(1, 120))).isoformat(),
+                'score': round(random.uniform(0.7, 0.95), 3),
+                'type': 'device_activity'
+            })
+        return anomaly_data
+    
+    recent_data = df.tail(min(24, len(df)))
     
     for _, row in recent_data.iterrows():
         hour = row['hour']
@@ -270,9 +319,10 @@ def detect_dynamic_anomalies(df):
             
             if hour_std > 0:
                 z_score = abs((consumption - hour_mean) / hour_std)
-                threshold = 0.5 if device_change_count > 2 else (0.8 if device_change_count > 0 else 1.5)
                 
-                if z_score > threshold:
+                device_threshold = 0.3 if current_active_devices > 4 else (0.5 if current_active_devices > 2 else 0.8)
+                
+                if z_score > device_threshold:
                     deviation_ratio = abs(consumption - hour_mean) / hour_mean
                     severity = 'high' if deviation_ratio > 0.4 else ('medium' if deviation_ratio > 0.2 else 'low')
                     confidence = min(0.95, 0.5 + (z_score / 4.0))
@@ -293,7 +343,7 @@ def detect_dynamic_anomalies(df):
         expected_base = 50 + (device_consumption * 0.8)
         actual_consumption = recent_point['consumption']
         
-        threshold_factor = 0.05 if device_change_count > 2 else 0.08
+        threshold_factor = 0.05 if current_active_devices > 3 else 0.08
         if abs(actual_consumption - expected_base) > expected_base * threshold_factor:
             deviation_ratio = abs(actual_consumption - expected_base) / expected_base
             severity = 'high' if deviation_ratio > 0.3 else 'medium'
@@ -314,7 +364,7 @@ def detect_dynamic_anomalies(df):
         overall_std = consumption_values.std()
         
         if overall_std > 0:
-            sensitivity_factor = 1.0 if device_change_count > 2 else (1.5 if device_change_count > 0 else 2.0)
+            sensitivity_factor = 0.8 if current_active_devices > 4 else (1.2 if current_active_devices > 2 else 1.8)
             upper_bound = overall_mean + (sensitivity_factor * overall_std)
             lower_bound = overall_mean - (1.5 * overall_std)
             
@@ -346,25 +396,32 @@ def detect_dynamic_anomalies(df):
     
     unique_anomalies.sort(key=lambda x: x['score'], reverse=True)
     
-    final_anomalies = unique_anomalies[:target_count]
-    
-    while len(final_anomalies) < target_count:
+    while len(unique_anomalies) < target_anomaly_count:
         synthetic_hour = random.randint(0, 23)
-        base_consumption = 60 + random.uniform(10, 40)
+        base_consumption = 60 + (current_power * 0.0008) + random.uniform(10, 40)
+        
         if device_change_count > 0:
-            base_consumption += random.uniform(15, 50)
+            base_consumption += random.uniform(15, 35)
         
         synthetic_anomaly = {
             'time': synthetic_hour,
             'consumption': round(float(base_consumption + random.uniform(-5, 25)), 1),
-            'severity': random.choice(['medium', 'high']) if device_change_count > 0 else 'medium',
+            'severity': random.choice(['medium', 'high']) if current_active_devices > 2 else 'medium',
             'timestamp': (datetime.now() - timedelta(minutes=random.randint(1, 120))).isoformat(),
             'score': round(float(random.uniform(0.6, 0.9)), 3),
             'type': 'pattern_detection'
         }
-        final_anomalies.append(synthetic_anomaly)
+        unique_anomalies.append(synthetic_anomaly)
+    
+    final_anomalies = unique_anomalies[:target_anomaly_count]
     
     return final_anomalies
+
+def ensure_initialized_and_trained():
+    if not initialized:
+        initialize_minimal_data()
+    if not models_trained:
+        threading.Thread(target=train_models_background, daemon=True).start()
 
 @app.before_request
 def before_any_request():
@@ -396,6 +453,7 @@ def update_device_states():
             previous_device_hash = new_hash
         
         device_states = new_device_states
+        track_device_activity(device_states)
         
         cached_analytics = None
         analytics_cache_time = None

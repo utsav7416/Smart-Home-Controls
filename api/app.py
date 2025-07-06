@@ -48,7 +48,7 @@ last_calculated_contamination_rate = 0.15
 last_device_change_time = None
 cached_analytics = None
 analytics_cache_time = None
-CACHE_DURATION = 8
+CACHE_DURATION = 5
 device_change_count = 0
 previous_device_hash = None
 
@@ -238,27 +238,21 @@ def detect_dynamic_anomalies(df):
     if len(df) < 5:
         return anomaly_data
     
-    recent_data = df[-min(24, len(df)):]
+    recent_data = df.tail(min(24, len(df)))
     consumption_values = recent_data['consumption'].values
     
-    min_anomalies = 3
-    max_anomalies = 8
+    device_factor = max(1.2, 1.0 + (device_change_count * 0.15)) if device_change_count > 0 else 1.0
+    time_since_change = (datetime.now() - last_device_change_time).total_seconds() if last_device_change_time else float('inf')
     
-    base_anomaly_count = min_anomalies
-    if device_change_count > 0:
-        additional_anomalies = min(3, device_change_count)
-        base_anomaly_count = min(max_anomalies, min_anomalies + additional_anomalies)
+    if time_since_change < 120:
+        device_factor *= 1.8
+    elif time_since_change < 300:
+        device_factor *= 1.4
+    elif time_since_change < 600:
+        device_factor *= 1.2
     
-    time_since_last_change = float('inf')
-    if last_device_change_time:
-        time_since_last_change = (datetime.now() - last_device_change_time).total_seconds()
-    
-    if time_since_last_change < 180:
-        base_anomaly_count = min(max_anomalies, base_anomaly_count + 2)
-    elif time_since_last_change < 600:
-        base_anomaly_count = min(max_anomalies, base_anomaly_count + 1)
-    
-    target_anomaly_count = random.randint(base_anomaly_count, max_anomalies)
+    base_count = 3 + min(2, device_change_count)
+    target_count = min(8, max(3, int(base_count * device_factor)))
     
     for _, row in recent_data.iterrows():
         hour = row['hour']
@@ -273,7 +267,7 @@ def detect_dynamic_anomalies(df):
             
             if hour_std > 0:
                 z_score = abs((consumption - hour_mean) / hour_std)
-                threshold = 1.0 if device_change_count > 0 else 1.8
+                threshold = 0.8 if device_change_count > 2 else (1.2 if device_change_count > 0 else 1.8)
                 
                 if z_score > threshold:
                     deviation_ratio = abs(consumption - hour_mean) / hour_mean
@@ -289,14 +283,15 @@ def detect_dynamic_anomalies(df):
                         'type': 'temporal_pattern'
                     })
     
-    if time_since_last_change < 300:
+    if time_since_change < 300:
         recent_point = recent_data.iloc[-1]
         device_consumption = recent_point.get('device_consumption', 0)
         
         expected_base = 50 + (device_consumption * 0.8)
         actual_consumption = recent_point['consumption']
         
-        if abs(actual_consumption - expected_base) > expected_base * 0.1:
+        threshold_factor = 0.08 if device_change_count > 2 else 0.12
+        if abs(actual_consumption - expected_base) > expected_base * threshold_factor:
             deviation_ratio = abs(actual_consumption - expected_base) / expected_base
             severity = 'high' if deviation_ratio > 0.3 else 'medium'
             confidence = min(0.95, 0.7 + (deviation_ratio * 0.3))
@@ -315,7 +310,7 @@ def detect_dynamic_anomalies(df):
         overall_std = consumption_values.std()
         
         if overall_std > 0:
-            sensitivity_factor = 1.8 if device_change_count > 0 else 2.5
+            sensitivity_factor = 1.5 if device_change_count > 2 else (1.8 if device_change_count > 0 else 2.5)
             upper_bound = overall_mean + (sensitivity_factor * overall_std)
             lower_bound = overall_mean - (2.0 * overall_std)
             
@@ -346,7 +341,7 @@ def detect_dynamic_anomalies(df):
             if device_change_count > 0:
                 contamination_rate = min(0.4, 0.12 + (device_change_count * 0.06))
             
-            if time_since_last_change < 600:
+            if time_since_change < 600:
                 contamination_rate = min(0.45, contamination_rate + 0.08)
             
             global last_calculated_contamination_rate
@@ -417,23 +412,7 @@ def detect_dynamic_anomalies(df):
     
     unique_anomalies.sort(key=lambda x: x['score'], reverse=True)
     
-    final_anomalies = unique_anomalies[:target_anomaly_count]
-    
-    while len(final_anomalies) < target_anomaly_count:
-        synthetic_hour = random.randint(0, 23)
-        base_consumption = 80
-        if device_change_count > 0:
-            base_consumption += random.uniform(20, 60)
-        
-        synthetic_anomaly = {
-            'time': synthetic_hour,
-            'consumption': round(float(base_consumption + random.uniform(-10, 30)), 1),
-            'severity': random.choice(['medium', 'high']) if device_change_count > 0 else 'medium',
-            'timestamp': datetime.now().isoformat(),
-            'score': round(float(random.uniform(0.6, 0.9)), 3),
-            'type': 'pattern_detection'
-        }
-        final_anomalies.append(synthetic_anomaly)
+    final_anomalies = unique_anomalies[:target_count]
     
     return final_anomalies
 

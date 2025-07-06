@@ -301,14 +301,14 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
   ];
 
   const efficiencyBars = [
-    { category: 'Device Utilization', value: Math.round(metrics.deviceUtilization), target: 85 },
-    { category: 'Peak Hour Optimization', value: Math.round(metrics.peakHourOptimization), target: 90 },
-    { category: 'Temperature Control', value: Math.round(metrics.temperatureControl), target: 88 },
-    { category: 'Standby Power Reduction', value: Math.round(metrics.standbyReduction), target: 92 },
-    { category: 'Load Balancing', value: Math.round(metrics.loadBalancing), target: 87 },
-    { category: 'Smart Scheduling', value: Math.round(metrics.smartScheduling), target: 93 },
-    { category: 'Occupancy Control', value: Math.round(metrics.occupancyControl), target: 89 },
-    { category: 'Weather Responsive', value: Math.round(metrics.weatherResponsive), target: 86 }
+    { name: 'Device Utilization', value: Math.round(metrics.deviceUtilization) },
+    { name: 'Peak Hour Optimization', value: Math.round(metrics.peakHourOptimization) },
+    { name: 'Temperature Control', value: Math.round(metrics.temperatureControl) },
+    { name: 'Standby Power Reduction', value: Math.round(metrics.standbyReduction) },
+    { name: 'Load Balancing', value: Math.round(metrics.loadBalancing) },
+    { name: 'Smart Scheduling', value: Math.round(metrics.smartScheduling) },
+    { name: 'Occupancy Control', value: Math.round(metrics.occupancyControl) },
+    { name: 'Weather Responsive', value: Math.round(metrics.weatherResponsive) }
   ];
 
   const recommendations = [
@@ -401,10 +401,20 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
             Efficiency Metrics Breakdown
           </h4>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={efficiencyBars} layout="horizontal" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
+            <BarChart 
+              data={efficiencyBars} 
+              layout="horizontal" 
+              margin={{ top: 5, right: 30, left: 5, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" tick={{ fontSize: 12 }} />
-              <YAxis dataKey="category" type="category" width={100} stroke="#9CA3AF" tick={{ fontSize: 11 }} />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                width={120} 
+                stroke="#9CA3AF" 
+                tick={{ fontSize: 10 }} 
+              />
               <Tooltip 
                 contentStyle={{
                   backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -413,11 +423,8 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
                   color: 'white',
                   fontSize: '14px'
                 }}
-                formatter={(value, name) => [
-                  `${value}%`, 
-                  name === 'value' ? 'Current Efficiency' : name
-                ]}
-                labelFormatter={(label) => `Category: ${label}`}
+                formatter={(value) => [`${value}%`, 'Efficiency']}
+                labelFormatter={(label) => `Metric: ${label}`}
               />
               <Bar dataKey="value" radius={[0, 4, 4, 0]} stroke="#ffffff" strokeWidth={0.5}>
                 {efficiencyBars.map((entry, index) => (
@@ -1079,3 +1086,5 @@ export default function Analytics() {
     </div>
   );
 }
+
+

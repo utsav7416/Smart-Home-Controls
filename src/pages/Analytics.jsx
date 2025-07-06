@@ -105,19 +105,23 @@ const useDeviceSync = () => {
       let total = 0;
       const breakdown = [];
       
-      Object.values(devices).forEach((roomDevices) => {
-        roomDevices.forEach((device) => {
-          const power = calculateDevicePower(device.name, device.isOn, device.value, device.property);
-          total += power;
-          if (power > 0) {
-            breakdown.push({
-              name: device.name,
-              power: Math.round(power),
-              percentage: 0
+      if (devices && typeof devices === 'object') {
+        Object.values(devices).forEach((roomDevices) => {
+          if (Array.isArray(roomDevices)) {
+            roomDevices.forEach((device) => {
+              const power = calculateDevicePower(device.name, device.isOn, device.value, device.property);
+              total += power;
+              if (power > 0) {
+                breakdown.push({
+                  name: device.name,
+                  power: Math.round(power),
+                  percentage: 0
+                });
+              }
             });
           }
         });
-      });
+      }
       
       breakdown.forEach(device => {
         device.percentage = total > 0 ? Math.round((device.power / total) * 100) : 0;
@@ -130,7 +134,7 @@ const useDeviceSync = () => {
 
   useEffect(() => {
     syncDeviceStates();
-    const interval = setInterval(syncDeviceStates, 2000);
+    const interval = setInterval(syncDeviceStates, 1000);
     window.addEventListener('storage', syncDeviceStates);
     return () => {
       clearInterval(interval);
@@ -284,7 +288,7 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
     const deviceCount = devicePowerBreakdown.length;
     const currentHour = new Date().getHours();
     const isOnPeak = currentHour >= 17 && currentHour <= 22;
-    const powerKW = totalDevicePower / 1000;
+    const powerKW = Math.max(0.1, totalDevicePower / 1000);
     
     const deviceUtilization = Math.min(100, Math.max(15, (deviceCount / 9) * 100));
     const peakHourOptimization = isOnPeak ? Math.max(30, 90 - (powerKW * 15)) : Math.min(95, 70 + (powerKW * 5));
@@ -321,14 +325,14 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
   ];
 
   const efficiencyBars = [
-    { name: 'Device Utilization', value: Math.round(metrics.deviceUtilization) },
-    { name: 'Peak Hour Optimization', value: Math.round(metrics.peakHourOptimization) },
-    { name: 'Temperature Control', value: Math.round(metrics.temperatureControl) },
-    { name: 'Standby Power Reduction', value: Math.round(metrics.standbyReduction) },
-    { name: 'Load Balancing', value: Math.round(metrics.loadBalancing) },
-    { name: 'Time-of-Use', value: Math.round(metrics.timeOfUse) },
-    { name: 'Seasonal Adjustment', value: Math.round(metrics.seasonalAdjustment) },
-    { name: 'Occupancy Control', value: Math.round(metrics.occupancyControl) }
+    { name: 'Device Utilization', value: Math.round(metrics.deviceUtilization), shortName: 'Device Util.' },
+    { name: 'Peak Hour Optimization', value: Math.round(metrics.peakHourOptimization), shortName: 'Peak Hour' },
+    { name: 'Temperature Control', value: Math.round(metrics.temperatureControl), shortName: 'Temp Control' },
+    { name: 'Standby Power Reduction', value: Math.round(metrics.standbyReduction), shortName: 'Standby Red.' },
+    { name: 'Load Balancing', value: Math.round(metrics.loadBalancing), shortName: 'Load Balance' },
+    { name: 'Time-of-Use', value: Math.round(metrics.timeOfUse), shortName: 'Time-of-Use' },
+    { name: 'Seasonal Adjustment', value: Math.round(metrics.seasonalAdjustment), shortName: 'Seasonal' },
+    { name: 'Occupancy Control', value: Math.round(metrics.occupancyControl), shortName: 'Occupancy' }
   ];
 
   const recommendations = [
@@ -421,16 +425,16 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
             <BarChart 
               data={efficiencyBars} 
               layout="horizontal" 
-              margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+              margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" tick={{ fontSize: 12 }} />
+              <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" tick={{ fontSize: 10 }} />
               <YAxis 
-                dataKey="name" 
+                dataKey="shortName" 
                 type="category" 
-                width={120} 
+                width={80} 
                 stroke="#9CA3AF" 
-                tick={{ fontSize: 10 }} 
+                tick={{ fontSize: 9 }} 
               />
               <Tooltip 
                 contentStyle={{
@@ -438,12 +442,15 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   borderRadius: '8px',
                   color: 'white',
-                  fontSize: '14px'
+                  fontSize: '12px'
                 }}
-                formatter={(value) => [`${value}%`, 'Efficiency']}
-                labelFormatter={(label) => `Metric: ${label}`}
+                formatter={(value, name, props) => [`${value}%`, 'Efficiency']}
+                labelFormatter={(label, payload) => {
+                  const item = payload?.[0]?.payload;
+                  return item ? `${item.name}` : label;
+                }}
               />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]} stroke="#ffffff" strokeWidth={0.5}>
+              <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                 {efficiencyBars.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getEfficiencyColor(entry.value)} />
                 ))}
@@ -524,7 +531,7 @@ export default function Analytics() {
         prefetchAnalytics()
           .then(data => setAnalyticsData(data))
           .catch(e => console.error('Analytics refresh failed:', e));
-      }, 5000);
+      }, 1000);
       return () => clearInterval(interval);
     }
   }, [viewState]);
@@ -958,7 +965,7 @@ export default function Analytics() {
             <div className="w-[60%]">
               <ResponsiveContainer width="100%" height={300}>
                 <ScatterChart data={anomalyData}>
-                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
                   <XAxis dataKey="time" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip 
@@ -1025,7 +1032,7 @@ export default function Analytics() {
             <div className="w-[70%]">
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={adjustedWeeklyData} barCategoryGap="20%">
-                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
                   <XAxis dataKey="day" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip 
@@ -1071,7 +1078,7 @@ export default function Analytics() {
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333333" />
                   <XAxis dataKey="hour" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
                   <Tooltip 

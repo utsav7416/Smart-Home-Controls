@@ -48,10 +48,12 @@ last_calculated_contamination_rate = 0.15
 last_device_change_time = None
 cached_analytics = None
 analytics_cache_time = None
-CACHE_DURATION = 3
+CACHE_DURATION = 1
 device_change_count = 0
 previous_device_hash = None
 device_activity_history = []
+current_active_devices = 0
+current_total_power = 0
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -104,7 +106,7 @@ def calculate_device_consumption(device_name, is_on, value, property_type):
     return calculate_device_consumption_cached(device_name, is_on, value, property_type)
 
 def track_device_activity(device_states_data):
-    global device_activity_history
+    global device_activity_history, current_active_devices, current_total_power
     current_time = datetime.now()
     
     active_devices = 0
@@ -119,6 +121,9 @@ def track_device_activity(device_states_data):
                         device['name'], device['isOn'], device['value'], device['property']
                     )
                     total_power += power
+    
+    current_active_devices = active_devices
+    current_total_power = total_power
     
     activity_record = {
         'timestamp': current_time,
@@ -256,23 +261,17 @@ def train_models_background():
         models_trained = False
 
 def detect_dynamic_anomalies(df):
-    global device_change_count, last_device_change_time, device_activity_history
-    
-    recent_activity = device_activity_history[-10:] if device_activity_history else []
-    current_active_devices = recent_activity[-1]['active_devices'] if recent_activity else 0
-    current_power = recent_activity[-1]['total_power'] if recent_activity else 0
+    global device_change_count, last_device_change_time, device_activity_history, current_active_devices, current_total_power
     
     base_anomaly_count = 3
-    
-    device_based_count = min(3, max(0, current_active_devices - 2))
-    
+    device_based_count = min(3, max(0, current_active_devices - 1))
     power_based_count = 0
-    if current_power > 2000:
+    if current_total_power > 2000:
         power_based_count = 2
-    elif current_power > 1000:
+    elif current_total_power > 1000:
         power_based_count = 1
     
-    change_based_count = min(3, device_change_count)
+    change_based_count = min(2, device_change_count)
     
     time_since_change = float('inf')
     if last_device_change_time:
@@ -292,7 +291,7 @@ def detect_dynamic_anomalies(df):
     if len(df) < 5:
         for i in range(target_anomaly_count):
             hour = random.randint(0, 23)
-            consumption = 60 + (current_power * 0.001) + random.uniform(10, 50)
+            consumption = 60 + (current_total_power * 0.001) + random.uniform(10, 50)
             severity = 'high' if consumption > 100 else 'medium'
             
             anomaly_data.append({
@@ -398,7 +397,7 @@ def detect_dynamic_anomalies(df):
     
     while len(unique_anomalies) < target_anomaly_count:
         synthetic_hour = random.randint(0, 23)
-        base_consumption = 60 + (current_power * 0.0008) + random.uniform(10, 40)
+        base_consumption = 60 + (current_total_power * 0.0008) + random.uniform(10, 40)
         
         if device_change_count > 0:
             base_consumption += random.uniform(15, 35)
@@ -635,7 +634,12 @@ def get_analytics():
             'costOptimization': cost_optimization,
             'mlPerformance': ml_performance,
             'hourlyPatterns': hourly_patterns,
-            'mlAlgorithms': ml_algorithms
+            'mlAlgorithms': ml_algorithms,
+            'currentDeviceStats': {
+                'active_devices': current_active_devices,
+                'total_power': current_total_power,
+                'device_change_count': device_change_count
+            }
         }
         
         cached_analytics = result

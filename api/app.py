@@ -203,34 +203,42 @@ def detect_dynamic_anomalies(df):
     anomaly_data = []
     if len(df) < 5:
         return anomaly_data
+    
     recent_data = df[-min(24, len(df)):]
     consumption_values = recent_data['consumption'].values
+    
+    # Enhanced device-aware anomaly detection
     for _, row in recent_data.iterrows():
         hour = row['hour']
         consumption = row['consumption']
         timestamp = row['timestamp']
         device_consumption = row.get('device_consumption', 0)
+        
+        # Time-based pattern anomalies
         similar_hours = recent_data[recent_data['hour'] == hour]['consumption']
         if len(similar_hours) > 1:
             hour_mean = similar_hours.mean()
             hour_std = similar_hours.std()
             if hour_std > 0:
                 z_score = abs((consumption - hour_mean) / hour_std)
-                threshold = 1.4 if hour_std < hour_mean * 0.3 else 1.8
+                # Dynamic threshold based on device activity
+                threshold = 1.2 if device_consumption > 0 else 1.6
                 if z_score > threshold:
                     deviation_ratio = abs(consumption - hour_mean) / hour_mean
-                    severity = 'high' if deviation_ratio > 0.4 else ('medium' if deviation_ratio > 0.2 else 'low')
+                    severity = 'high' if deviation_ratio > 0.3 else 'medium'
                     confidence = min(0.95, 0.5 + (z_score / 4.0))
                     anomaly_data.append({
                         'time': int(hour), 'consumption': round(float(consumption), 1),
                         'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
                         'type': 'temporal_pattern'
                     })
+        
+        # Device consumption mismatch anomalies
         if device_consumption > 0:
             expected_base = 50 + (device_consumption * 0.7)
-            if consumption > expected_base * 1.25 or consumption < expected_base * 0.75:
-                deviation_ratio = abs(consumption - expected_base) / expected_base
-                severity = 'high' if deviation_ratio > 0.5 else 'medium'
+            deviation_ratio = abs(consumption - expected_base) / expected_base
+            if deviation_ratio > 0.2:  # More sensitive threshold
+                severity = 'high' if deviation_ratio > 0.4 else 'medium'
                 confidence = min(0.95, 0.6 + (deviation_ratio * 0.4))
                 if not any(a['timestamp'] == timestamp for a in anomaly_data):
                     anomaly_data.append({
@@ -238,11 +246,17 @@ def detect_dynamic_anomalies(df):
                         'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
                         'type': 'device_mismatch'
                     })
+    
+    # Statistical outlier detection
     overall_mean = consumption_values.mean()
     overall_std = consumption_values.std()
     if overall_std > 0:
-        upper_bound = overall_mean + (2.2 * overall_std)
-        lower_bound = overall_mean - (1.8 * overall_std)
+        # Adaptive bounds based on recent device activity
+        recent_device_activity = recent_data['device_consumption'].mean()
+        multiplier = 2.0 if recent_device_activity > 100 else 2.5
+        upper_bound = overall_mean + (multiplier * overall_std)
+        lower_bound = overall_mean - (1.5 * overall_std)
+        
         for _, row in recent_data.iterrows():
             consumption = row['consumption']
             if consumption > upper_bound or consumption < lower_bound:
@@ -255,26 +269,44 @@ def detect_dynamic_anomalies(df):
                         'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
                         'type': 'statistical'
                     })
+    
+    # ML-based anomaly detection with improved sensitivity
     if len(recent_data) > 8 and models_trained:
         try:
             features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption']].fillna(0).values
             global last_calculated_contamination_rate
-            contamination_rate = 0.18
-            if len(energy_data) > 15:
-                recent_variance = np.var(consumption_values)
-                if recent_variance > overall_mean * 0.1:
-                    contamination_rate = min(0.25, contamination_rate + 0.05)
+            
+            # Dynamic contamination rate based on device activity and variance
+            recent_variance = np.var(consumption_values)
+            device_change_score = recent_data['device_change_factor'].mean()
+            
+            # More sensitive contamination rate calculation
+            base_contamination = 0.1
+            if recent_variance > overall_mean * 0.08:
+                contamination_rate = min(0.3, base_contamination + 0.1)
+            elif device_change_score > 1.1:
+                contamination_rate = min(0.25, base_contamination + 0.08)
+            else:
+                contamination_rate = base_contamination
+                
             last_calculated_contamination_rate = contamination_rate
-            temp_detector = IsolationForest(contamination=contamination_rate, random_state=int(time.time()) % 1000, n_estimators=20, n_jobs=1)
+            
+            temp_detector = IsolationForest(
+                contamination=contamination_rate, 
+                random_state=int(time.time()) % 1000, 
+                n_estimators=25, 
+                n_jobs=1
+            )
             temp_detector.fit(features)
             ml_anomalies = temp_detector.predict(features)
             ml_scores = temp_detector.decision_function(features)
+            
             for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
-                if is_anomaly == -1 and len(anomaly_data) < 15:
+                if is_anomaly == -1:
                     row = recent_data.iloc[i]
                     if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
-                        severity = 'high' if abs(score) > 0.3 else 'medium'
-                        confidence = min(0.95, 0.4 + abs(score))
+                        severity = 'high' if abs(score) > 0.2 else 'medium'
+                        confidence = min(0.95, 0.4 + abs(score) * 1.5)
                         anomaly_data.append({
                             'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
                             'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
@@ -282,21 +314,25 @@ def detect_dynamic_anomalies(df):
                         })
         except Exception:
             pass
+    
+    # Real-time device change detection - prioritize these anomalies
     global last_device_change_time
     if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 300:
-        row = recent_data.iloc[-1]
-        anomaly_data = [a for a in anomaly_data if a['timestamp'] != row['timestamp']]
-        anomaly_data.insert(0, {
-            'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
-            'severity': 'high', 'timestamp': row['timestamp'], 'score': 0.99,
-            'type': 'device_change'
-        })
-    if len(anomaly_data) < 3:
-        return anomaly_data
-    if len(anomaly_data) <= 8:
-        return anomaly_data
-    random.shuffle(anomaly_data)
-    return anomaly_data[:random.randint(3, 8)]
+        if len(recent_data) > 0:
+            row = recent_data.iloc[-1]
+            # Remove any existing anomaly for this timestamp and add device change anomaly
+            anomaly_data = [a for a in anomaly_data if a['timestamp'] != row['timestamp']]
+            anomaly_data.insert(0, {
+                'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
+                'severity': 'high', 'timestamp': row['timestamp'], 'score': 0.99,
+                'type': 'device_change_detected'
+            })
+    
+    # Return ALL detected anomalies without artificial limiting
+    # Sort by timestamp to show most recent first
+    anomaly_data.sort(key=lambda x: x['timestamp'], reverse=True)
+    
+    return anomaly_data
 
 @app.route('/')
 def health_check():
@@ -496,5 +532,3 @@ def get_geofence_analytics():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
-
-

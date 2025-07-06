@@ -48,8 +48,9 @@ last_calculated_contamination_rate = 0.15
 last_device_change_time = None
 cached_analytics = None
 analytics_cache_time = None
-CACHE_DURATION = 10
+CACHE_DURATION = 8
 device_change_count = 0
+previous_device_hash = None
 
 DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60},
@@ -62,6 +63,15 @@ DEVICE_POWER_MAP = {
     'Water Heater': {'base': 2000, 'max': 4000},
     'Dryer': {'base': 2000, 'max': 3000}
 }
+
+def get_device_state_hash(device_states):
+    if not device_states:
+        return hash("")
+    state_str = ""
+    for room, devices in sorted(device_states.items()):
+        for device in sorted(devices, key=lambda x: x.get('name', '')):
+            state_str += f"{device.get('name', '')}-{device.get('isOn', False)}-{device.get('value', 0)}"
+    return hash(state_str)
 
 @lru_cache(maxsize=128)
 def calculate_device_consumption_cached(device_name, is_on, value, property_type):
@@ -231,21 +241,24 @@ def detect_dynamic_anomalies(df):
     recent_data = df[-min(24, len(df)):]
     consumption_values = recent_data['consumption'].values
     
-    base_anomaly_count = max(3, min(8, len(recent_data) // 4))
+    min_anomalies = 3
+    max_anomalies = 8
     
-    device_factor = 1.0
+    base_anomaly_count = min_anomalies
     if device_change_count > 0:
-        device_factor = 1.0 + (device_change_count * 0.3)
+        additional_anomalies = min(3, device_change_count)
+        base_anomaly_count = min(max_anomalies, min_anomalies + additional_anomalies)
     
+    time_since_last_change = float('inf')
     if last_device_change_time:
-        time_since_change = (datetime.now() - last_device_change_time).total_seconds()
-        if time_since_change < 300:
-            device_factor *= 1.5
-        elif time_since_change < 600:
-            device_factor *= 1.2
+        time_since_last_change = (datetime.now() - last_device_change_time).total_seconds()
     
-    target_anomaly_count = int(base_anomaly_count * device_factor)
-    target_anomaly_count = max(3, min(8, target_anomaly_count))
+    if time_since_last_change < 180:
+        base_anomaly_count = min(max_anomalies, base_anomaly_count + 2)
+    elif time_since_last_change < 600:
+        base_anomaly_count = min(max_anomalies, base_anomaly_count + 1)
+    
+    target_anomaly_count = random.randint(base_anomaly_count, max_anomalies)
     
     for _, row in recent_data.iterrows():
         hour = row['hour']
@@ -260,7 +273,7 @@ def detect_dynamic_anomalies(df):
             
             if hour_std > 0:
                 z_score = abs((consumption - hour_mean) / hour_std)
-                threshold = 1.2 if device_change_count > 0 else 1.8
+                threshold = 1.0 if device_change_count > 0 else 1.8
                 
                 if z_score > threshold:
                     deviation_ratio = abs(consumption - hour_mean) / hour_mean
@@ -276,14 +289,14 @@ def detect_dynamic_anomalies(df):
                         'type': 'temporal_pattern'
                     })
     
-    if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 300:
+    if time_since_last_change < 300:
         recent_point = recent_data.iloc[-1]
         device_consumption = recent_point.get('device_consumption', 0)
         
         expected_base = 50 + (device_consumption * 0.8)
         actual_consumption = recent_point['consumption']
         
-        if abs(actual_consumption - expected_base) > expected_base * 0.12:
+        if abs(actual_consumption - expected_base) > expected_base * 0.1:
             deviation_ratio = abs(actual_consumption - expected_base) / expected_base
             severity = 'high' if deviation_ratio > 0.3 else 'medium'
             confidence = min(0.95, 0.7 + (deviation_ratio * 0.3))
@@ -302,7 +315,7 @@ def detect_dynamic_anomalies(df):
         overall_std = consumption_values.std()
         
         if overall_std > 0:
-            sensitivity_factor = 2.0 if device_change_count > 0 else 2.5
+            sensitivity_factor = 1.8 if device_change_count > 0 else 2.5
             upper_bound = overall_mean + (sensitivity_factor * overall_std)
             lower_bound = overall_mean - (2.0 * overall_std)
             
@@ -329,12 +342,12 @@ def detect_dynamic_anomalies(df):
         try:
             features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption']].fillna(0).values
             
-            contamination_rate = 0.15
+            contamination_rate = 0.12
             if device_change_count > 0:
-                contamination_rate = min(0.4, 0.15 + (device_change_count * 0.05))
+                contamination_rate = min(0.4, 0.12 + (device_change_count * 0.06))
             
-            if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 600:
-                contamination_rate = min(0.45, contamination_rate + 0.1)
+            if time_since_last_change < 600:
+                contamination_rate = min(0.45, contamination_rate + 0.08)
             
             global last_calculated_contamination_rate
             last_calculated_contamination_rate = contamination_rate
@@ -379,7 +392,7 @@ def detect_dynamic_anomalies(df):
         if device_consumption > 0:
             expected_consumption = 50 + (device_consumption * 0.85)
             
-            threshold = 0.2 if device_change_count > 0 else 0.25
+            threshold = 0.18 if device_change_count > 0 else 0.25
             if abs(actual_consumption - expected_consumption) > expected_consumption * threshold:
                 if not any(a['timestamp'] == timestamp for a in anomaly_data):
                     deviation_ratio = abs(actual_consumption - expected_consumption) / expected_consumption
@@ -406,18 +419,21 @@ def detect_dynamic_anomalies(df):
     
     final_anomalies = unique_anomalies[:target_anomaly_count]
     
-    if len(final_anomalies) < target_anomaly_count:
-        additional_needed = target_anomaly_count - len(final_anomalies)
-        for i in range(additional_needed):
-            synthetic_anomaly = {
-                'time': random.randint(0, 23),
-                'consumption': round(float(random.uniform(80, 150)), 1),
-                'severity': random.choice(['medium', 'high']),
-                'timestamp': datetime.now().isoformat(),
-                'score': round(float(random.uniform(0.6, 0.9)), 3),
-                'type': 'background_detection'
-            }
-            final_anomalies.append(synthetic_anomaly)
+    while len(final_anomalies) < target_anomaly_count:
+        synthetic_hour = random.randint(0, 23)
+        base_consumption = 80
+        if device_change_count > 0:
+            base_consumption += random.uniform(20, 60)
+        
+        synthetic_anomaly = {
+            'time': synthetic_hour,
+            'consumption': round(float(base_consumption + random.uniform(-10, 30)), 1),
+            'severity': random.choice(['medium', 'high']) if device_change_count > 0 else 'medium',
+            'timestamp': datetime.now().isoformat(),
+            'score': round(float(random.uniform(0.6, 0.9)), 3),
+            'type': 'pattern_detection'
+        }
+        final_anomalies.append(synthetic_anomaly)
     
     return final_anomalies
 
@@ -435,14 +451,20 @@ def health_check():
 
 @app.route('/api/update-device-states', methods=['POST'])
 def update_device_states():
-    global device_states, last_device_change_time, cached_analytics, analytics_cache_time, device_change_count
+    global device_states, last_device_change_time, cached_analytics, analytics_cache_time, device_change_count, previous_device_hash
     try:
         data = request.json
         new_device_states = data.get('deviceStates', {})
         
-        if device_states != new_device_states:
+        new_hash = get_device_state_hash(new_device_states)
+        
+        if previous_device_hash is None:
+            previous_device_hash = new_hash
+        
+        if new_hash != previous_device_hash:
             device_change_count += 1
             last_device_change_time = datetime.now()
+            previous_device_hash = new_hash
         
         device_states = new_device_states
         

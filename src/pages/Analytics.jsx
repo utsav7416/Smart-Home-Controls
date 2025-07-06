@@ -301,12 +301,14 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
   ];
 
   const efficiencyBars = [
-    { name: 'Device Utilization', efficiency: metrics.deviceUtilization, target: 85, improvement: 85 - metrics.deviceUtilization },
-    { name: 'Peak Hour Optimization', efficiency: metrics.peakHourOptimization, target: 90, improvement: 90 - metrics.peakHourOptimization },
-    { name: 'Temperature Control', efficiency: metrics.temperatureControl, target: 88, improvement: 88 - metrics.temperatureControl },
-    { name: 'Standby Power Reduction', efficiency: metrics.standbyReduction, target: 92, improvement: 92 - metrics.standbyReduction },
-    { name: 'Load Balancing', efficiency: metrics.loadBalancing, target: 87, improvement: 87 - metrics.loadBalancing },
-    { name: 'Smart Scheduling', efficiency: metrics.smartScheduling, target: 93, improvement: 93 - metrics.smartScheduling }
+    { category: 'Device Utilization', value: Math.round(metrics.deviceUtilization), target: 85 },
+    { category: 'Peak Hour Optimization', value: Math.round(metrics.peakHourOptimization), target: 90 },
+    { category: 'Temperature Control', value: Math.round(metrics.temperatureControl), target: 88 },
+    { category: 'Standby Power Reduction', value: Math.round(metrics.standbyReduction), target: 92 },
+    { category: 'Load Balancing', value: Math.round(metrics.loadBalancing), target: 87 },
+    { category: 'Smart Scheduling', value: Math.round(metrics.smartScheduling), target: 93 },
+    { category: 'Occupancy Control', value: Math.round(metrics.occupancyControl), target: 89 },
+    { category: 'Weather Responsive', value: Math.round(metrics.weatherResponsive), target: 86 }
   ];
 
   const recommendations = [
@@ -399,21 +401,27 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
             Efficiency Metrics Breakdown
           </h4>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={efficiencyBars} layout="horizontal">
+            <BarChart data={efficiencyBars} layout="horizontal" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" />
-              <YAxis dataKey="name" type="category" width={120} stroke="#9CA3AF" tick={{ fontSize: 10 }} />
+              <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" tick={{ fontSize: 12 }} />
+              <YAxis dataKey="category" type="category" width={100} stroke="#9CA3AF" tick={{ fontSize: 11 }} />
               <Tooltip 
                 contentStyle={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   borderRadius: '8px',
-                  color: 'white'
+                  color: 'white',
+                  fontSize: '14px'
                 }}
+                formatter={(value, name) => [
+                  `${value}%`, 
+                  name === 'value' ? 'Current Efficiency' : name
+                ]}
+                labelFormatter={(label) => `Category: ${label}`}
               />
-              <Bar dataKey="efficiency" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} stroke="#ffffff" strokeWidth={0.5}>
                 {efficiencyBars.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getEfficiencyColor(entry.efficiency)} />
+                  <Cell key={`cell-${index}`} fill={getEfficiencyColor(entry.value)} />
                 ))}
               </Bar>
             </BarChart>
@@ -448,48 +456,6 @@ function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, a
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Overall Efficiency</span>
-            <TrendingUp className="w-4 h-4 text-green-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {Math.round(Object.values(metrics).reduce((a, b) => a + b, 0) / Object.keys(metrics).length)}%
-          </div>
-        </div>
-        
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Monthly Savings</span>
-            <TrendingDown className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            ${Math.round(recommendations.reduce((sum, rec) => sum + parseInt(rec.savings.split('-')[0].replace('$', '')), 0))}
-          </div>
-        </div>
-        
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Active Optimizations</span>
-            <Clock className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {recommendations.filter(r => r.type === 'Scheduled').length}
-          </div>
-        </div>
-        
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Improvement Score</span>
-            <Target className="w-4 h-4 text-orange-400" />
-          </div>
-          <div className="text-2xl font-bold text-white">
-            {Math.round(efficiencyBars.reduce((sum, bar) => sum + Math.max(0, bar.improvement), 0) / efficiencyBars.length)}
-          </div>
         </div>
       </div>
     </div>

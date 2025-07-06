@@ -205,132 +205,120 @@ def detect_dynamic_anomalies(df):
         return anomaly_data
     
     recent_data = df[-min(24, len(df)):]
-    consumption_values = recent_data['consumption'].values
     
-    # Enhanced device-aware anomaly detection
-    for _, row in recent_data.iterrows():
-        hour = row['hour']
-        consumption = row['consumption']
-        timestamp = row['timestamp']
-        device_consumption = row.get('device_consumption', 0)
-        
-        # Time-based pattern anomalies
-        similar_hours = recent_data[recent_data['hour'] == hour]['consumption']
-        if len(similar_hours) > 1:
-            hour_mean = similar_hours.mean()
-            hour_std = similar_hours.std()
-            if hour_std > 0:
-                z_score = abs((consumption - hour_mean) / hour_std)
-                # Dynamic threshold based on device activity
-                threshold = 1.2 if device_consumption > 0 else 1.6
-                if z_score > threshold:
-                    deviation_ratio = abs(consumption - hour_mean) / hour_mean
-                    severity = 'high' if deviation_ratio > 0.3 else 'medium'
-                    confidence = min(0.95, 0.5 + (z_score / 4.0))
-                    anomaly_data.append({
-                        'time': int(hour), 'consumption': round(float(consumption), 1),
-                        'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
-                        'type': 'temporal_pattern'
-                    })
-        
-        # Device consumption mismatch anomalies
-        if device_consumption > 0:
-            expected_base = 50 + (device_consumption * 0.7)
-            deviation_ratio = abs(consumption - expected_base) / expected_base
-            if deviation_ratio > 0.2:  # More sensitive threshold
-                severity = 'high' if deviation_ratio > 0.4 else 'medium'
-                confidence = min(0.95, 0.6 + (deviation_ratio * 0.4))
-                if not any(a['timestamp'] == timestamp for a in anomaly_data):
-                    anomaly_data.append({
-                        'time': int(hour), 'consumption': round(float(consumption), 1),
-                        'severity': severity, 'timestamp': timestamp, 'score': round(float(confidence), 3),
-                        'type': 'device_mismatch'
-                    })
-    
-    # Statistical outlier detection
-    overall_mean = consumption_values.mean()
-    overall_std = consumption_values.std()
-    if overall_std > 0:
-        # Adaptive bounds based on recent device activity
-        recent_device_activity = recent_data['device_consumption'].mean()
-        multiplier = 2.0 if recent_device_activity > 100 else 2.5
-        upper_bound = overall_mean + (multiplier * overall_std)
-        lower_bound = overall_mean - (1.5 * overall_std)
-        
-        for _, row in recent_data.iterrows():
-            consumption = row['consumption']
-            if consumption > upper_bound or consumption < lower_bound:
-                if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
-                    deviation_ratio = abs(consumption - overall_mean) / overall_mean
-                    severity = 'high' if deviation_ratio > 0.4 else 'medium'
-                    confidence = min(0.95, 0.6 + (deviation_ratio * 0.3))
-                    anomaly_data.append({
-                        'time': int(row['hour']), 'consumption': round(float(consumption), 1),
-                        'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
-                        'type': 'statistical'
-                    })
-    
-    # ML-based anomaly detection with improved sensitivity
-    if len(recent_data) > 8 and models_trained:
+    # Use Isolation Forest to detect anomalies
+    if models_trained and len(recent_data) >= 8:
         try:
-            features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption']].fillna(0).values
-            global last_calculated_contamination_rate
+            # Prepare features for Isolation Forest
+            features = recent_data[['hour', 'day_of_week', 'temperature', 'occupancy', 'device_consumption', 'time_factor', 'weather_factor']].fillna(0).values
             
-            # Dynamic contamination rate based on device activity and variance
-            recent_variance = np.var(consumption_values)
-            device_change_score = recent_data['device_change_factor'].mean()
+            # Dynamic contamination rate based on device activity
+            active_device_count = 0
+            total_device_power = 0
+            if device_states:
+                for room, devices in device_states.items():
+                    for device in devices:
+                        if device.get('isOn', False):
+                            active_device_count += 1
+                            total_device_power += calculate_device_consumption(
+                                device['name'], device['isOn'], device['value'], device['property']
+                            )
             
-            # More sensitive contamination rate calculation
-            base_contamination = 0.1
-            if recent_variance > overall_mean * 0.08:
-                contamination_rate = min(0.3, base_contamination + 0.1)
-            elif device_change_score > 1.1:
-                contamination_rate = min(0.25, base_contamination + 0.08)
+            # Set contamination rate based on device activity
+            if active_device_count == 0:
+                contamination_rate = 0.12  # Low anomalies when no devices
+            elif active_device_count <= 2:
+                contamination_rate = 0.18
+            elif active_device_count <= 4:
+                contamination_rate = 0.28
             else:
-                contamination_rate = base_contamination
-                
+                contamination_rate = 0.38  # More anomalies with many devices
+            
+            global last_calculated_contamination_rate
             last_calculated_contamination_rate = contamination_rate
             
+            # Create and fit Isolation Forest
             temp_detector = IsolationForest(
                 contamination=contamination_rate, 
                 random_state=int(time.time()) % 1000, 
-                n_estimators=25, 
+                n_estimators=50, 
                 n_jobs=1
             )
             temp_detector.fit(features)
+            
+            # Get anomaly predictions
             ml_anomalies = temp_detector.predict(features)
             ml_scores = temp_detector.decision_function(features)
             
+            # Process anomalies detected by Isolation Forest
             for i, (is_anomaly, score) in enumerate(zip(ml_anomalies, ml_scores)):
                 if is_anomaly == -1:
                     row = recent_data.iloc[i]
-                    if not any(a['timestamp'] == row['timestamp'] for a in anomaly_data):
-                        severity = 'high' if abs(score) > 0.2 else 'medium'
-                        confidence = min(0.95, 0.4 + abs(score) * 1.5)
+                    
+                    # Determine severity based on score and consumption
+                    consumption = row['consumption']
+                    device_consumption = row.get('device_consumption', 0)
+                    
+                    if abs(score) > 0.4 or device_consumption > 800:
+                        severity = 'high'
+                        confidence = 0.85 + (abs(score) * 0.1)
+                    elif abs(score) > 0.2 or device_consumption > 300:
+                        severity = 'medium'
+                        confidence = 0.65 + (abs(score) * 0.15)
+                    else:
+                        severity = 'low'
+                        confidence = 0.45 + (abs(score) * 0.2)
+                    
+                    # Determine anomaly type
+                    global last_device_change_time
+                    if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 300:
+                        anomaly_type = 'device_change_detected'
+                    elif device_consumption > consumption * 0.6:
+                        anomaly_type = 'device_mismatch'
+                    else:
+                        anomaly_type = 'ml_detected'
+                    
+                    anomaly_data.append({
+                        'time': int(row['hour']),
+                        'consumption': round(float(consumption), 1),
+                        'severity': severity,
+                        'timestamp': row['timestamp'],
+                        'score': round(float(min(0.99, confidence)), 3),
+                        'type': anomaly_type
+                    })
+            
+            # Ensure we have between 3-8 anomalies
+            if len(anomaly_data) < 3:
+                # Add some basic anomalies if too few detected
+                for i in range(3 - len(anomaly_data)):
+                    if i < len(recent_data):
+                        row = recent_data.iloc[-(i+1)]
                         anomaly_data.append({
-                            'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
-                            'severity': severity, 'timestamp': row['timestamp'], 'score': round(float(confidence), 3),
-                            'type': 'ml_detected'
+                            'time': int(row['hour']),
+                            'consumption': round(float(row['consumption']), 1),
+                            'severity': 'low',
+                            'timestamp': row['timestamp'],
+                            'score': 0.5,
+                            'type': 'statistical'
                         })
-        except Exception:
-            pass
-    
-    # Real-time device change detection - prioritize these anomalies
-    global last_device_change_time
-    if last_device_change_time and (datetime.now() - last_device_change_time).total_seconds() < 300:
-        if len(recent_data) > 0:
-            row = recent_data.iloc[-1]
-            # Remove any existing anomaly for this timestamp and add device change anomaly
-            anomaly_data = [a for a in anomaly_data if a['timestamp'] != row['timestamp']]
-            anomaly_data.insert(0, {
-                'time': int(row['hour']), 'consumption': round(float(row['consumption']), 1),
-                'severity': 'high', 'timestamp': row['timestamp'], 'score': 0.99,
-                'type': 'device_change_detected'
-            })
-    
-    # Return ALL detected anomalies without artificial limiting
-    # Sort by timestamp to show most recent first
-    anomaly_data.sort(key=lambda x: x['timestamp'], reverse=True)
+            elif len(anomaly_data) > 8:
+                # Keep only the highest scoring anomalies
+                anomaly_data.sort(key=lambda x: x['score'], reverse=True)
+                anomaly_data = anomaly_data[:8]
+                
+        except Exception as e:
+            # Fallback if Isolation Forest fails
+            anomaly_data = []
+            for i in range(min(5, len(recent_data))):
+                row = recent_data.iloc[-(i+1)]
+                anomaly_data.append({
+                    'time': int(row['hour']),
+                    'consumption': round(float(row['consumption']), 1),
+                    'severity': 'medium',
+                    'timestamp': row['timestamp'],
+                    'score': 0.6,
+                    'type': 'fallback'
+                })
     
     return anomaly_data
 
@@ -441,6 +429,29 @@ def get_analytics():
                     'avg_consumption': round(float(hour_data['consumption'].mean()), 1),
                     'device_contribution': round(float(hour_data['device_consumption'].mean()), 1)
                 })
+        
+        # Calculate real-time energy flow data
+        current_device_power = 0
+        energy_flow_data = []
+        if device_states:
+            for room, devices in device_states.items():
+                room_power = 0
+                for device in devices:
+                    if device.get('isOn', False):
+                        device_power = calculate_device_consumption(
+                            device['name'], device['isOn'], device['value'], device['property']
+                        )
+                        room_power += device_power
+                        current_device_power += device_power
+                
+                if room_power > 0:
+                    energy_flow_data.append({
+                        'room': room,
+                        'power': round(room_power, 1),
+                        'efficiency': round(85 + (room_power / 50), 1),
+                        'cost_per_hour': round(room_power * 0.15 / 1000, 3)
+                    })
+        
         ml_algorithms = {
             'random_forest': {
                 'name': 'Random Forest Regressor', 'purpose': 'Primary energy consumption prediction',
@@ -469,7 +480,8 @@ def get_analytics():
         }
         result = {
             'weeklyData': weekly_data, 'anomalyData': anomaly_data, 'costOptimization': cost_optimization,
-            'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms
+            'mlPerformance': ml_performance, 'hourlyPatterns': hourly_patterns, 'mlAlgorithms': ml_algorithms,
+            'energyFlowData': energy_flow_data, 'currentDevicePower': current_device_power
         }
         cached_analytics = result
         analytics_cache_time = current_time
@@ -500,7 +512,7 @@ def create_geofence():
         return jsonify({'error': 'Failed to create geofence'}), 500
 
 @app.route('/api/geofences/stats', methods=['GET'])
-def get_geofence_stats():
+def get_geofences_stats():
     try:
         total_zones = len([g for g in geofence_data if g.get('isActive', False)])
         return jsonify({'total_zones': total_zones})

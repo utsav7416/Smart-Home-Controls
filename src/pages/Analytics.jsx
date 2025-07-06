@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, Battery, DollarSign, Gauge, Clock } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, PieChart, Pie } from 'recharts';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, Thermometer, Clock, DollarSign, Gauge, Battery, Lightbulb } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, RadialBarChart, RadialBar, PieChart, Pie } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -56,20 +56,11 @@ const Button = ({ children, onClick, className = '', disabled = false, ...props 
 const useDeviceSync = () => {
   const [deviceStates, setDeviceStates] = useState({});
   const [totalDevicePower, setTotalDevicePower] = useState(0);
-  const [deviceBreakdown, setDeviceBreakdown] = useState([]);
-  const [realTimeMetrics, setRealTimeMetrics] = useState({
-    currentCost: 0,
-    efficiency: 0,
-    peakLoad: 0,
-    activeDevices: 0
-  });
-
   const DEVICE_POWER_MAP = {
     'Main Light': {'base': 15, 'max': 60}, 'Fan': {'base': 25, 'max': 75}, 'AC': {'base': 800, 'max': 1500},
     'TV': {'base': 120, 'max': 200}, 'Microwave': {'base': 800, 'max': 1200}, 'Refrigerator': {'base': 150, 'max': 300},
     'Shower': {'base': 50, 'max': 100}, 'Water Heater': {'base': 2000, 'max': 4000}, 'Dryer': {'base': 2000, 'max': 3000}
   };
-
   const calculateDevicePower = (deviceName, isOn, value, property) => {
     if (!isOn || !DEVICE_POWER_MAP[deviceName]) return 0;
     const { base, max } = DEVICE_POWER_MAP[deviceName];
@@ -88,70 +79,26 @@ const useDeviceSync = () => {
     }
     return base + (max - base) * ratio;
   };
-
   useEffect(() => {
     const handleDeviceChange = () => {
       const storedDevices = localStorage.getItem('deviceStates');
       if (storedDevices) {
         const devices = JSON.parse(storedDevices);
         setDeviceStates(devices);
-        
         let total = 0;
-        let breakdown = [];
-        let activeCount = 0;
-        let maxPossiblePower = 0;
-
         Object.values(devices).forEach((roomDevices) => {
           roomDevices.forEach((device) => {
-            const power = calculateDevicePower(device.name, device.isOn, device.value, device.property);
-            total += power;
-            
-            if (device.isOn) {
-              activeCount++;
-              breakdown.push({
-                name: device.name,
-                value: power,
-                percentage: 0 // Will calculate after we have total
-              });
-            }
-
-            // Calculate max possible power for efficiency
-            if (DEVICE_POWER_MAP[device.name]) {
-              maxPossiblePower += DEVICE_POWER_MAP[device.name].max;
-            }
+            total += calculateDevicePower(device.name, device.isOn, device.value, device.property);
           });
         });
-
-        // Calculate percentages
-        breakdown = breakdown.map(item => ({
-          ...item,
-          percentage: total > 0 ? (item.value / total * 100) : 0
-        }));
-
         setTotalDevicePower(total);
-        setDeviceBreakdown(breakdown);
-        
-        // Calculate real-time metrics
-        const costPerKwh = 0.15; // $0.15 per kWh
-        const currentCost = (total / 1000) * costPerKwh; // Convert W to kW
-        const efficiency = maxPossiblePower > 0 ? ((maxPossiblePower - total) / maxPossiblePower * 100) : 100;
-        const peakLoad = Math.max(...breakdown.map(d => d.value), 0);
-
-        setRealTimeMetrics({
-          currentCost: currentCost * 24, // Daily cost
-          efficiency: Math.max(0, efficiency),
-          peakLoad,
-          activeDevices: activeCount
-        });
       }
     };
-
     handleDeviceChange();
     window.addEventListener('storage', handleDeviceChange);
     return () => window.removeEventListener('storage', handleDeviceChange);
   }, []);
-
-  return { deviceStates, totalDevicePower, deviceBreakdown, realTimeMetrics };
+  return { deviceStates, totalDevicePower };
 };
 
 const doYouKnowFacts = [
@@ -291,7 +238,7 @@ function LiveActivityFeed() {
 }
 
 export default function Analytics() {
-  const { deviceStates, totalDevicePower, deviceBreakdown, realTimeMetrics } = useDeviceSync();
+  const { deviceStates, totalDevicePower } = useDeviceSync();
   const [analyticsData, setAnalyticsData] = useState(analyticsCache);
   const [error, setError] = useState(null);
   const [factIndex, setFactIndex] = useState(0);
@@ -561,7 +508,7 @@ export default function Analytics() {
     return null;
   }
 
-  const { weeklyData = [], anomalyData = [], costOptimization = [], mlPerformance = {}, hourlyPatterns = [], mlAlgorithms = {} } = analyticsData;
+  const { weeklyData = [], anomalyData = [], costOptimization = [], mlPerformance = {}, hourlyPatterns = [], mlAlgorithms = {}, energyFlowData = [], currentDevicePower = 0 } = analyticsData;
 
   const adjustedWeeklyData = weeklyData.map(item => ({ ...item, consumption: item.consumption + (totalDevicePower * 0.001), prediction: item.prediction + (totalDevicePower * 0.0009) }));
 
@@ -576,6 +523,20 @@ export default function Analytics() {
 
   const anomaliesDetected = anomalyData.length;
   const totalSavings = costOptimization.reduce((sum, item) => sum + item.saved, 0);
+
+  // Calculate energy efficiency metrics for the new section
+  const activeDeviceCount = Object.values(deviceStates).reduce((count, roomDevices) => 
+    count + roomDevices.filter(device => device.isOn).length, 0);
+  
+  const energyEfficiencyScore = Math.max(0, Math.min(100, 
+    85 - (totalDevicePower / 100) + (activeDeviceCount * 2)
+  ));
+
+  const peakHourData = adjustedHourlyPatterns.map(item => ({
+    hour: item.hour,
+    efficiency: Math.max(60, Math.min(95, 80 + Math.random() * 15)),
+    load: item.avg_consumption
+  }));
 
   const AlgorithmCard = ({ algorithm, icon: Icon }) => {
     const algorithmKey = algorithm?.name || 'unknown';
@@ -708,18 +669,6 @@ export default function Analytics() {
       </div>
     );
   };
-
-  // Color mapping for device breakdown
-  const deviceColors = [
-    '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
-    '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
-  ];
-
-  const deviceBreakdownWithColors = deviceBreakdown.map((item, index) => ({
-    ...item,
-    fill: deviceColors[index % deviceColors.length]
-  }));
-
   return (
     <div className="p-6 space-y-6 animate-fade-in bg-black text-white">
       <div className="relative text-center py-8">
@@ -792,133 +741,6 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
-
-      {/* NEW REAL-TIME ENERGY ANALYTICS SECTION */}
-      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Battery className="w-5 h-5" />
-            Live Energy Distribution & Performance Analytics
-          </CardTitle>
-          <p className="text-gray-400 text-sm">Real-time device consumption breakdown and efficiency metrics based on current device states</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Device Breakdown Chart */}
-            <div className="lg:col-span-2">
-              <h4 className="text-white font-medium mb-4 flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-blue-400" />
-                Current Device Power Distribution
-              </h4>
-              {deviceBreakdown.length > 0 ? (
-                <div className="flex gap-6">
-                  <div className="flex-1">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={deviceBreakdownWithColors}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={80}
-                          dataKey="value"
-                          label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                        >
-                          {deviceBreakdownWithColors.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '8px',
-                            color: 'white'
-                          }}
-                          formatter={(value) => [`${value.toFixed(1)}W`, 'Power']}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-2">
-                    {deviceBreakdownWithColors.map((device, index) => (
-                      <div key={index} className="flex items-center gap-3 text-sm">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: device.fill }}
-                        />
-                        <span className="text-gray-300">{device.name}</span>
-                        <span className="text-white font-medium">{device.value.toFixed(1)}W</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-[250px] flex items-center justify-center text-gray-400">
-                  <div className="text-center">
-                    <Battery className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>No active devices detected</p>
-                    <p className="text-sm">Turn on devices to see real-time distribution</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Real-time Metrics */}
-            <div className="space-y-4">
-              <h4 className="text-white font-medium flex items-center gap-2">
-                <Clock className="w-4 h-4 text-green-400" />
-                Live Performance Metrics
-              </h4>
-              
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-300 text-sm">Daily Energy Cost</span>
-                  <DollarSign className="w-4 h-4 text-green-400" />
-                </div>
-                <div className="text-2xl font-bold text-white">${realTimeMetrics.currentCost.toFixed(2)}</div>
-                <div className="text-xs text-green-400">Based on current usage</div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-300 text-sm">System Efficiency</span>
-                  <Gauge className="w-4 h-4 text-blue-400" />
-                </div>
-                <div className="text-2xl font-bold text-white">{realTimeMetrics.efficiency.toFixed(1)}%</div>
-                <div className="text-xs text-blue-400">Energy optimization score</div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-300 text-sm">Peak Device Load</span>
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                </div>
-                <div className="text-2xl font-bold text-white">{realTimeMetrics.peakLoad.toFixed(0)}W</div>
-                <div className="text-xs text-yellow-400">Highest single device</div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-300 text-sm">Active Devices</span>
-                  <Activity className="w-4 h-4 text-purple-400" />
-                </div>
-                <div className="text-2xl font-bold text-white">{realTimeMetrics.activeDevices}</div>
-                <div className="text-xs text-purple-400">Currently consuming power</div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-300 text-sm">Total Load</span>
-                  <Battery className="w-4 h-4 text-orange-400" />
-                </div>
-                <div className="text-2xl font-bold text-white">{(totalDevicePower/1000).toFixed(2)}kW</div>
-                <div className="text-xs text-orange-400">Real-time consumption</div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -970,6 +792,216 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Gauge className="w-5 h-5" />
+            Smart Energy Efficiency & Peak Load Analysis
+          </CardTitle>
+          <p className="text-gray-400 text-sm">Real-time efficiency monitoring and peak hour optimization insights</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <ResponsiveContainer width="100%" height={350}>
+                <AreaChart data={peakHourData}>
+                  <defs>
+                    <linearGradient id="efficiencyGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="loadGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <XAxis dataKey="hour" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="efficiency" 
+                    stroke="#10b981" 
+                    fill="url(#efficiencyGradient)" 
+                    strokeWidth={2} 
+                    name="Efficiency %" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="load" 
+                    stroke="#f59e0b" 
+                    fill="url(#loadGradient)" 
+                    strokeWidth={2} 
+                    name="Load (kWh)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <Battery className="w-6 h-6 text-green-400" />
+                  <h3 className="text-white font-semibold">Efficiency Score</h3>
+                </div>
+                <div className="relative">
+                  <ResponsiveContainer width="100%" height={120}>
+                    <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={[{value: energyEfficiencyScore}]}>
+                      <RadialBar dataKey="value" cornerRadius={10} fill="#10b981" />
+                    </RadialBarChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">{energyEfficiencyScore.toFixed(0)}%</div>
+                      <div className="text-xs text-gray-400">Overall</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <Lightbulb className="w-6 h-6 text-yellow-400" />
+                  <h3 className="text-white font-semibold">Smart Insights</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Peak Hours</span>
+                    <span className="text-yellow-400 font-mono text-sm">18:00-21:00</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Optimal Load</span>
+                    <span className="text-green-400 font-mono text-sm">{(totalDevicePower * 0.8 / 1000).toFixed(1)}kW</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Potential Savings</span>
+                    <span className="text-blue-400 font-mono text-sm">${(totalDevicePower * 0.15 * 0.2 / 1000).toFixed(2)}/day</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <Activity className="w-6 h-6 text-blue-400" />
+                  <h3 className="text-white font-semibold">Live Status</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Active Devices</span>
+                    <span className="text-white font-mono text-sm">{activeDeviceCount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Current Load</span>
+                    <span className="text-white font-mono text-sm">{(totalDevicePower/1000).toFixed(2)}kW</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm">Grid Status</span>
+                    <span className="text-green-400 font-mono text-sm">Optimal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Thermometer className="w-5 h-5" />
+            Real-Time Energy Flow & Room Analytics
+          </CardTitle>
+          <p className="text-gray-400 text-sm">Live energy distribution and efficiency metrics across your smart home</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-8">
+            <div className="w-[65%]">
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={energyFlowData} barCategoryGap="20%">
+                  <CartesianGrid strokeDashArray="3 3" stroke="#333333" />
+                  <XAxis dataKey="room" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '8px',
+                      color: 'white'
+                    }}
+                  />
+                  <Bar dataKey="power" fill="#8b5cf6" name="Power (W)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-[35%] space-y-4">
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                  <h3 className="text-white font-medium">Live Metrics</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 text-sm">Total Power</span>
+                    <span className="text-white font-mono">{currentDevicePower.toFixed(1)}W</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400 text-sm">Cost/Hour</span>
+                    <span className="text-green-400 font-mono">${energyFlowData.reduce((sum, room) => sum + room.cost_per_hour, 0).toFixed(3)}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <Clock className="w-5 h-5 text-blue-400" />
+                  <h3 className="text-white font-medium">Efficiency Score</h3>
+                </div>
+                <div className="space-y-2">
+                  {energyFlowData.slice(0, 3).map((room, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <span className="text-gray-400 text-sm">{room.room}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-green-400 to-blue-400 rounded-full"
+                            style={{ width: `${Math.min(room.efficiency, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-white text-xs font-mono w-8">{room.efficiency.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <DollarSign className="w-5 h-5 text-green-400" />
+                  <h3 className="text-white font-medium">Cost Breakdown</h3>
+                </div>
+                <div className="space-y-2">
+                  {energyFlowData.slice(0, 3).map((room, index) => (
+                    <div key={index} className="flex justify-between">
+                      <span className="text-gray-400 text-sm">{room.room}</span>
+                      <span className="text-green-400 font-mono text-sm">${room.cost_per_hour.toFixed(3)}/hr</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">

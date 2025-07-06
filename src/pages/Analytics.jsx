@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, Power, Gauge, Clock } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, PieChart, Pie } from 'recharts';
+import { TrendingUp, AlertTriangle, Brain, Zap, Activity, Target, BarChart3, Cpu, Settings, Shield, Network, Code, Layers, GitBranch, Lightbulb, Leaf, Clock, TrendingDown } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ScatterChart, Scatter, Cell, PieChart, Pie, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 
 const FLASK_API_URL = process.env.REACT_APP_API_BASE_URL || 'https://smart-home-controls-backend.onrender.com';
 
@@ -103,13 +103,12 @@ const useDeviceSync = () => {
               breakdown.push({
                 name: device.name,
                 power: Math.round(power),
-                percentage: 0 // Will be calculated after total is known
+                percentage: 0
               });
             }
           });
         });
         
-        // Calculate percentages
         breakdown.forEach(device => {
           device.percentage = total > 0 ? Math.round((device.power / total) * 100) : 0;
         });
@@ -265,85 +264,234 @@ function LiveActivityFeed() {
   );
 }
 
-// New Real-Time Energy Flow Component
-function RealTimeEnergyFlow({ devicePowerBreakdown, totalDevicePower }) {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [energyFlow, setEnergyFlow] = useState(0);
+function EnergyEfficiencyRecommender({ devicePowerBreakdown, totalDevicePower, analyticsData }) {
+  const calculateEfficiencyMetrics = () => {
+    const deviceCount = devicePowerBreakdown.length;
+    const avgPowerPerDevice = deviceCount > 0 ? totalDevicePower / deviceCount : 0;
+    const currentHour = new Date().getHours();
+    const isOnPeak = currentHour >= 17 && currentHour <= 22;
+    
+    return {
+      deviceUtilization: Math.min(100, Math.max(20, (deviceCount / 9) * 100)),
+      peakHourOptimization: isOnPeak ? Math.max(40, 100 - (totalDevicePower / 50)) : Math.min(95, 60 + (totalDevicePower / 100)),
+      temperatureControl: totalDevicePower > 1000 ? Math.max(30, 85 - (totalDevicePower / 200)) : Math.min(95, 70 + (totalDevicePower / 50)),
+      standbyReduction: Math.min(90, 50 + (deviceCount * 5)),
+      loadBalancing: Math.min(95, 60 + Math.abs(50 - avgPowerPerDevice) / 10),
+      timeOfUse: isOnPeak ? Math.max(35, 75 - (totalDevicePower / 100)) : Math.min(95, 80 + (totalDevicePower / 200)),
+      seasonalAdjustment: Math.min(90, 65 + Math.random() * 20),
+      occupancyControl: Math.min(85, 55 + (deviceCount * 4)),
+      weatherResponsive: Math.min(88, 62 + Math.random() * 15),
+      powerFactor: Math.min(92, 70 + Math.random() * 15),
+      energyRecovery: Math.min(80, 45 + (deviceCount * 3)),
+      smartScheduling: Math.min(93, 68 + Math.random() * 18)
+    };
+  };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-      setEnergyFlow(totalDevicePower + Math.random() * 50 - 25); // Small fluctuation
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [totalDevicePower]);
+  const metrics = calculateEfficiencyMetrics();
+  
+  const radarData = [
+    { subject: 'Device Utilization', current: metrics.deviceUtilization, optimal: 85, fullMark: 100 },
+    { subject: 'Peak Hour Opt.', current: metrics.peakHourOptimization, optimal: 90, fullMark: 100 },
+    { subject: 'Temperature Control', current: metrics.temperatureControl, optimal: 88, fullMark: 100 },
+    { subject: 'Standby Reduction', current: metrics.standbyReduction, optimal: 92, fullMark: 100 },
+    { subject: 'Load Balancing', current: metrics.loadBalancing, optimal: 87, fullMark: 100 },
+    { subject: 'Time-of-Use', current: metrics.timeOfUse, optimal: 85, fullMark: 100 },
+    { subject: 'Seasonal Adj.', current: metrics.seasonalAdjustment, optimal: 83, fullMark: 100 },
+    { subject: 'Occupancy Control', current: metrics.occupancyControl, optimal: 89, fullMark: 100 }
+  ];
 
-  const getPowerColor = (power) => {
-    if (power > 1000) return '#ef4444'; // Red for high power
-    if (power > 500) return '#f59e0b'; // Orange for medium power
-    if (power > 100) return '#eab308'; // Yellow for low-medium power
-    return '#22c55e'; // Green for low power
+  const efficiencyBars = [
+    { name: 'Device Utilization', efficiency: metrics.deviceUtilization, target: 85, improvement: 85 - metrics.deviceUtilization },
+    { name: 'Peak Hour Optimization', efficiency: metrics.peakHourOptimization, target: 90, improvement: 90 - metrics.peakHourOptimization },
+    { name: 'Temperature Control', efficiency: metrics.temperatureControl, target: 88, improvement: 88 - metrics.temperatureControl },
+    { name: 'Standby Power Reduction', efficiency: metrics.standbyReduction, target: 92, improvement: 92 - metrics.standbyReduction },
+    { name: 'Load Balancing', efficiency: metrics.loadBalancing, target: 87, improvement: 87 - metrics.loadBalancing },
+    { name: 'Smart Scheduling', efficiency: metrics.smartScheduling, target: 93, improvement: 93 - metrics.smartScheduling }
+  ];
+
+  const recommendations = [
+    ...(metrics.deviceUtilization < 60 ? [{ 
+      type: 'Immediate', 
+      action: 'Reduce active devices during low-usage periods', 
+      impact: 'High', 
+      savings: '$12-18/month' 
+    }] : []),
+    ...(metrics.peakHourOptimization < 70 ? [{ 
+      type: 'Scheduled', 
+      action: 'Shift high-power devices to off-peak hours', 
+      impact: 'High', 
+      savings: '$25-35/month' 
+    }] : []),
+    ...(metrics.temperatureControl < 75 ? [{ 
+      type: 'Behavioral', 
+      action: 'Optimize AC temperature settings', 
+      impact: 'Medium', 
+      savings: '$15-22/month' 
+    }] : []),
+    ...(metrics.standbyReduction < 80 ? [{ 
+      type: 'System', 
+      action: 'Enable smart power strips for standby reduction', 
+      impact: 'Medium', 
+      savings: '$8-12/month' 
+    }] : []),
+    ...(metrics.loadBalancing < 75 ? [{ 
+      type: 'Upgrade', 
+      action: 'Install smart load balancing switches', 
+      impact: 'High', 
+      savings: '$20-30/month' 
+    }] : []),
+    { 
+      type: 'Scheduled', 
+      action: 'Enable weather-responsive automation', 
+      impact: 'Medium', 
+      savings: '$10-15/month' 
+    }
+  ];
+
+  const getEfficiencyColor = (efficiency) => {
+    if (efficiency >= 85) return '#22c55e';
+    if (efficiency >= 70) return '#eab308';
+    if (efficiency >= 50) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const getRecommendationColor = (type) => {
+    switch(type) {
+      case 'Immediate': return '#ef4444';
+      case 'Scheduled': return '#f59e0b';
+      case 'Behavioral': return '#3b82f6';
+      case 'System': return '#8b5cf6';
+      case 'Upgrade': return '#06b6d4';
+      default: return '#6b7280';
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-gray-800/50 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-green-400" />
+            Efficiency Radar Analysis
+          </h4>
+          <ResponsiveContainer width="100%" height={300}>
+            <RadarChart data={radarData}>
+              <PolarGrid stroke="#374151" />
+              <PolarAngleAxis dataKey="subject" className="text-xs" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+              <PolarRadiusAxis domain={[0, 100]} tick={false} />
+              <Radar name="Current" dataKey="current" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} strokeWidth={2} />
+              <Radar name="Optimal" dataKey="optimal" stroke="#22c55e" fill="#22c55e" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  color: 'white'
+                }}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="bg-gray-800/50 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-blue-400" />
+            Efficiency Metrics Breakdown
+          </h4>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={efficiencyBars} layout="horizontal">
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis type="number" domain={[0, 100]} stroke="#9CA3AF" />
+              <YAxis dataKey="name" type="category" width={120} stroke="#9CA3AF" tick={{ fontSize: 10 }} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  color: 'white'
+                }}
+              />
+              <Bar dataKey="efficiency" radius={[0, 4, 4, 0]}>
+                {efficiencyBars.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getEfficiencyColor(entry.efficiency)} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-gray-800/50 rounded-lg p-6">
+        <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-yellow-400" />
+          Smart Energy Recommendations
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {recommendations.map((rec, index) => (
+            <div key={index} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <span 
+                  className="text-xs font-medium px-2 py-1 rounded-full"
+                  style={{ 
+                    backgroundColor: getRecommendationColor(rec.type) + '20',
+                    color: getRecommendationColor(rec.type)
+                  }}
+                >
+                  {rec.type}
+                </span>
+                <span className="text-xs text-gray-400">{rec.impact} Impact</span>
+              </div>
+              <p className="text-sm text-gray-300 mb-2">{rec.action}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-green-400 font-medium">{rec.savings}</span>
+                <Leaf className="w-4 h-4 text-green-400" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gray-800/50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Current Flow</span>
-            <Power className="w-4 h-4 text-blue-400 animate-pulse" />
+            <span className="text-sm text-gray-400">Overall Efficiency</span>
+            <TrendingUp className="w-4 h-4 text-green-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {(energyFlow / 1000).toFixed(2)} kW
-          </div>
-          <div className="text-xs text-gray-500">
-            {currentTime.toLocaleTimeString()}
+            {Math.round(Object.values(metrics).reduce((a, b) => a + b, 0) / Object.keys(metrics).length)}%
           </div>
         </div>
         
         <div className="bg-gray-800/50 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-400">Active Devices</span>
-            <Gauge className="w-4 h-4 text-green-400" />
+            <span className="text-sm text-gray-400">Monthly Savings</span>
+            <TrendingDown className="w-4 h-4 text-blue-400" />
           </div>
           <div className="text-2xl font-bold text-white">
-            {devicePowerBreakdown.length}
+            ${Math.round(recommendations.reduce((sum, rec) => sum + parseInt(rec.savings.split('-')[0].replace('$', '')), 0))}
           </div>
-          <div className="text-xs text-gray-500">
-            Consuming Power
+        </div>
+        
+        <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-400">Active Optimizations</span>
+            <Clock className="w-4 h-4 text-purple-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {recommendations.filter(r => r.type === 'Scheduled').length}
+          </div>
+        </div>
+        
+        <div className="bg-gray-800/50 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-gray-400">Improvement Score</span>
+            <Target className="w-4 h-4 text-orange-400" />
+          </div>
+          <div className="text-2xl font-bold text-white">
+            {Math.round(efficiencyBars.reduce((sum, bar) => sum + Math.max(0, bar.improvement), 0) / efficiencyBars.length)}
           </div>
         </div>
       </div>
-
-      {devicePowerBreakdown.length > 0 && (
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Live Device Power Consumption
-          </h4>
-          <div className="space-y-2">
-            {devicePowerBreakdown.map((device, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm text-gray-300">{device.name}</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{ 
-                        width: `${device.percentage}%`,
-                        backgroundColor: getPowerColor(device.power)
-                      }}
-                    />
-                  </div>
-                  <span className="text-sm font-mono text-white w-12 text-right">
-                    {device.power}W
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -394,7 +542,6 @@ export default function Analytics() {
     }
   }, [viewState]);
 
-  // Loading and error states remain the same...
   if (viewState === 'initial' || viewState === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800 text-white overflow-hidden relative">
@@ -475,7 +622,45 @@ export default function Analytics() {
             </div>
           )}
 
-          {/* Rest of loading screen components remain the same */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl w-full">
+            <Carousel images={loadingCarouselImages} />
+            
+            <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6 col-span-1 md:col-span-2 lg:col-span-2">
+              <h3 className="text-lg font-semibold text-blue-400 mb-4">AI Processing Pipeline</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-900 rounded-full flex items-center justify-center">
+                    <Brain className="w-4 h-4 text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">Random Forest Model</div>
+                    <div className="text-xs text-gray-400">Training on consumption patterns</div>
+                  </div>
+                  <div className="text-xs text-green-400">Active</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">Isolation Forest</div>
+                    <div className="text-xs text-gray-400">Detecting anomalies</div>
+                  </div>
+                  <div className="text-xs text-blue-400">Processing</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-purple-900 rounded-full flex items-center justify-center">
+                    <Network className="w-4 h-4 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">Neural Network</div>
+                    <div className="text-xs text-gray-400">Deep pattern analysis</div>
+                  </div>
+                  <div className="text-xs text-purple-400">Training</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -738,26 +923,25 @@ export default function Analytics() {
         </Card>
       </div>
 
-      {/* NEW: Real-Time Energy Flow Component */}
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <Zap className="w-5 h-5" />
-            Real-Time Energy Flow & Device Monitoring
+            <Lightbulb className="w-5 h-5" />
+            Smart Energy Saving Recommender System
           </CardTitle>
           <p className="text-gray-400 text-sm">
-            Live tracking of your home's energy consumption with real-time device power analysis
+            AI-powered efficiency analysis with real-time recommendations based on your current device usage patterns
           </p>
         </CardHeader>
         <CardContent>
-          <RealTimeEnergyFlow 
+          <EnergyEfficiencyRecommender 
             devicePowerBreakdown={devicePowerBreakdown}
             totalDevicePower={totalDevicePower}
+            analyticsData={analyticsData}
           />
         </CardContent>
       </Card>
 
-      {/* Rest of existing components remain the same */}
       <Card className="bg-gradient-to-br from-gray-900 to-black backdrop-blur-md border border-gray-800">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">

@@ -1,38 +1,37 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import Home from './pages/Home';
-import Terms from './pages/Terms';
-import Contact from './pages/Contact';
-import Profile from './pages/Profile';
-import About from './pages/About';
-import Geofencing, { prefetchGeofences } from './pages/Geofencing';
-import Analytics, { prefetchAnalytics } from './pages/Analytics';
-import SmartRoutinesDashboard from './pages/SmartRoutinesDashboard';
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import Footer from './components/Footer'
+import Home from './pages/Home'
+import Terms from './pages/Terms'
+import Contact from './pages/Contact'
+import Profile from './pages/Profile'
+import About from './pages/About'
+import Geofencing from './pages/Geofencing'
+import Analytics from './pages/Analytics'
+import SmartRoutinesDashboard from './pages/SmartRoutinesDashboard'
+import EmailAlert from './components/EmailAlert'
 
-let prefetched = false;
+let prefetched = false
 function triggerPrefetch() {
   if (!prefetched) {
-    prefetched = true;
-    Promise.all([
-      prefetchGeofences(),
-      prefetchAnalytics()
-    ]);
+    prefetched = true
+    Promise.all([Geofencing.prefetchGeofences?.(), Analytics.prefetchAnalytics?.()])
   }
 }
 
-triggerPrefetch();
+triggerPrefetch()
 
 function App() {
   useEffect(() => {
-    triggerPrefetch();
-  }, []);
+    triggerPrefetch()
+  }, [])
 
   return (
     <Router>
       <div className="min-h-screen bg-[#07051c]">
         <Navbar />
+        <EmailAlert />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/smart-routines" element={<SmartRoutinesDashboard />} />
@@ -46,7 +45,7 @@ function App() {
         <Footer />
       </div>
     </Router>
-  );
+  )
 }
 
-export default App;
+export default App

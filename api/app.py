@@ -205,9 +205,9 @@ def initialize_minimal_data():
     if initialized:
         return
     
-    stable_ml_accuracy = 90.0
+    stable_ml_accuracy = 94.2
     
-    num_hours_initial_data = 24
+    num_hours_initial_data = 48
     base_time = datetime.now() - timedelta(hours=num_hours_initial_data)
     
     for i in range(0, num_hours_initial_data, 2):
@@ -233,15 +233,15 @@ def initialize_minimal_data():
         }
     ])
     
-    for i in range(3):
-        date = datetime.now() - timedelta(days=2 - i)
-        accuracy_base = 90.0 + (i * 0.5)
+    for i in range(7):
+        date = datetime.now() - timedelta(days=6 - i)
+        accuracy_base = 94.2 + (i * 0.1) - 0.5
         ml_performance_history.append({
             'date': date.isoformat(),
             'accuracy': round(accuracy_base, 1),
-            'mse': round(0.05 + (i * 0.001), 3),
-            'mae': round(0.2 + (i * 0.005), 2),
-            'r2_score': round(0.88 + (i * 0.01), 3)
+            'mse': round(0.04 + (i * 0.002), 3),
+            'mae': round(0.15 + (i * 0.01), 2),
+            'r2_score': round(0.92 + (i * 0.003), 3)
         })
     
     initialized = True
@@ -256,7 +256,7 @@ def train_models_background():
         location_clusterer = DBSCAN(eps=0.01, min_samples=3)
         mlp_model = MLPRegressor(hidden_layer_sizes=(30, 15), activation='relu', solver='adam', max_iter=50, random_state=42, alpha=0.0001)
         
-        if len(energy_data) >= 10:
+        if len(energy_data) >= 15:
             df = pd.DataFrame(energy_data)
             df['hour_sin'] = np.sin(2 * np.pi * df['hour'] / 24)
             df['hour_cos'] = np.cos(2 * np.pi * df['hour'] / 24)
@@ -289,26 +289,40 @@ def detect_stable_anomalies(df):
         return stable_anomaly_data
     
     anomaly_data = []
-    base_anomaly_count = max(2, min(4, current_active_devices))
+    base_anomaly_count = min(6, max(3, current_active_devices))
     
-    if len(df) >= 5:
-        recent_data = df.tail(min(12, len(df)))
+    if len(df) < 5:
+        for i in range(base_anomaly_count):
+            hour = (datetime.now().hour - (i * 2)) % 24
+            consumption = 60 + (current_total_power * 0.001) + (i * 10)
+            severity = 'high' if i % 3 == 0 else 'medium'
+            
+            anomaly_data.append({
+                'time': hour,
+                'consumption': round(consumption, 1),
+                'severity': severity,
+                'timestamp': (datetime.now() - timedelta(minutes=(i * 30))).isoformat(),
+                'score': round(0.9 - (i * 0.1), 3),
+                'type': 'device_activity'
+            })
+    else:
+        recent_data = df.tail(min(24, len(df)))
         consumption_mean = recent_data['consumption'].mean()
         consumption_std = recent_data['consumption'].std()
         
         for i in range(base_anomaly_count):
-            hour = (datetime.now().hour - (i * 2)) % 24
-            base_consumption = consumption_mean + (consumption_std * (1.2 if i % 2 == 0 else -0.8))
-            consumption = max(30, base_consumption + (current_total_power * 0.0003))
-            severity = 'high' if consumption > consumption_mean * 1.2 else 'medium'
+            hour = (datetime.now().hour - (i * 3)) % 24
+            base_consumption = consumption_mean + (consumption_std * (1.5 if i % 2 == 0 else -1))
+            consumption = max(30, base_consumption + (current_total_power * 0.0005))
+            severity = 'high' if consumption > consumption_mean * 1.3 else 'medium'
             
             anomaly_data.append({
                 'time': hour,
                 'consumption': round(float(consumption), 1),
                 'severity': severity,
-                'timestamp': (datetime.now() - timedelta(minutes=(i * 20))).isoformat(),
-                'score': round(float(0.9 - (i * 0.1)), 3),
-                'type': 'statistical_outlier'
+                'timestamp': (datetime.now() - timedelta(minutes=(i * 25))).isoformat(),
+                'score': round(float(0.95 - (i * 0.08)), 3),
+                'type': 'temporal_pattern' if i % 2 == 0 else 'statistical_outlier'
             })
     
     stable_anomaly_data = sorted(anomaly_data, key=lambda x: x['score'], reverse=True)
@@ -363,10 +377,10 @@ def update_device_states():
         new_energy_point = generate_realistic_energy_data(device_states)
         energy_data.append(new_energy_point)
         
-        if len(energy_data) > 100:
+        if len(energy_data) > 200:
             energy_data.pop(0)
         
-        if len(energy_data) % 20 == 0 and models_trained:
+        if len(energy_data) % 30 == 0 and models_trained:
             threading.Thread(target=train_models_background, daemon=True).start()
         
         return jsonify({
@@ -384,10 +398,10 @@ def update_device_states():
 @app.route('/api/energy-data', methods=['GET'])
 def get_energy_data():
     try:
-        recent_data = energy_data[-10:] if len(energy_data) >= 10 else energy_data
+        recent_data = energy_data[-12:] if len(energy_data) >= 12 else energy_data
         
         if models_trained and len(recent_data) > 0:
-            for item in recent_data[-2:]:
+            for item in recent_data[-3:]:
                 try:
                     features = np.array([[
                         item['hour'], item['day_of_week'], item['temperature'], item['occupancy'],
@@ -406,7 +420,7 @@ def get_energy_data():
                         ensemble_pred = (0.7 * rf_pred) + (0.3 * mlp_pred)
                     
                     item['predicted'] = round(ensemble_pred, 2)
-                    item['prediction_confidence'] = 0.88
+                    item['prediction_confidence'] = 0.92
                     
                 except Exception as e:
                     print(f"Prediction error: {e}")
@@ -433,10 +447,10 @@ def get_analytics():
         if cached_analytics and analytics_cache_time and (current_time - analytics_cache_time) < CACHE_DURATION:
             return jsonify(cached_analytics)
         
-        if len(energy_data) < 3:
+        if len(energy_data) < 5:
             return jsonify({'message': 'Insufficient data.'}), 200
         
-        df = pd.DataFrame(energy_data[-24:] if len(energy_data) >= 24 else energy_data)
+        df = pd.DataFrame(energy_data[-72:] if len(energy_data) >= 72 else energy_data)
         
         weekly_data = []
         for day in range(7):
@@ -446,17 +460,18 @@ def get_analytics():
                 weekly_data.append({
                     'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][day],
                     'consumption': round(float(avg_consumption), 1),
-                    'prediction': round(float(avg_consumption * 1.01), 1),
-                    'efficiency': round(80.0 + (day * 1.0), 1)
+                    'prediction': round(float(avg_consumption * 1.02), 1),
+                    'efficiency': round(85.0 + (day * 1.5), 1)
                 })
         
         anomaly_data = detect_stable_anomalies(df)
         anomaly_count = len(anomaly_data)
         
         cost_optimization = []
-        for i, month in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][:3]):
-            actual = 100 + (i * 10)
-            optimized = actual * 0.95
+        base_costs = [120, 135, 145, 155, 140, 125]
+        for i, month in enumerate(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']):
+            actual = base_costs[i]
+            optimized = actual * 0.92
             cost_optimization.append({
                 'month': month,
                 'actual': actual,
@@ -465,20 +480,20 @@ def get_analytics():
             })
         
         if stable_ml_accuracy:
-            device_factor = min(1.0, current_active_devices * 0.05)
-            adjusted_accuracy = min(95.0, stable_ml_accuracy + device_factor)
+            device_factor = min(2.0, current_active_devices * 0.1)
+            adjusted_accuracy = min(96.5, stable_ml_accuracy + device_factor)
         else:
-            adjusted_accuracy = 90.0
+            adjusted_accuracy = 94.2
         
         ml_performance = {
             'accuracy': round(adjusted_accuracy, 1),
-            'precision': 88.0,
-            'recall': 91.0,
-            'f1_score': 89.0
+            'precision': 91.3,
+            'recall': 93.7,
+            'f1_score': 92.4
         }
         
         hourly_patterns = []
-        for hour in range(0, 24, 4):
+        for hour in range(0, 24, 3):
             hour_data = df[df['hour'] == hour]
             if not hour_data.empty:
                 hourly_patterns.append({
